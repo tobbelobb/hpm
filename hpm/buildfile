@@ -44,3 +44,6 @@ for t: cxx{**.test...}
 
 # Include our own header files
 cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+# Include system wide opencv 4.4.0 headers
+cxx.poptions =+ "-I/usr/local/include/opencv4"

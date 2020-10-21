@@ -7,7 +7,7 @@
 #include <opencv2/highgui.hpp>   // waitKey
 #include <opencv2/imgcodecs.hpp> // IMREAD_COLOR/IMREAD_UNCHANGED/IMREAD_GREYSCALE
 
-auto main(int const argc, char **const argv) -> int {
+auto drawLogo(int const argc, char **const argv) -> int {
   // Configure optional command line options.
   std::stringstream usage;
   usage << "Usage:\n" << *argv << " image\n";
