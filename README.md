@@ -1,6 +1,6 @@
 # HPM
 
-This is the inner project/subrepo of [hp-mark](https://gitlab.com/tobben/hp-mark).
+This is the inner project/submodule of [hp-mark](https://gitlab.com/tobben/hp-mark).
 It contains a build2 project (build information) and c++ business logic source code.
 
 This README is intentionally kept sparse.
