@@ -1,0 +1,5 @@
+# output of testscript
+test-hpm
+
+# test binaries
+*.test

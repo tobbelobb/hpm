@@ -1,0 +1,46 @@
+include ../extern/cppcore/
+
+libs += ../extern/cppcore/lib{cppcore}
+
+# ./ means "when building this dir, also build following target"
+# executable hpm depends on utility library hpm, main.cxx.
+# hpm.testscript is associated with the hpm executable
+./: exe{hpm}: libue{hpm} {cxx}{main} testscript{hpm}
+
+
+# Utility library used by hpm executable and
+# the unit test executables
+# Depends on hxx and cxx files in this directory
+# except those who have .test.<something> in their name
+# and those who are called main.
+# Also depends on the libs
+libue{hpm}: {hxx cxx}{** -**.test... -main} $libs
+
+
+## All executables ending with .test are tests.
+## So they are built and executed with `b test`.
+## They are also not installed with `b install`.
+exe{*.test}:
+{
+  test = true
+  install = false
+}
+
+
+# All files ending with <somename>.test.cxx should be compiled
+# to executables <somename>.test
+# They depend on <somename>.test.hxx, <somename>.test.ixx, <somename>.test.txx
+# If <somename>.test.testscript exist, it is associated with the test executable
+# bin.whole = false makes so only the used functions are statically linked
+# into the test executable
+for t: cxx{**.test...}
+{
+  d = $directory($t)
+  n = $name($t)...
+
+  ./: $d/exe{$n}: $t $d/{hxx ixx txx}{+$n} $d/testscript{+$n}
+  $d/exe{$n}: libue{hpm}: bin.whole = false
+}
+
+# Include our own header files
+cxx.poptions =+ "-I$out_root" "-I$src_root"
