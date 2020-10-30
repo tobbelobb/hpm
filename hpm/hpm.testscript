@@ -10,5 +10,34 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 calibration-coefficients-xml-or-json marker-diameter image
+$0 <calibration-coefficients> <marker-diameter> <image> [-h|--help] [-s|--show]
+
+-s, --show  Pops up an image of the analysis result when finished. Useful
+            for debugging. Press s to write the image to image.png. Press
+            any other key to exit without saving the image.
+-h, --help  Print this help.
+EOE
+
+: End-as-expected
+: Checks what gets printed when run was successful
+$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png >> END
+No markers found
+END
+
+: Non-existent-calibration-file
+: Checks behviour when calibration coeffs file doesn't exist
+$* 'nonfile' 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+Failed to load nonfile
+EOE
+
+: Non-existent-image-file
+: Checks behviour when calibration coeffs file doesn't exist
+$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 'noimage' 2>>EOE != 0
+Could not read the image: noimage
+EOE
+
+: Zero-marker-diameter
+: Checks behviour when calibration coeffs file doesn't exist
+$* $src_base/example-cam-params/myExampleCamParams.xml 0 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+Need a positive marker diameter. Can not use 0
 EOE
