@@ -7,6 +7,8 @@
 #include <opencv2/highgui.hpp>   // waitKey
 #include <opencv2/imgcodecs.hpp> // IMREAD_COLOR/IMREAD_UNCHANGED/IMREAD_GREYSCALE
 
+#include <hpm/otherfile.h++>
+
 static inline auto toDouble(std::string const &s) -> double {
   std::size_t charCount = 0;
   double res = 0;
@@ -24,6 +26,7 @@ static inline auto toDouble(std::string const &s) -> double {
 
 auto main(int const argc, char **const argv) -> int {
   // Configure optional command line options.
+  otherfunc();
   std::stringstream usage;
   usage << "Usage:\n"
         << *argv
