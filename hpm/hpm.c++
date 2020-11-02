@@ -1,8 +1,25 @@
+#include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
 #include <hpm/hpm.h++>
 
-std::vector<Marker> detectMarkers(CamParams const &, cv::Mat const image) {
+void showImage(cv::InputArray image, std::string const &name) {
+  cv::namedWindow(name, cv::WINDOW_NORMAL);
+  constexpr auto SHOW_PIXELS_X{300};
+  constexpr auto SHOW_PIXELS_Y{300};
+  cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
+  cv::imshow(name, image);
+  if (cv::waitKey(0) == 's') {
+    cv::imwrite(name, image);
+  }
+}
+
+std::vector<Marker> detectMarkers(CamParams const &camParams,
+                                  cv::InputArray const undistortedImage,
+                                  bool showIntermediateImages) {
+  if (showIntermediateImages) {
+    showImage(undistortedImage, "intermediate0.png");
+  }
   return {};
 }
 

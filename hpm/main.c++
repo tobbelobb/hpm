@@ -5,7 +5,7 @@
 
 #include <opencv2/calib3d.hpp> // undistort
 #include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>   // waitKey
+#include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp> // IMREAD_COLOR/IMREAD_UNCHANGED/IMREAD_GREYSCALE
 
 #include <hpm/command-line.h++>
@@ -31,15 +31,18 @@ auto main(int const argc, char **const argv) -> int {
   usage << "Usage:\n"
         << *argv
         << " <calibration-coefficients> <marker-diameter> <image> "
-           "[-h|--help] [-s|--show]\n";
+           "[-h|--help] [-s|--show <value>]\n";
   CommandLine args(usage.str());
 
+  std::string show{};
   bool showResultImage{false};
-  args.addArgument({"-s", "--show"}, &showResultImage,
-                   "Pops up an image of the analysis result when finished. "
-                   "Useful for debugging. "
-                   "Press s to write the image to image.png. "
-                   "Press any other key to exit without saving the image.");
+  bool showIntermediateImages{false};
+  args.addArgument(
+      {"-s", "--show"}, &show,
+      "[result, intermediate, all, none]. none is the default."
+      " During any pop up you may press s to write the image, or"
+      " any other key to continue without saving. Filenames will be "
+      " result.png and/or intermadiate<n>.png, where <n> goes from 0.");
   bool printHelp{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
 
@@ -63,6 +66,8 @@ auto main(int const argc, char **const argv) -> int {
         &argv[MIN_ARGC], // NOLINT
         static_cast<unsigned int>(argc - MIN_ARGC));
     args.parse(optionalArgs);
+    showResultImage = (show == "result") or (show == "all");
+    showIntermediateImages = (show == "intermediate") or (show == "all");
   } catch (std::runtime_error const &e) {
     std::cerr << e.what() << std::endl;
     return -1;
@@ -106,7 +111,8 @@ auto main(int const argc, char **const argv) -> int {
   cv::undistort(distortedImage, undistortedImage, cameraMatrix,
                 distortionCoefficients);
 
-  std::vector<Marker> const markers{detectMarkers(camParams, undistortedImage)};
+  std::vector<Marker> const markers{
+      detectMarkers(camParams, undistortedImage, showIntermediateImages)};
 
   if (markers.empty()) {
     std::cout << "No markers found\n";
@@ -121,12 +127,11 @@ auto main(int const argc, char **const argv) -> int {
     }
     constexpr auto SHOW_PIXELS_X{300};
     constexpr auto SHOW_PIXELS_Y{300};
-    cv::namedWindow("Display image", cv::WINDOW_NORMAL);
-    cv::resizeWindow("Display image", SHOW_PIXELS_X, SHOW_PIXELS_Y);
-    cv::imshow("Display image", undistortedImage);
-    // Wait for a keystroke in the window
+    cv::namedWindow("Result image", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Result image", SHOW_PIXELS_X, SHOW_PIXELS_Y);
+    cv::imshow("Result image", undistortedImage);
     if (cv::waitKey(0) == 's') {
-      cv::imwrite("image.png", undistortedImage);
+      cv::imwrite("result.png", undistortedImage);
     }
   }
 

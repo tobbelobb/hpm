@@ -37,6 +37,8 @@ struct CamParams {
   }
 };
 
-std::vector<Marker> detectMarkers(CamParams const &, cv::Mat const image);
+std::vector<Marker> detectMarkers(CamParams const &camParams,
+                                  cv::InputArray const undistortedImage,
+                                  bool showIntermediateImages);
 
 void draw(/* inout */ cv::Mat image, Marker const &marker);
