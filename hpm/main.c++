@@ -37,12 +37,10 @@ auto main(int const argc, char **const argv) -> int {
   std::string show{};
   bool showResultImage{false};
   bool showIntermediateImages{false};
-  args.addArgument(
-      {"-s", "--show"}, &show,
-      "[result, intermediate, all, none]. none is the default."
-      " During any pop up you may press s to write the image, or"
-      " any other key to continue without saving. Filenames will be "
-      " result.png and/or intermadiate<n>.png, where <n> goes from 0.");
+  args.addArgument({"-s", "--show"}, &show,
+                   "[result, intermediate, all, none]. none is the default."
+                   " During any pop up you may press s to write the image, or"
+                   " any other key to continue without saving.");
   bool printHelp{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
 
@@ -93,7 +91,6 @@ auto main(int const argc, char **const argv) -> int {
     camParamsFile["distortion_coefficients"] >> distortionCoefficients_;
     return distortionCoefficients_;
   }();
-  CamParams const camParams{cameraMatrix, distortionCoefficients};
 
   if (markerDiameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "
@@ -111,27 +108,27 @@ auto main(int const argc, char **const argv) -> int {
   cv::undistort(distortedImage, undistortedImage, cameraMatrix,
                 distortionCoefficients);
 
-  std::vector<Marker> const markers{
-      detectMarkers(camParams, undistortedImage, showIntermediateImages)};
+  std::vector<cv::KeyPoint> const markers{
+      detectMarkers(undistortedImage, showIntermediateImages)};
 
   if (markers.empty()) {
     std::cout << "No markers found\n";
   }
   for (auto const &marker : markers) {
-    std::cout << marker;
+    std::cout << marker << '\n';
   }
 
   if (showResultImage) {
-    for (auto const &marker : markers) {
-      draw(undistortedImage, marker);
-    }
-    constexpr auto SHOW_PIXELS_X{300};
-    constexpr auto SHOW_PIXELS_Y{300};
-    cv::namedWindow("Result image", cv::WINDOW_NORMAL);
-    cv::resizeWindow("Result image", SHOW_PIXELS_X, SHOW_PIXELS_Y);
-    cv::imshow("Result image", undistortedImage);
+    drawMarkers(undistortedImage, markers);
+
+    constexpr auto SHOW_PIXELS_X{1500};
+    constexpr auto SHOW_PIXELS_Y{1500};
+    const std::string resultImageName{"result.png"};
+    cv::namedWindow(resultImageName, cv::WINDOW_NORMAL);
+    cv::resizeWindow(resultImageName, SHOW_PIXELS_X, SHOW_PIXELS_Y);
+    cv::imshow(resultImageName, undistortedImage);
     if (cv::waitKey(0) == 's') {
-      cv::imwrite("result.png", undistortedImage);
+      cv::imwrite(resultImageName, undistortedImage);
     }
   }
 

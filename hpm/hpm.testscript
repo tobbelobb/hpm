@@ -14,15 +14,14 @@ $0 <calibration-coefficients> <marker-diameter> <image> [-h|--help] [-s|--show <
 
 -s, --show  [result, intermediate, all, none]. none is the default. During
             any pop up you may press s to write the image, or any other key
-            to continue without saving. Filenames will be  result.png and/or
-            intermadiate<n>.png, where <n> goes from 0.
+            to continue without saving.
 -h, --help  Print this help.
 EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png >> END
-No markers found
+$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
+/Point: \[\d\d?\d?\d?\.\d?\d?, \d\d?\d?\d?\.\d?\d?\] Diameter: \d\d?\.\d\d?\d?\d?/
 END
 
 : Non-existent-calibration-file

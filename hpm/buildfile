@@ -52,6 +52,7 @@ cxx.libs =+ "-lopencv_highgui"
 cxx.libs =+ "-lopencv_imgcodecs"
 cxx.libs =+ "-lopencv_imgproc"
 cxx.libs =+ "-lopencv_calib3d"
+cxx.libs =+ "-lopencv_features2d"
 #
 # Might need these in the future:
 #-lopencv_stitching
@@ -96,7 +97,6 @@ cxx.libs =+ "-lopencv_calib3d"
 #-lopencv_xobjdetect
 #-lopencv_objdetect
 #-lopencv_imgcodecs
-#-lopencv_features2d
 #-lopencv_flann
 #-lopencv_xphoto
 #-lopencv_photo

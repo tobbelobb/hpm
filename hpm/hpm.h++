@@ -5,6 +5,12 @@
 
 #include <opencv2/core.hpp>
 
+namespace {
+std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
+  return os << "Point: " << keyPoint.pt << " Diameter: " << keyPoint.size;
+}
+} // namespace
+
 struct Position {
   double x{0};
   double y{0};
@@ -16,29 +22,9 @@ struct Position {
   }
 };
 
-struct Marker {
-  double x{0};
-  double y{0};
-  double r{0};
+std::vector<cv::KeyPoint> detectMarkers(cv::InputArray const undistortedImage,
+                                        bool showIntermediateImages);
 
-  friend std::ostream &operator<<(std::ostream &os, Marker const &marker) {
-    return os << "(" << marker.x << ", " << marker.y << ", " << marker.r << ')';
-  }
-};
+void drawMarkers(cv::InputOutputArray image,
+                 std::vector<cv::KeyPoint> const &markers);
 
-struct CamParams {
-  cv::Mat intrinsic{0};
-  cv::Mat distortion{0};
-
-  friend std::ostream &operator<<(std::ostream &os,
-                                  CamParams const &camParams) {
-    return os << "Intrinsic: " << camParams.intrinsic
-              << " Distortion: " << camParams.distortion;
-  }
-};
-
-std::vector<Marker> detectMarkers(CamParams const &camParams,
-                                  cv::InputArray const undistortedImage,
-                                  bool showIntermediateImages);
-
-void draw(/* inout */ cv::Mat image, Marker const &marker);
