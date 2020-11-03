@@ -1,13 +1,14 @@
 #pragma once
 
-#include <ostream>
+#include <iostream>
 #include <vector>
 
 #include <opencv2/core.hpp>
 
 namespace {
 std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
-  return os << "Point: " << keyPoint.pt << " Diameter: " << keyPoint.size;
+  return os << "Point: " << keyPoint.pt << "px Diameter: " << keyPoint.size
+            << "px ";
 }
 } // namespace
 
@@ -28,3 +29,4 @@ std::vector<cv::KeyPoint> detectMarkers(cv::InputArray const undistortedImage,
 void drawMarkers(cv::InputOutputArray image,
                  std::vector<cv::KeyPoint> const &markers);
 
+Position toCameraPosition(cv::KeyPoint const &keyPoint, cv::Mat cameraMatrix);

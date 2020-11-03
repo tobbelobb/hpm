@@ -115,7 +115,8 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers found\n";
   }
   for (auto const &marker : markers) {
-    std::cout << marker << '\n';
+    std::cout << marker << ' ';
+    std::cout << "Camera: " << toCameraPosition(marker, cameraMatrix) << "mm\n";
   }
 
   if (showResultImage) {

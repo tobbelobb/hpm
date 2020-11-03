@@ -1,3 +1,4 @@
+#include <numeric>
 #include <string>
 
 #include <opencv2/features2d.hpp>
@@ -119,4 +120,12 @@ auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
               "simpleBlobDetector.png");
   }
   return markers;
+}
+
+Position toCameraPosition(cv::KeyPoint const &keyPoint, cv::Mat cameraMatrix) {
+  constexpr double knownMarkerWidth{25.84};
+  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+                                             cameraMatrix.at<double>(1, 1))};
+  return {0, 0,
+          knownMarkerWidth * cameraMatrix.at<double>(0, 0) / keyPoint.size};
 }
