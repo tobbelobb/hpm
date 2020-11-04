@@ -3,3 +3,6 @@ hpm/hpm
 hpm.log
 out-root.build
 .bdep
+.attic.c++
+simpleBlobDetector.png
+attic
