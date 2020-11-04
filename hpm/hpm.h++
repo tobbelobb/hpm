@@ -29,4 +29,5 @@ std::vector<cv::KeyPoint> detectMarkers(cv::InputArray const undistortedImage,
 void drawMarkers(cv::InputOutputArray image,
                  std::vector<cv::KeyPoint> const &markers);
 
-Position toCameraPosition(cv::KeyPoint const &keyPoint, cv::Mat cameraMatrix);
+Position toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
+                          double markerDiameter);

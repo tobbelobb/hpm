@@ -1,4 +1,3 @@
-#include <numeric>
 #include <string>
 
 #include <opencv2/features2d.hpp>
@@ -70,15 +69,15 @@ auto getBlobDetector() {
     cv::SimpleBlobDetector::Params params_;
     params_.thresholdStep = 10.0; // NOLINT
     params_.minThreshold = 20.0;  // NOLINT
-    params_.maxThreshold = 200.0; // NOLINT
+    params_.maxThreshold = 2000.0; // NOLINT
     params_.minRepeatability = 2; // NOLINT
     params_.minDistBetweenBlobs = 10.0;  // NOLINT
     params_.filterByColor = true;        // NOLINT
     params_.blobColor = 0;               // NOLINT
     params_.filterByArea = true;         // NOLINT
     params_.minArea = 250.0;             // NOLINT
-    params_.maxArea = 5000.0;            // NOLINT
-    params_.filterByCircularity = false; // NOLINT
+    params_.maxArea = 500000.0;          // NOLINT
+    params_.filterByCircularity = true;  // NOLINT
     params_.minCircularity = 0.8;        // NOLINT
     params_.maxCircularity = 3.4e38;     // NOLINT
     params_.filterByInertia = true;      // NOLINT
@@ -109,7 +108,10 @@ auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector) {
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
 auto blobDetect(cv::InputArray image) {
   auto const detector = getBlobDetector();
-  return detect(getGreen(image), detector);
+  cv::Mat dst;
+  cv::bitwise_not(getRed(image), dst);
+  // showImage(dst, "invertedRed.png");
+  return detect(getGreen(image) / 3 + getBlue(image) / 3 + dst / 3, detector);
 }
 
 auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
@@ -122,10 +124,7 @@ auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
   return markers;
 }
 
-Position toCameraPosition(cv::KeyPoint const &keyPoint, cv::Mat cameraMatrix) {
-  constexpr double knownMarkerWidth{25.84};
-  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
-                                             cameraMatrix.at<double>(1, 1))};
-  return {0, 0,
-          knownMarkerWidth * cameraMatrix.at<double>(0, 0) / keyPoint.size};
+auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
+                      double markerDiameter) -> Position {
+  return {0, 0, markerDiameter * focalLength / keyPoint.size};
 }

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <numeric>
 
 #include <gsl/span_ext>
 
@@ -114,9 +115,14 @@ auto main(int const argc, char **const argv) -> int {
   if (markers.empty()) {
     std::cout << "No markers found\n";
   }
+
+  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+                                             cameraMatrix.at<double>(1, 1))};
   for (auto const &marker : markers) {
     std::cout << marker << ' ';
-    std::cout << "Camera: " << toCameraPosition(marker, cameraMatrix) << "mm\n";
+    std::cout << "Camera: "
+              << toCameraPosition(marker, meanFocalLength, markerDiameter)
+              << "mm\n";
   }
 
   if (showResultImage) {
