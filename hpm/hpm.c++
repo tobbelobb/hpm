@@ -57,6 +57,12 @@ auto getBlue(cv::InputArray image) -> cv::Mat {
   return getSingleColor(image, RGB::BLUE);
 }
 
+auto getRedInverted(cv::InputArray image) -> cv::Mat {
+  cv::Mat redInverted;
+  cv::bitwise_not(getRed(image), redInverted);
+  return redInverted;
+}
+
 auto imageWithMarkers(cv::InputArray image,
                       std::vector<cv::KeyPoint> const &markers) -> cv::Mat {
   cv::Mat result{};
@@ -67,25 +73,25 @@ auto imageWithMarkers(cv::InputArray image,
 auto getBlobDetector() {
   cv::SimpleBlobDetector::Params params = []() {
     cv::SimpleBlobDetector::Params params_;
-    params_.thresholdStep = 10.0; // NOLINT
-    params_.minThreshold = 20.0;  // NOLINT
-    params_.maxThreshold = 2000.0; // NOLINT
-    params_.minRepeatability = 2; // NOLINT
-    params_.minDistBetweenBlobs = 10.0;  // NOLINT
-    params_.filterByColor = true;        // NOLINT
-    params_.blobColor = 0;               // NOLINT
-    params_.filterByArea = true;         // NOLINT
-    params_.minArea = 250.0;             // NOLINT
-    params_.maxArea = 500000.0;          // NOLINT
-    params_.filterByCircularity = true;  // NOLINT
-    params_.minCircularity = 0.8;        // NOLINT
-    params_.maxCircularity = 3.4e38;     // NOLINT
-    params_.filterByInertia = true;      // NOLINT
-    params_.minInertiaRatio = 0.1;       // NOLINT
-    params_.maxInertiaRatio = 3.4e38;    // NOLINT
-    params_.filterByConvexity = true;    // NOLINT
-    params_.minConvexity = 0.95;         // NOLINT
-    params_.maxConvexity = 3.4e38;       // NOLINT
+    params_.thresholdStep = 10.0;       // NOLINT
+    params_.minThreshold = 20.0;        // NOLINT
+    params_.maxThreshold = 2000.0;      // NOLINT
+    params_.minRepeatability = 2;       // NOLINT
+    params_.minDistBetweenBlobs = 10.0; // NOLINT
+    params_.filterByColor = true;       // NOLINT
+    params_.blobColor = 0;              // NOLINT
+    params_.filterByArea = true;        // NOLINT
+    params_.minArea = 250.0;            // NOLINT
+    params_.maxArea = 500000.0;         // NOLINT
+    params_.filterByCircularity = true; // NOLINT
+    params_.minCircularity = 0.8;       // NOLINT
+    params_.maxCircularity = 3.4e38;    // NOLINT
+    params_.filterByInertia = true;     // NOLINT
+    params_.minInertiaRatio = 0.1;      // NOLINT
+    params_.maxInertiaRatio = 3.4e38;   // NOLINT
+    params_.filterByConvexity = true;   // NOLINT
+    params_.minConvexity = 0.95;        // NOLINT
+    params_.maxConvexity = 3.4e38;      // NOLINT
     return params_;
   }();
 
@@ -108,10 +114,12 @@ auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector) {
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
 auto blobDetect(cv::InputArray image) {
   auto const detector = getBlobDetector();
-  cv::Mat dst;
-  cv::bitwise_not(getRed(image), dst);
-  // showImage(dst, "invertedRed.png");
-  return detect(getGreen(image) / 3 + getBlue(image) / 3 + dst / 3, detector);
+  // Combine channels in a way that turns markers into dark regions
+  constexpr double THIRD{0.33333};
+  cv::Mat combined = getGreen(image) * THIRD + getBlue(image) * THIRD +
+                     getRedInverted(image) * THIRD;
+
+  return detect(combined, detector);
 }
 
 auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
