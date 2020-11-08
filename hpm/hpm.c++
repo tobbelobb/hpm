@@ -63,6 +63,12 @@ auto getRedInverted(cv::InputArray image) -> cv::Mat {
   return redInverted;
 }
 
+auto getBlueInverted(cv::InputArray image) -> cv::Mat {
+  cv::Mat blueInverted;
+  cv::bitwise_not(getBlue(image), blueInverted);
+  return blueInverted;
+}
+
 auto imageWithMarkers(cv::InputArray image,
                       std::vector<cv::KeyPoint> const &markers) -> cv::Mat {
   cv::Mat result{};
@@ -116,10 +122,20 @@ auto blobDetect(cv::InputArray image) {
   auto const detector = getBlobDetector();
   // Combine channels in a way that turns markers into dark regions
   constexpr double THIRD{0.33333};
-  cv::Mat combined = getGreen(image) * THIRD + getBlue(image) * THIRD +
-                     getRedInverted(image) * THIRD;
+  cv::Mat antiRed = getGreen(image) * THIRD + getBlue(image) * THIRD +
+                    getRedInverted(image) * THIRD;
+  cv::Mat antiBlue = getGreen(image) * THIRD + getBlueInverted(image) * THIRD +
+                     getRed(image) * THIRD;
 
-  return detect(combined, detector);
+  std::vector<cv::KeyPoint> keyPoints{};
+
+  auto redMarkers{detect(antiRed, detector)};
+  auto blueMarkers{detect(antiBlue, detector)};
+  keyPoints.reserve(redMarkers.size() + blueMarkers.size());
+  keyPoints.insert(keyPoints.end(), redMarkers.begin(), redMarkers.end());
+  keyPoints.insert(keyPoints.end(), blueMarkers.begin(), blueMarkers.end());
+
+  return keyPoints;
 }
 
 auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
