@@ -27,6 +27,14 @@ static inline auto toDouble(std::string const &s) -> double {
   return res;
 }
 
+static auto undistort(cv::InputArray image, cv::InputArray cameraMatrix,
+                      cv::InputArray distortionCoefficients) -> cv::Mat {
+  cv::Mat undistortedImage =
+      cv::Mat::zeros(image.rows(), image.cols(), image.type());
+  cv::undistort(image, undistortedImage, cameraMatrix, distortionCoefficients);
+  return undistortedImage;
+}
+
 auto main(int const argc, char **const argv) -> int {
   std::stringstream usage;
   usage << "Usage:\n"
@@ -57,7 +65,7 @@ auto main(int const argc, char **const argv) -> int {
 
   gsl::span<char *> const mandatoryArgs(&argv[1], NUM_MANDATORY_ARGS); // NOLINT
   auto *const camParamsFileName = gsl::at(mandatoryArgs, 0);
-  double const markerDiameter = toDouble(gsl::at(mandatoryArgs, 1));
+  double const knownMarkerDiameter = toDouble(gsl::at(mandatoryArgs, 1));
   auto *const imageFileName = gsl::at(mandatoryArgs, 2);
 
   try {
@@ -93,9 +101,9 @@ auto main(int const argc, char **const argv) -> int {
     return distortionCoefficients_;
   }();
 
-  if (markerDiameter <= 0.0) {
+  if (knownMarkerDiameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "
-              << markerDiameter << '\n';
+              << knownMarkerDiameter << '\n';
     return 1;
   }
 
@@ -104,29 +112,31 @@ auto main(int const argc, char **const argv) -> int {
     std::cerr << "Could not read the image: " << imageFileName << '\n';
     return 1;
   }
-  cv::Mat undistortedImage = cv::Mat::zeros(
-      distortedImage.rows, distortedImage.cols, distortedImage.type());
-  cv::undistort(distortedImage, undistortedImage, cameraMatrix,
-                distortionCoefficients);
+  cv::Mat undistortedImage{
+      undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  std::vector<cv::KeyPoint> const markers{
+  std::vector<cv::KeyPoint> const detectedMarkers{
       detectMarkers(undistortedImage, showIntermediateImages)};
 
-  if (markers.empty()) {
-    std::cout << "No markers found\n";
+  if (detectedMarkers.empty()) {
+    std::cout << "No markers detected\n";
   }
 
   const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
                                              cameraMatrix.at<double>(1, 1))};
-  for (auto const &marker : markers) {
-    std::cout << marker << ' ';
+  cv::Point2f const imageCenter{
+      static_cast<float>(cameraMatrix.at<double>(0, 2)),
+      static_cast<float>(cameraMatrix.at<double>(1, 2))};
+  for (auto const &detectedMarker : detectedMarkers) {
+    std::cout << detectedMarker << ' ';
     std::cout << "Camera: "
-              << toCameraPosition(marker, meanFocalLength, markerDiameter)
+              << toCameraPosition(detectedMarker, meanFocalLength, imageCenter,
+                                  knownMarkerDiameter)
               << "mm\n";
   }
 
   if (showResultImage) {
-    drawMarkers(undistortedImage, markers);
+    drawMarkers(undistortedImage, detectedMarkers);
 
     constexpr auto SHOW_PIXELS_X{1500};
     constexpr auto SHOW_PIXELS_Y{1500};

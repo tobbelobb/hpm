@@ -30,4 +30,5 @@ void drawMarkers(cv::InputOutputArray image,
                  std::vector<cv::KeyPoint> const &markers);
 
 Position toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
+                          cv::Point2f const &imageCenter,
                           double markerDiameter);

@@ -6,11 +6,11 @@
 
 #include <hpm/hpm.h++>
 
-enum RGB { RED = 2, BLUE = 1, GREEN = 0 };
+enum RGB { BLUE = 0, GREEN = 1, RED = 2 };
 
-void drawMarkers(cv::InputArray image,
-                 std::vector<cv::KeyPoint> const &keyPoints,
-                 cv::InputOutputArray result) {
+static void drawMarkers(cv::InputArray image,
+                        std::vector<cv::KeyPoint> const &keyPoints,
+                        cv::InputOutputArray result) {
   const auto BLACK{cv::Scalar(0)};
   cv::drawKeypoints(image, keyPoints, result, BLACK,
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
@@ -23,12 +23,7 @@ void drawMarkers(cv::InputOutputArray image,
   drawMarkers(image, markers, image);
 }
 
-void drawCircle(cv::InputOutputArray image, cv::KeyPoint const &marker) {
-  const cv::Scalar RED{0, 0, 255};
-  cv::circle(image, marker.pt, static_cast<int>(marker.size / 2), RED);
-}
-
-void showImage(cv::InputArray image, std::string const &name) {
+static void showImage(cv::InputArray image, std::string const &name) {
   cv::namedWindow(name, cv::WINDOW_NORMAL);
   constexpr auto SHOW_PIXELS_X{1500};
   constexpr auto SHOW_PIXELS_Y{1500};
@@ -39,44 +34,47 @@ void showImage(cv::InputArray image, std::string const &name) {
   }
 }
 
-auto getSingleColor(cv::InputArray image, enum RGB color) -> cv::Mat {
+static auto getSingleColor(cv::InputArray image, enum RGB color) -> cv::Mat {
   cv::Mat singleColorImage{};
   cv::extractChannel(image, singleColorImage, color);
   return singleColorImage;
 }
 
-auto getRed(cv::InputArray image) -> cv::Mat {
+static auto getRed(cv::InputArray image) -> cv::Mat {
   return getSingleColor(image, RGB::RED);
 }
 
-auto getGreen(cv::InputArray image) -> cv::Mat {
+static auto getGreen(cv::InputArray image) -> cv::Mat {
   return getSingleColor(image, RGB::GREEN);
 }
 
-auto getBlue(cv::InputArray image) -> cv::Mat {
+static auto getBlue(cv::InputArray image) -> cv::Mat {
   return getSingleColor(image, RGB::BLUE);
 }
 
-auto getRedInverted(cv::InputArray image) -> cv::Mat {
-  cv::Mat redInverted;
-  cv::bitwise_not(getRed(image), redInverted);
-  return redInverted;
+static auto invert(cv::InputArray image) -> cv::Mat {
+  cv::Mat inverted;
+  cv::bitwise_not(image, inverted);
+  return inverted;
 }
 
-auto getBlueInverted(cv::InputArray image) -> cv::Mat {
-  cv::Mat blueInverted;
-  cv::bitwise_not(getBlue(image), blueInverted);
-  return blueInverted;
-}
+// auto invert1of3(cv::InputArray image, enum RGB color) -> cv::Mat {
+//  cv::Mat imageClone = image.clone();
+//  for (auto &pixel : imageClone) {
+//    pixel[color] = cv::bitwise_not(pixel);
+//  }
+//  return imageClone;
+//}
 
-auto imageWithMarkers(cv::InputArray image,
-                      std::vector<cv::KeyPoint> const &markers) -> cv::Mat {
+static auto imageWithMarkers(cv::InputArray image,
+                             std::vector<cv::KeyPoint> const &markers)
+    -> cv::Mat {
   cv::Mat result{};
   drawMarkers(image, markers, result);
   return result;
 }
 
-auto getBlobDetector() {
+static auto getBlobDetector() {
   cv::SimpleBlobDetector::Params params = []() {
     cv::SimpleBlobDetector::Params params_;
     params_.thresholdStep = 10.0;       // NOLINT
@@ -107,7 +105,8 @@ auto getBlobDetector() {
   return simpleBlobDetector;
 }
 
-auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector) {
+static auto detect(cv::InputArray image,
+                   cv::Ptr<cv::Feature2D> const &detector) {
   std::vector<cv::KeyPoint> keyPoints{};
   detector->detect(image, keyPoints);
   return keyPoints;
@@ -123,17 +122,27 @@ auto blobDetect(cv::InputArray image) {
   // Combine channels in a way that turns markers into dark regions
   constexpr double THIRD{0.33333};
   cv::Mat antiRed = getGreen(image) * THIRD + getBlue(image) * THIRD +
-                    getRedInverted(image) * THIRD;
-  cv::Mat antiBlue = getGreen(image) * THIRD + getBlueInverted(image) * THIRD +
+                    invert(getRed(image)) * THIRD;
+  cv::Mat antiBlue = getGreen(image) * THIRD + invert(getBlue(image)) * THIRD +
                      getRed(image) * THIRD;
+  cv::Mat antiGreen = invert(getGreen(image)) * THIRD + getBlue(image) * THIRD +
+                      getRed(image) * THIRD;
+
+  // The three detect lines take up ~90% of execution time
+  // auto const t0{cv::getTickCount()};
+  auto redMarkers{detect(antiRed, detector)};
+  auto greenMarkers{detect(antiGreen, detector)};
+  auto blueMarkers{detect(antiBlue, detector)};
+  // auto const t1{cv::getTickCount()};
+  // std::cout << "Time to detect: " << (t1 - t0) / cv::getTickFrequency()
+  //          << " seconds" << std::endl;
 
   std::vector<cv::KeyPoint> keyPoints{};
-
-  auto redMarkers{detect(antiRed, detector)};
-  auto blueMarkers{detect(antiBlue, detector)};
-  keyPoints.reserve(redMarkers.size() + blueMarkers.size());
-  keyPoints.insert(keyPoints.end(), redMarkers.begin(), redMarkers.end());
+  keyPoints.reserve(redMarkers.size() + blueMarkers.size() +
+                    greenMarkers.size());
   keyPoints.insert(keyPoints.end(), blueMarkers.begin(), blueMarkers.end());
+  keyPoints.insert(keyPoints.end(), greenMarkers.begin(), greenMarkers.end());
+  keyPoints.insert(keyPoints.end(), redMarkers.begin(), redMarkers.end());
 
   return keyPoints;
 }
@@ -149,6 +158,10 @@ auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
 }
 
 auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
-                      double markerDiameter) -> Position {
-  return {0, 0, markerDiameter * focalLength / keyPoint.size};
+                      cv::Point2f const &imageCenter, double markerDiameter)
+    -> Position {
+  auto const fromCenter{keyPoint.pt - imageCenter};
+  return {fromCenter.x * markerDiameter / keyPoint.size,
+          -fromCenter.y * markerDiameter / keyPoint.size,
+          focalLength * markerDiameter / keyPoint.size};
 }
