@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<!--
+     focal length depends on png width and height in openscad.
+     The found value was:
+     f = (3377.17 + 3374.53)/2 = 3375.9 px
+     3377.17 was found through creating images of a 2560 mm long block
+     from various distances between 3377 and 3378, carefully watching
+     at what distance we got exactly the whole width of the cube included in the image.
+     The second value, 3374.53, was found by moving the camera 1 mm (1 pixel width) to the right,
+     and then move the camera closer to the cube until the right edge of the image matched exactly
+     with the right edge of the cube.
+
+     We observe that this measured value is within 1 px of the value that
+     the calibration script found which was 3376.3.
+     3375.9 - 3376.3 = -0.4
+
+     This whole process will become far easier in the future, when we will be able to directly set
+     field of view in the image.
+     Then we can calculate f from fov like
+     f = (image_width/2)/sin(fov/2)
+
+
+
+     cx = image_width/2 = 1280
+     cy = image_height/2 = 671.5
+-->
+<calibration_time>"Tue Nov 10 18:10:29 2020"</calibration_time>
+<image_width>2560</image_width>
+<image_height>1343</image_height>
+<flags>0</flags>
+<camera_matrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    3.3759e+03 0. 1.280e+03 0.
+    3.3759e+03 6.715e+02 0. 0. 1.</data></camera_matrix>
+<distortion_coefficients type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    0 0
+    0 0
+    0</data></distortion_coefficients>
+<avg_reprojection_error>0</avg_reprojection_error>
+</opencv_storage>
