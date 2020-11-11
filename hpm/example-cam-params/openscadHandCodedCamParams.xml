@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <!--
-     focal length depends on png width and height in openscad.
-     The found value was:
-     f = (3377.17 + 3374.53)/2 = 3375.9 px
+     focal lengths (fx and fy) depend on png width and height in openscad.
+     The found fx value was:
+
+     fx = (3377.17 + 3374.53)/2 = 3375.9 px
+
      3377.17 was found through creating images of a 2560 mm long block
      from various distances between 3377 and 3378, carefully watching
      at what distance we got exactly the whole width of the cube included in the image.
@@ -11,16 +13,25 @@
      and then move the camera closer to the cube until the right edge of the image matched exactly
      with the right edge of the cube.
 
+     A simlar procedure was carried out to find fy.
+
+     fy = (3378.36 + 3373.33)/2 = 3375.8 px
+
+     We will assume the .1 px discrepancy between fx and fy comes from limitations in our measurment method.
+     Lets use
+
+     f = (fx + fy)/2
+
      We observe that this measured value is within 1 px of the value that
      the calibration script found which was 3376.3.
-     3375.9 - 3376.3 = -0.4
+     3375.85 - 3376.3 = -0.45
 
      This whole process will become far easier in the future, when we will be able to directly set
      field of view in the image.
      Then we can calculate f from fov like
      f = (image_width/2)/sin(fov/2)
 
-
+     Center of image sensor calculations are a bit easier
 
      cx = image_width/2 = 1280
      cy = image_height/2 = 671.5
@@ -34,8 +45,8 @@
   <cols>3</cols>
   <dt>d</dt>
   <data>
-    3.3759e+03 0. 1.280e+03 0.
-    3.3759e+03 6.715e+02 0. 0. 1.</data></camera_matrix>
+    3.37585e+03 0. 1.280e+03 0.
+    3.37585e+03 6.715e+02 0. 0. 1.</data></camera_matrix>
 <distortion_coefficients type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
