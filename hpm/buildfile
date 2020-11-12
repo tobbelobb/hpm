@@ -1,6 +1,8 @@
 include ../extern/cppcore/
+include ../extern/boostut/
 
 libs += ../extern/cppcore/lib{cppcore}
+libs += ../extern/boostut/lib{boostut}
 
 # ./ means "when building this dir, also build following target"
 # executable hpm depends on utility library hpm, main.cxx.

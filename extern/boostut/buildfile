@@ -1,0 +1,9 @@
+hxx{*}: extension = hpp
+
+lib{boostut}: {hxx ixx txx}{**}
+
+# Export options
+lib{boostut}:
+{
+  cxx.export.poptions = "-I$src_root/extern/boostut/"
+}
