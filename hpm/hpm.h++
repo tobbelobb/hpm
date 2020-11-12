@@ -12,16 +12,7 @@ std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
 }
 } // namespace
 
-struct Position {
-  double x{0};
-  double y{0};
-  double z{0};
-
-  friend std::ostream &operator<<(std::ostream &os, Position const &position) {
-    return os << "(" << position.x << ", " << position.y << ", " << position.z
-              << ')';
-  }
-};
+using Position = cv::Point3d;
 
 std::vector<cv::KeyPoint> detectMarkers(cv::InputArray const undistortedImage,
                                         bool showIntermediateImages);
