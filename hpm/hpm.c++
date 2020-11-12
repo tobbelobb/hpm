@@ -125,9 +125,8 @@ auto blobDetect(cv::InputArray image) {
                     invert(getRed(image)) * THIRD;
   cv::Mat antiBlue = getGreen(image) * THIRD + invert(getBlue(image)) * THIRD +
                      getRed(image) * THIRD;
-  // Green seems harder to find on OpenScad images...
-  cv::Mat antiGreen = invert(getGreen(image)) * 0.25 +
-                      getBlue(image) * 0.75 / 2 + getRed(image) * 0.75 / 2;
+  cv::Mat antiGreen = invert(getGreen(image)) * THIRD + getBlue(image) * THIRD +
+                      getRed(image) * THIRD;
 
   // The three detect lines take up ~90% of execution time
   // auto const t0{cv::getTickCount()};
