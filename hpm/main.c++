@@ -131,7 +131,7 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << detectedMarker << ' ';
     std::cout << "Camera: "
               << toCameraPosition(detectedMarker, meanFocalLength, imageCenter,
-                                  knownMarkerDiameter)
+                                  undistortedImage.size(), knownMarkerDiameter)
               << "mm\n";
   }
 

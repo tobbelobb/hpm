@@ -48,7 +48,7 @@ int main() {
         detectedMarkers |
         std::views::transform([&](cv::KeyPoint const &keyPoint) {
           return toCameraPosition(keyPoint, meanFocalLength, imageCenter,
-                                  knownMarkerDiameter);
+                                  image.size(), knownMarkerDiameter);
         });
     expect(positions[0].x > 0 and positions[1].x > 0)
         << "Blue markers on the right";
@@ -77,7 +77,7 @@ int main() {
         << "The three largest crossovers should have the same length";
 
     double constexpr circle_d{2 * 144.896};
-    auto constexpr evenBiggerEPS{4.0_d};
+    auto constexpr evenBiggerEPS{0.1_d};
     expect(std::abs(cv::norm(positions[0] - positions[2]) - circle_d) <
                evenBiggerEPS or
            std::abs(cv::norm(positions[0] - positions[3]) - circle_d) <
@@ -86,7 +86,7 @@ int main() {
                evenBiggerEPS or
            std::abs(cv::norm(positions[0] - positions[5]) - circle_d) <
                evenBiggerEPS)
-        << "Largest distance other markers should match CAD file";
+        << "Hexagon width should match CAD file";
     expect(std::abs(cv::norm(positions[1] - positions[2]) - circle_d) <
                evenBiggerEPS or
            std::abs(cv::norm(positions[1] - positions[3]) - circle_d) <
@@ -95,7 +95,7 @@ int main() {
                evenBiggerEPS or
            std::abs(cv::norm(positions[1] - positions[5]) - circle_d) <
                evenBiggerEPS)
-        << "Largest distance other markers should match CAD file";
+        << "Hexagon width should match CAD file";
     expect(std::abs(cv::norm(positions[2] - positions[0]) - circle_d) <
                evenBiggerEPS or
            std::abs(cv::norm(positions[2] - positions[1]) - circle_d) <
@@ -104,7 +104,7 @@ int main() {
                evenBiggerEPS or
            std::abs(cv::norm(positions[2] - positions[5]) - circle_d) <
                evenBiggerEPS)
-        << "Largest distance other markers should match CAD file";
+        << "Hexagon width should match CAD file";
     expect(std::abs(cv::norm(positions[3] - positions[0]) - circle_d) <
                evenBiggerEPS or
            std::abs(cv::norm(positions[3] - positions[1]) - circle_d) <
@@ -113,10 +113,21 @@ int main() {
                evenBiggerEPS or
            std::abs(cv::norm(positions[3] - positions[5]) - circle_d) <
                evenBiggerEPS)
-        << "Largest distance other markers should match CAD file";
+        << "Hexagon width should match CAD file";
 
     // Would really want to just test the absolute positions, but they actually
     // seem to be dead wrong.
+    //
+    // std::array<Position, 6> const correctWorldPositions{
+    //    {144.896, 0, 22},  {72.4478, 125.483, 22},   {-72.4478, 125.483, 22},
+    //    {-144.896, 0, 22}, {-72.4478, -125.483, 22}, {72.4478, -125.483, 22}};
+
+    // cv::Mat const cameraRotation {}
+    // Position const cameraPosition{0, -755.0 / sqrt(2), 755 / sqrt(2)};
+
+    // for (auto const &pos : positions) {
+    //  std::cout << pos << " error: " <<
+    //}
   };
 }
 

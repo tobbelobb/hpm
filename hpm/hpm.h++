@@ -22,4 +22,4 @@ void drawMarkers(cv::InputOutputArray image,
 
 Position toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
                           cv::Point2f const &imageCenter,
-                          double markerDiameter);
+                          cv::Size const &imageSize, double markerDiameter);
