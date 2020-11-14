@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibration_time>"Tue Nov 10 18:10:29 2020"</calibration_time>
+<image_width>10240</image_width>
+<image_height>5372</image_height>
+<flags>0</flags>
+<camera_matrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    13505.354718794 0. 5118.74177294002 0.
+    13505.354718794 2681.40814615063 0. 0. 1.</data></camera_matrix>
+<distortion_coefficients type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    1.3065501723347973e-03 -2.0758549742572043e-02
+    -1.1778247615975853e-05 2.3827656671996494e-05
+    8.0582022054240809e-02</data></distortion_coefficients>
+<avg_reprojection_error>2.1882252497702526e-01</avg_reprojection_error>
+</opencv_storage>
