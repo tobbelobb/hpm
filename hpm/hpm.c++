@@ -164,42 +164,54 @@ auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
                       double markerDiameter) -> Position {
   auto const fromCenter{keyPoint.pt - imageCenter};
 
-  auto const fov_width = 2 * atan((imageSize.width / 2) / focalLength);
-  auto const fov_height = 2 * atan((imageSize.height / 2) / focalLength);
-  // OK std::cout << "field of view: " << fov << std::endl;
+  double const fov_width =
+      2.0 * atan((static_cast<double>(imageSize.width) / 2.0) / focalLength);
+  // auto const fov_height = 2 * atan((imageSize.height / 2) / focalLength);
 
-  // "radius field of view", or "half the marker's field of view"
-  auto const gamma_width = fov_width * keyPoint.size / 2 / imageSize.width;
-  // std::cout << "gamma_width: " << gamma_width << std::endl;
-  auto const gamma_height = fov_height * keyPoint.size / 2 / imageSize.height;
-  // std::cout << "gamma_height: " << gamma_height << std::endl;
-  auto const gamma = std::midpoint(gamma_width, gamma_height);
-  // std::cout << "gamma: " << gamma << std::endl;
+  // This approximation works well close to x and y axis, but
+  // if keyPoint lies along y = x, then this approximation isn't good
+  double const facingDiscsProjectedSemiMajorAxis = keyPoint.size / 2.0;
+
+  auto const dirToOrigin = -fromCenter / cv::norm(fromCenter);
+
+  auto closestPoint =
+      fromCenter + facingDiscsProjectedSemiMajorAxis * dirToOrigin;
+  auto farthestPoint =
+      fromCenter - facingDiscsProjectedSemiMajorAxis * dirToOrigin;
+
+  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
+  double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
+
+  if (cv::norm(fromCenter) < facingDiscsProjectedSemiMajorAxis) {
+    // If we're close to the center, alpha and gamma shouldn't matter much
+    // anyways. But for theoretical purity and correctness, let's do this:
+    smallestAng = -smallestAng;
+  }
+
+  double const alpha = std::midpoint(smallestAng, largestAng);
+  double const gamma = (largestAng - smallestAng) / 2.0;
+
+  // The linear projection of a sphere becomes an ellipse
+  double const ellipsisFactor =
+      0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma);
+  // double const ellipsisFactor = 1.0;
 
   // Part of sphere will be occluded. We will see a smaller diameter,
   // but closer "facing disc" instead of the sphere's full diameter
-  auto const facingDiscDiameter_width = cos(gamma_width) * markerDiameter;
-  // std::cout << "facingDiscDiameter_width: " << facingDiscDiameter_width
-  //          << std::endl;
-  auto const facingDiscDiameter_height = cos(gamma_height) * markerDiameter;
-  // std::cout << "facingDiscDiameter_height: " << facingDiscDiameter_height
-  //          << std::endl;
-  auto const facingDiscDiameter =
-      std::midpoint(facingDiscDiameter_width, facingDiscDiameter_height);
-  // std::cout << "facingDiscDiameter: " << facingDiscDiameter << std::endl;
+  double const facingDiscDiameter =
+      (cos(alpha) * markerDiameter) * ellipsisFactor;
 
   // Distance to facing disc
-  auto const b0 = facingDiscDiameter * focalLength / keyPoint.size;
-  // auto const b0 = (facingDiscDiameter / 2) * tan(3.14159 / 2 - gamma);
-  // std::cout << "b0: " << b0 << std::endl;
+  double const b0 = facingDiscDiameter * focalLength / keyPoint.size;
 
   // Distance from facing disc center to marker's physical center
-  auto const b1 = (markerDiameter / 2) * sin(gamma);
-  // std::cout << "b1: " << b1 << std::endl;
+  double const b1 = (markerDiameter / 2) * sin(alpha);
 
-  Position const P = {fromCenter.x * facingDiscDiameter / keyPoint.size,
-                      fromCenter.y * facingDiscDiameter / keyPoint.size,
-                      focalLength * facingDiscDiameter / keyPoint.size};
+  double const xDist = fromCenter.x * facingDiscDiameter / keyPoint.size;
+  double const yDist = fromCenter.y * facingDiscDiameter / keyPoint.size;
+  double const totalDist = b0 + b1;
+
+  Position const P = {xDist, yDist, totalDist};
 
   Position const C = P * (1 + b1 / b0);
 
