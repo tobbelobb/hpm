@@ -15,119 +15,85 @@ auto sum(auto... args) { return (args + ...); }
 
 int main() {
   using namespace boost::ut;
+  // clang-format off
+  cv::Mat const openScadCamParams   = (cv::Mat_<double>(3, 3) <<     3375.85,        0.00,     1280.0,
+                                                                        0.00,     3375.85,      671.5,
+                                                                        0.00,        0.00,        1.0);
+  cv::Mat const openScadCamParams2x = (cv::Mat_<double>(3, 3) << 2 * 3375.85,        0.00, 2 * 1280.0,
+                                                                        0.00, 2 * 3375.85, 2 *  671.5,
+                                                                        0.00,        0.00,        1.0);
+  cv::Mat const openScadCamParams4x = (cv::Mat_<double>(3, 3) << 4 * 3375.85,        0.00, 4 * 1280.0,
+                                                                        0.00, 4 * 3375.85, 4 *  671.5,
+                                                                        0.00,        0.00,        1.0);
+  cv::Mat const openScadCamParams6x = (cv::Mat_<double>(3, 3) << 6 * 3375.85,        0.00, 6 * 1280.0,
+                                                                        0.00, 6 * 3375.85, 6 *  671.5,
+                                                                        0.00,        0.00,        1.0);
+  // clang-format on
+  double constexpr knownMarkerDiameter{32.0};
 
-  "generated benchmark nr1"_test = [] {
-    std::string const camParamsFileName{
-        hpm::getPath("example-cam-params/openscadHandCodedCamParams.xml")};
-    std::string const imageFileName{hpm::getPath(
-        "test-images/generated_benchmark_nr1_32_0_0_0_45_0_0_755.png")};
-    double constexpr knownMarkerDiameter{32.0};
-    cv::FileStorage const camParamsFile(camParamsFileName,
-                                        cv::FileStorage::READ);
-    expect((camParamsFile.isOpened()) >> fatal);
-
-    cv::Mat const cameraMatrix = [&camParamsFile]() {
-      cv::Mat cameraMatrix_;
-      camParamsFile["camera_matrix"] >> cameraMatrix_;
-      return cameraMatrix_;
-    }();
-    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
-    expect((not image.empty()) >> fatal);
-
-    std::vector<cv::KeyPoint> const detectedMarkers{
-        detectMarkers(image, false)};
-    expect((detectedMarkers.size() == 6_i) >> fatal); // Must find all markers
-
-    const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+  "mocked 123Mpx benchmark"_test = [&openScadCamParams6x] {
+    cv::Size const imageSize{.width = 15360, .height = 8058};
+    auto const cameraMatrix = openScadCamParams6x;
+    double const meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
                                                cameraMatrix.at<double>(1, 1))};
     cv::Point2f const imageCenter{
         static_cast<float>(cameraMatrix.at<double>(0, 2)),
         static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
+    std::vector<cv::KeyPoint> const detectedMarkers{
+        {.pt = {10615.1, 4028.5}, .size = 651.901},
+        {.pt = {9147.31, 1486.16}, .size = 652.191},
+        {.pt = {4743.87, 4028.5}, .size = 651.847},
+        {.pt = {6211.69, 1486.17}, .size = 652.185},
+        {.pt = {9147.33, 6570.83}, .size = 652.169},
+        {.pt = {6211.7, 6570.83}, .size = 652.223},
+        {.pt = {7679.5, 4028.5}, .size = 648.853}};
+    std::vector<Position> const knownPositions{
+        {144.896, 0, 1000},         // blue on x-axis
+        {72.4478, -125.483, 1000},  // blue back
+        {-144.896, 0, 1000},        // green on x-axis
+        {-72.4478, -125.483, 1000}, // green back
+        {72.4478, 125.483, 1000},   // red right
+        {-72.4478, 125.483, 1000},  // red left
+        {0, 0, 1000}};              // center
+    expect(knownPositions.size() == detectedMarkers.size());
+
     auto positions =
         detectedMarkers |
         std::views::transform([&](cv::KeyPoint const &keyPoint) {
           return toCameraPosition(keyPoint, meanFocalLength, imageCenter,
-                                  image.size(), knownMarkerDiameter);
+                                  imageSize, knownMarkerDiameter);
         });
-    expect(positions[0].x > 0 and positions[1].x > 0)
-        << "Blue markers on the right";
-    expect(positions[2].x < 0 and positions[3].x < 0)
-        << "Green markers on the left";
-    expect(std::signbit(positions[4].x * positions[5].x) == 1)
-        << "Red markers left/right";
+    expect(positions.size() == detectedMarkers.size());
 
-    for (auto const &pos : positions) {
-      expect(pos.z > 0);
+    // A little analysis of the kind of error we get
+    for (auto i{0}; i < knownPositions.size(); ++i) {
+      auto const err{positions[i] - knownPositions[i]};
+      Position const knownPositionXy{knownPositions[i].x, knownPositions[i].y,
+                                     0};
+
+      std::cout << std::fixed << std::setprecision(5) << positions[i] << err
+                << std::left << " norm: " << cv::norm(err);
+      Position const errXy{err.x, err.y, 0};
+      if (cv::norm(knownPositionXy) > 0.001 and cv::norm(errXy) > 0.001) {
+        Position const knownPositionXyDirection{knownPositionXy /
+                                                cv::norm(knownPositionXy)};
+        Position const errXyDirection{errXy / cv::norm(errXy)};
+        std::cout << " pointing center?: "
+                  << -knownPositionXyDirection.dot(errXyDirection)
+                  << " xy-err fraction: "
+                  << (abs(err.x) + abs(err.y)) /
+                         (abs(err.x) + abs(err.y) + abs(err.z));
+      }
+      std::cout << '\n';
     }
-    auto constexpr EPS{0.01_d};
-
-    expect(std::abs(positions[0].y - positions[2].y) < EPS or
-           std::abs(positions[0].y - positions[3].y) < EPS)
-        << "Each blue marker has similar y pos as one green marker";
-    expect(std::abs(positions[1].y - positions[2].y) < EPS or
-           std::abs(positions[1].y - positions[3].y) < EPS)
-        << "Each blue marker has similar y pos as one green marker";
-
-    auto constexpr biggerEPS{0.2_d};
-    expect(std::abs(cv::norm(positions[0] - positions[2]) -
-                    cv::norm(positions[1] - positions[5])) < biggerEPS and
-           std::abs(cv::norm(positions[0] - positions[2]) -
-                    cv::norm(positions[3] - positions[4])) < biggerEPS)
-        << "The three largest crossovers should have the same length";
-
-    double constexpr circle_d{2 * 144.896};
-    auto constexpr evenBiggerEPS{0.1_d};
-    expect(std::abs(cv::norm(positions[0] - positions[2]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[0] - positions[3]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[0] - positions[4]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[0] - positions[5]) - circle_d) <
-               evenBiggerEPS)
-        << "Hexagon width should match CAD file";
-    expect(std::abs(cv::norm(positions[1] - positions[2]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[1] - positions[3]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[1] - positions[4]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[1] - positions[5]) - circle_d) <
-               evenBiggerEPS)
-        << "Hexagon width should match CAD file";
-    expect(std::abs(cv::norm(positions[2] - positions[0]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[2] - positions[1]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[2] - positions[4]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[2] - positions[5]) - circle_d) <
-               evenBiggerEPS)
-        << "Hexagon width should match CAD file";
-    expect(std::abs(cv::norm(positions[3] - positions[0]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[3] - positions[1]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[3] - positions[4]) - circle_d) <
-               evenBiggerEPS or
-           std::abs(cv::norm(positions[3] - positions[5]) - circle_d) <
-               evenBiggerEPS)
-        << "Hexagon width should match CAD file";
-
-    // Would really want to just test the absolute positions, but they actually
-    // seem to be dead wrong.
-    //
-    // std::array<Position, 6> const correctWorldPositions{
-    //    {144.896, 0, 22},  {72.4478, 125.483, 22},   {-72.4478, 125.483, 22},
-    //    {-144.896, 0, 22}, {-72.4478, -125.483, 22}, {72.4478, -125.483, 22}};
-
-    // cv::Mat const cameraRotation {}
-    // Position const cameraPosition{0, -755.0 / sqrt(2), 755 / sqrt(2)};
-
-    // for (auto const &pos : positions) {
-    //  std::cout << pos << " error: " <<
-    //}
+    // Camera: [144.428, -0.0244592, 998.988]mm
+    // Camera: [72.1696, -125.07, 998.547]mm
+    // Camera: [-144.49, -0.0244132, 999.072]mm
+    // Camera: [-72.2194, -125.07, 998.557]mm
+    // Camera: [72.173, 125.024, 998.579]mm
+    // Camera: [-72.2149, 125.014, 998.498]mm
+    // Camera: [-0.0246621, -0.0246621, 999.066]mm
   };
 }
 
@@ -139,27 +105,5 @@ int main() {
 // red0:   [ -72.4478, -125.483, 22]
 // red1:   [  72.4478, -125.483, 22]
 //
-// Span an inner hexagon of a circle with radius:
+// Span a circle's inner hexagon
 // circle_r = 144.896
-//
-// Camera position
-// translate [0,0,0]
-// rotate [45,0,0]
-// distance 755
-// So... at
-// [            0,
-//   -755/sqrt(2),
-//    755/sqrt(2)]
-//
-// Found positions relative to the camera/camera plane:
-// [ 142.799,  15.4505, 728.94 ]
-// [ 71.4615,  103.155, 817.945]
-// [-143.007,  15.4491, 728.896]
-// [-71.7038,  103.155, 817.945]
-// [ 71.5839, -72.3039, 643.429]
-// [-71.7745, -72.3039, 643.429]
-//
-// We see that
-//
-// cam + rel =
-//

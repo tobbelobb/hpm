@@ -7,7 +7,7 @@
 
 namespace {
 std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
-  return os << "Point: " << keyPoint.pt << "px Diameter: " << keyPoint.size
+  return os << "Point: " << keyPoint.pt << "px Size: " << keyPoint.size
             << "px ";
 }
 } // namespace

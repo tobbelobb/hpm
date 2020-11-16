@@ -162,58 +162,102 @@ auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
 auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
                       cv::Point2f const &imageCenter, cv::Size const &imageSize,
                       double markerDiameter) -> Position {
-  auto const fromCenter{keyPoint.pt - imageCenter};
-
-  double const fov_width =
-      2.0 * atan((static_cast<double>(imageSize.width) / 2.0) / focalLength);
-  // auto const fov_height = 2 * atan((imageSize.height / 2) / focalLength);
-
+  // Step 1: We have an ellipsis within an xy-direced square with a given size
+  //         So we know its semi-major axis size and direction,
+  //         We also know the position of its center
+  cv::Point2f const fromCenter{keyPoint.pt - imageCenter};
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
-  double const facingDiscsProjectedSemiMajorAxis = keyPoint.size / 2.0;
+  double const semiMajorAxis = keyPoint.size / 2.0;
+  double const majorAxis = keyPoint.size;
+  // The semi major axis is oriented along this direction
+  cv::Point2f const dirToOrigin = -fromCenter / cv::norm(fromCenter);
 
-  auto const dirToOrigin = -fromCenter / cv::norm(fromCenter);
-
-  auto closestPoint =
-      fromCenter + facingDiscsProjectedSemiMajorAxis * dirToOrigin;
-  auto farthestPoint =
-      fromCenter - facingDiscsProjectedSemiMajorAxis * dirToOrigin;
-
+  // Step 2: We know that this ellipsis is a projection cast by a circular disc
+  //         which is the part of the spherical marker that is facing towards
+  //         the pinhole.
+  //         The facing disc's normal points directly towards the pinhole.
+  //
+  //         The ray from it that is closest to the image center,
+  //         and the ray that is farthest from the image center,
+  //         have entered the pinhole at two deducable angles
+  //         (angles measured from z-axis to ray)
+  cv::Point2f const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
+  cv::Point2f const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
   double smallestAng = atan(cv::norm(closestPoint) / focalLength);
   double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
-
-  if (cv::norm(fromCenter) < facingDiscsProjectedSemiMajorAxis) {
-    // If we're close to the center, alpha and gamma shouldn't matter much
-    // anyways. But for theoretical purity and correctness, let's do this:
+  if (cv::norm(fromCenter) < semiMajorAxis) {
     smallestAng = -smallestAng;
   }
-
+  // facing disc's midpoint ang
   double const alpha = std::midpoint(smallestAng, largestAng);
-  double const gamma = (largestAng - smallestAng) / 2.0;
+  // facing disc's angular radius seen from the pinhole
+  double const gamma = std::midpoint(largestAng, -smallestAng);
 
-  // The linear projection of a sphere becomes an ellipse
+  // Step 3: How would the facing disc project onto the sensor?
+  // The facing disc's diameter will be slightly smaller than
+  // the full sphere's diameter
+  double const facingDiscDiameter = markerDiameter * cos(gamma);
+
+  // It's center will also be slightly in front of the spheres center.
+
+  // The center point of the facing disc is not projected onto
+  // the center of the ellipsis we see on the sensor
+  // Rather, we need to go via alpha to find that
+  auto projectionOfFacingDiscCenterPoint{-dirToOrigin * focalLength *
+                                         tan(alpha)};
+
+  // The facing disc is not parallell to the image plane,
+  // therefore, its projection gets dragged out into an ellipse
   double const ellipsisFactor =
-      0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma);
-  // double const ellipsisFactor = 1.0;
+      cos(alpha / 2 + gamma * 2) *
+      (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
 
-  // Part of sphere will be occluded. We will see a smaller diameter,
-  // but closer "facing disc" instead of the sphere's full diameter
-  double const facingDiscDiameter =
-      (cos(alpha) * markerDiameter) * ellipsisFactor;
+  // The ellipsisFactor I found via scribbling law of sines on paper:
+  //
+  // double const ellipsisFactor =
+  //    cos(gamma) * (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
+  //
+  // Two ellipsis factors that work better than what I had found theoretically:
+  //
+  // double const ellipsisFactor =
+  //    cos(alpha / 2 + gamma * 2) *
+  //    (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
+  //
+  // double const ellipsisFactor =
+  //    1.0 +
+  //    (cos(gamma) * (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma)) -
+  //     1.0) /
+  //        2;
+  //
+  // I hope something is wrong with the theory of the ellipsisFactor so I can
+  // fix it in a more convincing way than this...
+
+  // If it was an ellipse, with the same angular center as the facing disc,
+  // but standing parallell with the image plane, that cast the projection
+  // onto the sensor, then it would need to have had the following width
+  // along its semi-major axis
+  double const imaginaryEllipsisWidth = facingDiscDiameter * ellipsisFactor;
 
   // Distance to facing disc
-  double const b0 = facingDiscDiameter * focalLength / keyPoint.size;
+  double const z0 = focalLength * (imaginaryEllipsisWidth / majorAxis);
+  double const x0 = projectionOfFacingDiscCenterPoint.x *
+                    (imaginaryEllipsisWidth / majorAxis);
+  double const y0 = projectionOfFacingDiscCenterPoint.y *
+                    (imaginaryEllipsisWidth / majorAxis);
 
-  // Distance from facing disc center to marker's physical center
-  double const b1 = (markerDiameter / 2) * sin(alpha);
+  Position const P = {x0, y0, z0};
 
-  double const xDist = fromCenter.x * facingDiscDiameter / keyPoint.size;
-  double const yDist = fromCenter.y * facingDiscDiameter / keyPoint.size;
-  double const totalDist = b0 + b1;
+  // Distance from pinhole to the facingDisc is:
+  double const b0 = cv::norm(P);
 
-  Position const P = {xDist, yDist, totalDist};
+  // Distance from facing discmarker's physical center is
+  double const b1 = (markerDiameter / 2) * sin(gamma);
+  // double const totalDist = b0 + b1;
 
+  // Correcting for the offset between sphere center and facing center
+  // finally gives us the real center point
+  // Position const C = {P.x * (1 + b1 / b0), P.y * (1 + b1 / b0), P.z};
   Position const C = P * (1 + b1 / b0);
-
   return C;
 }
