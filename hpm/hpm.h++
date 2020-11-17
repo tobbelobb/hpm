@@ -14,12 +14,18 @@ std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
 
 using Position = cv::Point3d;
 
-std::vector<cv::KeyPoint> detectMarkers(cv::InputArray const undistortedImage,
-                                        bool showIntermediateImages);
+struct detectionResult {
+  std::vector<cv::KeyPoint> keyPoints;
+  double ellipsenessInclusion;
+};
+
+detectionResult detectMarkers(cv::InputArray const undistortedImage,
+                              bool showIntermediateImages);
 
 void drawMarkers(cv::InputOutputArray image,
                  std::vector<cv::KeyPoint> const &markers);
 
 Position toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
                           cv::Point2f const &imageCenter,
-                          cv::Size const &imageSize, double markerDiameter);
+                          cv::Size const &imageSize, double markerDiameter,
+                          double detectorElipsenessInclusion);

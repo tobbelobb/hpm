@@ -150,26 +150,35 @@ auto blobDetect(cv::InputArray image) {
 }
 
 auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
-    -> std::vector<cv::KeyPoint> {
+    -> detectionResult {
+  double constexpr simpleBlobDetectorElipsenessInclusion{0.5};
+  if (undistortedImage.empty()) {
+    return {{}, simpleBlobDetectorElipsenessInclusion};
+  }
   std::vector<cv::KeyPoint> markers{blobDetect(undistortedImage)};
   if (showIntermediateImages) {
     showImage(imageWithMarkers(undistortedImage, markers),
               "simpleBlobDetector.png");
   }
-  return markers;
+  return {markers, simpleBlobDetectorElipsenessInclusion};
 }
 
-auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
+auto toCameraPosition(cv::KeyPoint const &keyPoint, double const focalLength,
                       cv::Point2f const &imageCenter, cv::Size const &imageSize,
-                      double markerDiameter) -> Position {
-  // Step 1: We have an ellipsis within an xy-direced square with a given size
+                      double const markerDiameter,
+                      double const detectorEllipsenessInclusion) -> Position {
+  assert(detectorEllipsenessInclusion <= 1.0 and
+         detectorEllipsenessInclusion >= 0.0);
+  // Step 1: We have an ellipsis within an xy-direced square with a given
+  // size
   //         So we know its semi-major axis size and direction,
   //         We also know the position of its center
   cv::Point2f const fromCenter{keyPoint.pt - imageCenter};
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
   double const semiMajorAxis = keyPoint.size / 2.0;
-  double const majorAxis = keyPoint.size;
+  double const majorAxis = 2 * semiMajorAxis;
+  ;
   // The semi major axis is oriented along this direction
   cv::Point2f const dirToOrigin = -fromCenter / cv::norm(fromCenter);
 
@@ -194,13 +203,6 @@ auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
   // facing disc's angular radius seen from the pinhole
   double const gamma = std::midpoint(largestAng, -smallestAng);
 
-  // Step 3: How would the facing disc project onto the sensor?
-  // The facing disc's diameter will be slightly smaller than
-  // the full sphere's diameter
-  double const facingDiscDiameter = markerDiameter * cos(gamma);
-
-  // It's center will also be slightly in front of the spheres center.
-
   // The center point of the facing disc is not projected onto
   // the center of the ellipsis we see on the sensor
   // Rather, we need to go via alpha to find that
@@ -210,37 +212,40 @@ auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
   // The facing disc is not parallell to the image plane,
   // therefore, its projection gets dragged out into an ellipse
   double const ellipsisFactor =
-      cos(alpha / 2 + gamma * 2) *
-      (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
+      cos(gamma) * (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
 
-  // The ellipsisFactor I found via scribbling law of sines on paper:
-  //
-  // double const ellipsisFactor =
-  //    cos(gamma) * (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
-  //
-  // Two ellipsis factors that work better than what I had found theoretically:
-  //
-  // double const ellipsisFactor =
-  //    cos(alpha / 2 + gamma * 2) *
-  //    (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma));
-  //
-  // double const ellipsisFactor =
-  //    1.0 +
-  //    (cos(gamma) * (0.5 / cos(alpha + gamma) + 0.5 / cos(alpha - gamma)) -
-  //     1.0) /
-  //        2;
-  //
-  // I hope something is wrong with the theory of the ellipsisFactor so I can
-  // fix it in a more convincing way than this...
+  // This alpha and gamma are correct for the ellipsis that the detector
+  // gave us. But did it account for the ellipsis being non-spherical?
+  // If detectorEllipsenessInclusion == 1 then yes, otherwise, we need
+  // to correct alpha and gamma before continuing
+
+  // Unless detectorEllipsenessInclusion was exactly 1, we've
+  // worked with the wrong majorAxis, which have led us to the wrong
+  // gamma. Let's create a corrected gamma
+  double const correctedEllipsisFactor =
+      (1 - detectorEllipsenessInclusion) +
+      detectorEllipsenessInclusion * ellipsisFactor;
+
+  // This corrected gamma is still not perfect, but it's about as good
+  // as we'll be able to make it with incomplete data
+  double const correctedGamma = gamma * correctedEllipsisFactor;
+
+  // Step 3: How would the facing disc project onto the sensor?
+  // The facing disc's diameter will be slightly smaller than
+  // the full sphere's diameter
+  double const facingDiscDiameter = markerDiameter * cos(correctedGamma);
+
+  // It's center will also be slightly in front of the sphere's center.
 
   // If it was an ellipse, with the same angular center as the facing disc,
   // but standing parallell with the image plane, that cast the projection
   // onto the sensor, then it would need to have had the following width
   // along its semi-major axis
-  double const imaginaryEllipsisWidth = facingDiscDiameter * ellipsisFactor;
+  double const imaginaryEllipsisWidth =
+      facingDiscDiameter * correctedEllipsisFactor;
 
   // Distance to facing disc
-  double const z0 = focalLength * (imaginaryEllipsisWidth / majorAxis);
+  double const z0 = focalLength * (imaginaryEllipsisWidth / (majorAxis));
   double const x0 = projectionOfFacingDiscCenterPoint.x *
                     (imaginaryEllipsisWidth / majorAxis);
   double const y0 = projectionOfFacingDiscCenterPoint.y *
@@ -252,12 +257,11 @@ auto toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
   double const b0 = cv::norm(P);
 
   // Distance from facing discmarker's physical center is
-  double const b1 = (markerDiameter / 2) * sin(gamma);
+  double const b1 = (markerDiameter / 2) * sin(correctedGamma);
   // double const totalDist = b0 + b1;
 
   // Correcting for the offset between sphere center and facing center
   // finally gives us the real center point
-  // Position const C = {P.x * (1 + b1 / b0), P.y * (1 + b1 / b0), P.z};
   Position const C = P * (1 + b1 / b0);
   return C;
 }

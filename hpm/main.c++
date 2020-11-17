@@ -115,10 +115,9 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  std::vector<cv::KeyPoint> const detectedMarkers{
-      detectMarkers(undistortedImage, showIntermediateImages)};
+  auto const detected{detectMarkers(undistortedImage, showIntermediateImages)};
 
-  if (detectedMarkers.empty()) {
+  if (detected.keyPoints.empty()) {
     std::cout << "No markers detected\n";
   }
 
@@ -127,16 +126,17 @@ auto main(int const argc, char **const argv) -> int {
   cv::Point2f const imageCenter{
       static_cast<float>(cameraMatrix.at<double>(0, 2)),
       static_cast<float>(cameraMatrix.at<double>(1, 2))};
-  for (auto const &detectedMarker : detectedMarkers) {
-    std::cout << detectedMarker << ' ';
+  for (auto const &detectedMarker : detected.keyPoints) {
+    std::cout << detectedMarker;
     std::cout << "Camera: "
               << toCameraPosition(detectedMarker, meanFocalLength, imageCenter,
-                                  undistortedImage.size(), knownMarkerDiameter)
+                                  undistortedImage.size(), knownMarkerDiameter,
+                                  detected.ellipsenessInclusion)
               << "mm\n";
   }
 
   if (showResultImage) {
-    drawMarkers(undistortedImage, detectedMarkers);
+    drawMarkers(undistortedImage, detected.keyPoints);
 
     constexpr auto SHOW_PIXELS_X{1500};
     constexpr auto SHOW_PIXELS_Y{1500};
