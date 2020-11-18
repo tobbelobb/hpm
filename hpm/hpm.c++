@@ -151,24 +151,22 @@ auto blobDetect(cv::InputArray image) {
 
 auto detectMarkers(cv::InputArray undistortedImage, bool showIntermediateImages)
     -> detectionResult {
-  double constexpr simpleBlobDetectorElipsenessInclusion{0.5};
   if (undistortedImage.empty()) {
-    return {{}, simpleBlobDetectorElipsenessInclusion};
+    return {{}};
   }
   std::vector<cv::KeyPoint> markers{blobDetect(undistortedImage)};
   if (showIntermediateImages) {
     showImage(imageWithMarkers(undistortedImage, markers),
               "simpleBlobDetector.png");
   }
-  return {markers, simpleBlobDetectorElipsenessInclusion};
+  return {markers};
 }
 
-auto toCameraPosition(cv::KeyPoint const &keyPoint, double const focalLength,
-                      cv::Point2f const &imageCenter, cv::Size const &imageSize,
-                      double const markerDiameter,
-                      double const detectorEllipsenessInclusion) -> Position {
-  assert(detectorEllipsenessInclusion <= 1.0 and
-         detectorEllipsenessInclusion >= 0.0);
+auto blobToCameraPosition(cv::KeyPoint const &keyPoint,
+                          double const focalLength,
+                          cv::Point2f const &imageCenter,
+                          cv::Size const &imageSize,
+                          double const markerDiameter) -> Position {
   // Step 1: We have an ellipsis within an xy-direced square with a given
   // size
   //         So we know its semi-major axis size and direction,
@@ -176,11 +174,24 @@ auto toCameraPosition(cv::KeyPoint const &keyPoint, double const focalLength,
   cv::Point2f const fromCenter{keyPoint.pt - imageCenter};
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
-  double const semiMajorAxis = keyPoint.size / 2.0;
-  double const majorAxis = 2 * semiMajorAxis;
-  ;
+
   // The semi major axis is oriented along this direction
   cv::Point2f const dirToOrigin = -fromCenter / cv::norm(fromCenter);
+
+  // These were empirically determined for the SimpleBlobDetector
+  // xyOffness:
+  // How much does the reported marker size grow or shrink
+  // when the marker does not lie along the y=0 or x=0 axes?
+  double const xyOffnessFactor =
+      1.00052 * cos(0.09 * abs(dirToOrigin.x * dirToOrigin.y));
+  // detectorEllipsenessInclusion:
+  // If a circle has been stretched out by a scaling factor x along one axis,
+  // and turned into an ellipse, how large part of that elongation does
+  // the SimpleBlobDetector include/enclose in its marker size?
+  double constexpr detectorEllipsenessInclusion{0.5};
+
+  double const semiMajorAxis = (keyPoint.size / 2.0) * xyOffnessFactor;
+  double const majorAxis = 2 * semiMajorAxis;
 
   // Step 2: We know that this ellipsis is a projection cast by a circular disc
   //         which is the part of the spherical marker that is facing towards

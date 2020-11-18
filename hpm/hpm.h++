@@ -16,7 +16,6 @@ using Position = cv::Point3d;
 
 struct detectionResult {
   std::vector<cv::KeyPoint> keyPoints;
-  double ellipsenessInclusion;
 };
 
 detectionResult detectMarkers(cv::InputArray const undistortedImage,
@@ -25,7 +24,6 @@ detectionResult detectMarkers(cv::InputArray const undistortedImage,
 void drawMarkers(cv::InputOutputArray image,
                  std::vector<cv::KeyPoint> const &markers);
 
-Position toCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
-                          cv::Point2f const &imageCenter,
-                          cv::Size const &imageSize, double markerDiameter,
-                          double detectorElipsenessInclusion);
+Position blobToCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
+                              cv::Point2f const &imageCenter,
+                              cv::Size const &imageSize, double markerDiameter);

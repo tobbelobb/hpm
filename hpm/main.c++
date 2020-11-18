@@ -140,9 +140,9 @@ auto main(int const argc, char **const argv) -> int {
   for (auto const &detectedMarker : detected.keyPoints) {
     std::cout << detectedMarker;
     std::cout << "Camera: "
-              << toCameraPosition(detectedMarker, meanFocalLength, imageCenter,
-                                  undistortedImage.size(), knownMarkerDiameter,
-                                  detected.ellipsenessInclusion)
+              << blobToCameraPosition(detectedMarker, meanFocalLength,
+                                      imageCenter, undistortedImage.size(),
+                                      knownMarkerDiameter)
               << "mm\n";
   }
 
