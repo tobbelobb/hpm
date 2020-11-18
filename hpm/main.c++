@@ -85,20 +85,31 @@ auto main(int const argc, char **const argv) -> int {
     return 0;
   }
 
-  cv::FileStorage const camParamsFile(camParamsFileName, cv::FileStorage::READ);
-  if (not camParamsFile.isOpened()) {
-    std::cerr << "Failed to load " << camParamsFileName << '\n';
-    return 1;
-  }
-  cv::Mat const cameraMatrix = [&camParamsFile]() {
-    cv::Mat cameraMatrix_;
-    camParamsFile["camera_matrix"] >> cameraMatrix_;
-    return cameraMatrix_;
-  }();
-  cv::Mat const distortionCoefficients = [&camParamsFile]() {
-    cv::Mat distortionCoefficients_;
-    camParamsFile["distortion_coefficients"] >> distortionCoefficients_;
-    return distortionCoefficients_;
+  auto const [cameraMatrix, distortionCoefficients] =
+      [&camParamsFileName]() -> std::tuple<cv::Mat, cv::Mat> {
+    try {
+      cv::FileStorage const camParamsFile(camParamsFileName,
+                                          cv::FileStorage::READ);
+      if (not camParamsFile.isOpened()) {
+        std::cerr << "Failed to load " << camParamsFileName << '\n';
+        exit(1);
+      }
+      return {[&camParamsFile]() {
+                cv::Mat cameraMatrix_;
+                camParamsFile["camera_matrix"] >> cameraMatrix_;
+                return cameraMatrix_;
+              }(),
+              [&camParamsFile]() {
+                cv::Mat distortionCoefficients_;
+                camParamsFile["distortion_coefficients"] >>
+                    distortionCoefficients_;
+                return distortionCoefficients_;
+              }()};
+    } catch (...) {
+      std::cerr << camParamsFileName
+                << " does not seem to contain camera parameters\n";
+      std::exit(1);
+    }
   }();
 
   if (knownMarkerDiameter <= 0.0) {

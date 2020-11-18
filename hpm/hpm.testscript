@@ -36,6 +36,12 @@ $* $src_base/example-cam-params/myExampleCamParams.xml 25.84 'noimage' 2>>EOE !=
 Could not read the image: noimage
 EOE
 
+: Swaps-image-file-and-camera-parameters
+: Checks behviour when calibration coeffs file doesn't exist
+$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png 25.84 $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
+%.+/test-images/ball_25_84_dist_1001_08_Z.png does not seem to contain camera parameters%
+EOE
+
 : Zero-marker-diameter
 : Checks behviour when calibration coeffs file doesn't exist
 $* $src_base/example-cam-params/myExampleCamParams.xml 0 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
