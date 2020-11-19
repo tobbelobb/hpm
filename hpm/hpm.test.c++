@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
       [&openScadCamParams4x, argc, &argv] {
         // This is what we fed into openScad when generating the image
         cv::Size const imageSize{.width = 10240, .height = 5372};
-        std::vector<Position> const knownPositions{
+        std::vector<CameraFramedPosition> const knownPositions{
             {144.896, 0, 733},         // blue on x-axis
             {72.4478, -125.483, 733},  // blue back
             {-144.896, 0, 733},        // green on x-axis
@@ -70,24 +70,22 @@ int main(int argc, char **argv) {
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
         // This is what SimpleBlobDetector gave us back
-        detectionResult const mockedResult{
-            .keyPoints = {{.pt = {7790.05, 2685.5}, .size = 595.324},
-                          {.pt = {6454.76, 372.741}, .size = 595.764},
-                          {.pt = {2448.95, 2685.5}, .size = 595.324},
-                          {.pt = {3784.24, 372.741}, .size = 595.764},
-                          {.pt = {6454.77, 4998.27}, .size = 595.762},
-                          {.pt = {3784.23, 4998.27}, .size = 595.762},
-                          {.pt = {5119.5, 2685.5}, .size = 572.927}}};
+        std::vector<cv::KeyPoint> const mockedResult{
+            {{.pt = {7790.05, 2685.5}, .size = 595.324},
+             {.pt = {6454.76, 372.741}, .size = 595.764},
+             {.pt = {2448.95, 2685.5}, .size = 595.324},
+             {.pt = {3784.24, 372.741}, .size = 595.764},
+             {.pt = {6454.77, 4998.27}, .size = 595.762},
+             {.pt = {3784.23, 4998.27}, .size = 595.762},
+             {.pt = {5119.5, 2685.5}, .size = 572.927}}};
 
         // This is what we want to test.
         // Given all of the above, are we able to get back the
         // values that we fed into OpenScad?
-        auto positions =
-            mockedResult.keyPoints |
-            std::views::transform([&](cv::KeyPoint const &keyPoint) {
-              return blobToCameraPosition(keyPoint, meanFocalLength,
-                                          imageCenter, imageSize,
-                                          knownMarkerDiameter);
+        auto const positions =
+            mockedResult | std::views::transform([&](cv::KeyPoint const &blob) {
+              return blobToPosition(blob, meanFocalLength, imageCenter,
+                                    imageSize, knownMarkerDiameter);
             });
 
         auto constexpr EPS{0.448_d};
@@ -173,16 +171,16 @@ int main(int argc, char **argv) {
           for (auto i{0}; i < positions.size(); ++i) {
             std::cout << idxNames[i] << ' ' << positions[i];
             auto const err{positions[i] - knownPositions[i]};
-            Position const knownPositionXy{knownPositions[i].x,
-                                           knownPositions[i].y, 0};
-            Position const errXy{err.x, err.y, 0};
+            cv::Point3d const knownPositionXy{knownPositions[i].x,
+                                              knownPositions[i].y, 0};
+            cv::Point3d const errXy{err.x, err.y, 0};
             if (cv::norm(knownPositionXy) > 0.001 and cv::norm(errXy) > 0.001) {
-              Position const knownPositionDirection{
+              cv::Point3d const knownPositionDirection{
                   knownPositions[i] / cv::norm(knownPositions[i])};
-              Position const knownPositionXyDirection{
+              cv::Point3d const knownPositionXyDirection{
                   knownPositionXy / cv::norm(knownPositionXy)};
-              Position const errDirection{err / cv::norm(err)};
-              Position const errXyDirection{errXy / cv::norm(errXy)};
+              cv::Point3d const errDirection{err / cv::norm(err)};
+              cv::Point3d const errXyDirection{errXy / cv::norm(errXy)};
 
               std::cout << " is xy-err towards origin: "
                         << -knownPositionXyDirection.dot(errXyDirection);
@@ -204,7 +202,7 @@ int main(int argc, char **argv) {
             static_cast<float>(cameraMatrix.at<double>(0, 2)),
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
-        std::vector<cv::KeyPoint> const detectedMarkers{
+        std::vector<cv::KeyPoint> const detectedBlobs{
             {.pt = {10615.1, 4028.5}, .size = 651.901},
             {.pt = {9147.31, 1486.16}, .size = 652.191},
             {.pt = {4743.87, 4028.5}, .size = 651.847},
@@ -212,7 +210,7 @@ int main(int argc, char **argv) {
             {.pt = {9147.33, 6570.83}, .size = 652.169},
             {.pt = {6211.7, 6570.83}, .size = 652.223},
             {.pt = {7679.5, 4028.5}, .size = 648.853}};
-        std::vector<Position> const knownPositions{
+        std::vector<CameraFramedPosition> const knownPositions{
             {144.896, 0, 1000},         // blue on x-axis
             {72.4478, -125.483, 1000},  // blue back
             {-144.896, 0, 1000},        // green on x-axis
@@ -238,16 +236,14 @@ int main(int argc, char **argv) {
         idxNames[BOTTOMLEFT] = "Bottomleft";
         idxNames[CENTER] = "Center";
 
-        expect(knownPositions.size() == detectedMarkers.size());
+        expect(knownPositions.size() == detectedBlobs.size());
 
-        auto positions =
-            detectedMarkers |
+        auto const positions =
+            detectedBlobs |
             std::views::transform([&](cv::KeyPoint const &keyPoint) {
-              return blobToCameraPosition(keyPoint, meanFocalLength,
-                                          imageCenter, imageSize,
-                                          knownMarkerDiameter);
+              return blobToPosition(keyPoint, meanFocalLength, imageCenter,
+                                    imageSize, knownMarkerDiameter);
             });
-        expect(positions.size() == detectedMarkers.size());
 
         auto constexpr EPS{1.0_d};
         for (auto i{0}; i < positions.size(); ++i) {
@@ -270,16 +266,16 @@ int main(int argc, char **argv) {
         if (argc > 1 and argv[1][0] == 's') {
           for (auto i{0}; i < knownPositions.size(); ++i) {
             auto const err{positions[i] - knownPositions[i]};
-            Position const knownPositionXy{knownPositions[i].x,
-                                           knownPositions[i].y, 0};
+            cv::Point3d const knownPositionXy{knownPositions[i].x,
+                                              knownPositions[i].y, 0};
 
             std::cout << std::fixed << std::setprecision(5) << positions[i]
                       << err << std::left << " norm: " << cv::norm(err);
-            Position const errXy{err.x, err.y, 0};
+            cv::Point3d const errXy{err.x, err.y, 0};
             if (cv::norm(knownPositionXy) > 0.001 and cv::norm(errXy) > 0.001) {
-              Position const knownPositionXyDirection{
+              cv::Point3d const knownPositionXyDirection{
                   knownPositionXy / cv::norm(knownPositionXy)};
-              Position const errXyDirection{errXy / cv::norm(errXy)};
+              cv::Point3d const errXyDirection{errXy / cv::norm(errXy)};
               std::cout << " pointing center?: "
                         << -knownPositionXyDirection.dot(errXyDirection)
                         << " xy-err fraction: "
@@ -300,7 +296,7 @@ int main(int argc, char **argv) {
             static_cast<float>(cameraMatrix.at<double>(0, 2)),
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
-        std::vector<cv::KeyPoint> const detectedMarkers{
+        std::vector<cv::KeyPoint> const detectedBlobs{
             {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
             {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
             {{10718, 7066.96}, 328.151},   {{9705.1, 7066.96}, 326.976},
@@ -355,7 +351,7 @@ int main(int argc, char **argv) {
             {{2615.39, 990.025}, 330.735}, {{1602.57, 990.037}, 332.911},
             {{589.769, 990.02}, 335.57}};
 
-        std::vector<Position> const knownPositions{
+        std::vector<CameraFramedPosition> const knownPositions{
             {700, 300, 2000},   {600, 300, 2000},   {500, 300, 2000},
             {400, 300, 2000},   {300, 300, 2000},   {200, 300, 2000},
             {100, 300, 2000},   {0, 300, 2000},     {-100, 300, 2000},
@@ -392,12 +388,11 @@ int main(int argc, char **argv) {
             {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
             {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
 
-        auto positions =
-            detectedMarkers |
-            std::views::transform([&](cv::KeyPoint const &keyPoint) {
-              return blobToCameraPosition(keyPoint, meanFocalLength,
-                                          imageCenter, imageSize,
-                                          knownMarkerDiameter);
+        auto const positions =
+            detectedBlobs |
+            std::views::transform([&](cv::KeyPoint const &blob) {
+              return blobToPosition(blob, meanFocalLength, imageCenter,
+                                    imageSize, knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};
@@ -429,7 +424,7 @@ int main(int argc, char **argv) {
             static_cast<float>(cameraMatrix.at<double>(0, 2)),
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
-        std::vector<cv::KeyPoint> const detectedMarkers{
+        std::vector<cv::KeyPoint> const detectedBlobs{
             {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
             {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
             {{10718, 7066.96}, 328.151},   {{9705.1, 7066.96}, 326.976},
@@ -483,7 +478,7 @@ int main(int argc, char **argv) {
             {{4641.02, 990.023}, 328.159}, {{3628.18, 990.037}, 329.301},
             {{2615.39, 990.025}, 330.735}, {{1602.57, 990.037}, 332.911},
             {{589.769, 990.02}, 335.57}};
-        std::vector<Position> const knownPositions{
+        std::vector<CameraFramedPosition> const knownPositions{
             {700, 300, 2000},   {600, 300, 2000},   {500, 300, 2000},
             {400, 300, 2000},   {300, 300, 2000},   {200, 300, 2000},
             {100, 300, 2000},   {0, 300, 2000},     {-100, 300, 2000},
@@ -520,12 +515,11 @@ int main(int argc, char **argv) {
             {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
             {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
 
-        auto positions =
-            detectedMarkers |
-            std::views::transform([&](cv::KeyPoint const &keyPoint) {
-              return blobToCameraPosition(keyPoint, meanFocalLength,
-                                          imageCenter, imageSize,
-                                          knownMarkerDiameter);
+        auto const positions =
+            detectedBlobs |
+            std::views::transform([&](cv::KeyPoint const &blob) {
+              return blobToPosition(blob, meanFocalLength, imageCenter,
+                                    imageSize, knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};
@@ -557,7 +551,7 @@ int main(int argc, char **argv) {
             static_cast<float>(cameraMatrix.at<double>(0, 2)),
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
-        std::vector<cv::KeyPoint> const detectedMarkers{
+        std::vector<cv::KeyPoint> const detectedBlobs{
             {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
             {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
             {{10718, 7066.96}, 328.151},   {{9705.1, 7066.96}, 326.976},
@@ -611,7 +605,7 @@ int main(int argc, char **argv) {
             {{4641.02, 990.023}, 328.159}, {{3628.18, 990.037}, 329.301},
             {{2615.39, 990.025}, 330.735}, {{1602.57, 990.037}, 332.911},
             {{589.769, 990.02}, 335.57}};
-        std::vector<Position> const knownPositions{
+        std::vector<CameraFramedPosition> const knownPositions{
             {700, 300, 2000},   {600, 300, 2000},   {500, 300, 2000},
             {400, 300, 2000},   {300, 300, 2000},   {200, 300, 2000},
             {100, 300, 2000},   {0, 300, 2000},     {-100, 300, 2000},
@@ -648,12 +642,11 @@ int main(int argc, char **argv) {
             {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
             {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
 
-        auto positions =
-            detectedMarkers |
-            std::views::transform([&](cv::KeyPoint const &keyPoint) {
-              return blobToCameraPosition(keyPoint, meanFocalLength,
-                                          imageCenter, imageSize,
-                                          knownMarkerDiameter);
+        auto const positions =
+            detectedBlobs |
+            std::views::transform([&](cv::KeyPoint const &blob) {
+              return blobToPosition(blob, meanFocalLength, imageCenter,
+                                    imageSize, knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};

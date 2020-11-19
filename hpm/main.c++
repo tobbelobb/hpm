@@ -77,7 +77,7 @@ auto main(int const argc, char **const argv) -> int {
     showIntermediateImages = (show == "intermediate") or (show == "all");
   } catch (std::runtime_error const &e) {
     std::cerr << e.what() << std::endl;
-    return -1;
+    return 1;
   }
 
   if (printHelp) {
@@ -91,7 +91,8 @@ auto main(int const argc, char **const argv) -> int {
       cv::FileStorage const camParamsFile(camParamsFileName,
                                           cv::FileStorage::READ);
       if (not camParamsFile.isOpened()) {
-        std::cerr << "Failed to load " << camParamsFileName << '\n';
+        std::cerr << "Failed to load cam params file: " << camParamsFileName
+                  << '\n';
         exit(1);
       }
       return {[&camParamsFile]() {
@@ -106,11 +107,16 @@ auto main(int const argc, char **const argv) -> int {
                 return distortionCoefficients_;
               }()};
     } catch (...) {
-      std::cerr << camParamsFileName
+      std::cerr << "The file:" << camParamsFileName
                 << " does not seem to contain camera parameters\n";
       std::exit(1);
     }
   }();
+  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+                                             cameraMatrix.at<double>(1, 1))};
+  cv::Point2f const imageCenter{
+      static_cast<float>(cameraMatrix.at<double>(0, 2)),
+      static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
   if (knownMarkerDiameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "
@@ -123,41 +129,21 @@ auto main(int const argc, char **const argv) -> int {
     std::cerr << "Could not read the image: " << imageFileName << '\n';
     return 1;
   }
+
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  auto const detected{detectMarkers(undistortedImage, showIntermediateImages)};
+  auto const cameraFramedPositions{
+      find(undistortedImage, knownMarkerDiameter, meanFocalLength, imageCenter,
+           showIntermediateImages, showResultImage)};
 
-  if (detected.keyPoints.empty()) {
+  if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected\n";
   }
 
-  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
-                                             cameraMatrix.at<double>(1, 1))};
-  cv::Point2f const imageCenter{
-      static_cast<float>(cameraMatrix.at<double>(0, 2)),
-      static_cast<float>(cameraMatrix.at<double>(1, 2))};
-  for (auto const &detectedMarker : detected.keyPoints) {
-    std::cout << detectedMarker;
-    std::cout << "Camera: "
-              << blobToCameraPosition(detectedMarker, meanFocalLength,
-                                      imageCenter, undistortedImage.size(),
-                                      knownMarkerDiameter)
-              << "mm\n";
-  }
-
-  if (showResultImage) {
-    drawMarkers(undistortedImage, detected.keyPoints);
-
-    constexpr auto SHOW_PIXELS_X{1500};
-    constexpr auto SHOW_PIXELS_Y{1500};
-    const std::string resultImageName{"result.png"};
-    cv::namedWindow(resultImageName, cv::WINDOW_NORMAL);
-    cv::resizeWindow(resultImageName, SHOW_PIXELS_X, SHOW_PIXELS_Y);
-    cv::imshow(resultImageName, undistortedImage);
-    if (cv::waitKey(0) == 's') {
-      cv::imwrite(resultImageName, undistortedImage);
-    }
+  for (auto const &cameraFramedPosition : cameraFramedPositions) {
+    // std::cout << Position{cameraFramePosition} << "mm\n";
+    std::cout << cameraFramedPosition << "mm\n";
   }
 
   return 0;

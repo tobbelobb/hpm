@@ -5,25 +5,20 @@
 
 #include <opencv2/core.hpp>
 
-namespace {
-std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
-  return os << "Point: " << keyPoint.pt << "px Size: " << keyPoint.size
-            << "px ";
-}
-} // namespace
+#include <hpm/blob-detector.h++>
+#include <hpm/types.h++>
 
-using Position = cv::Point3d;
-
-struct detectionResult {
-  std::vector<cv::KeyPoint> keyPoints;
-};
-
-detectionResult detectMarkers(cv::InputArray const undistortedImage,
-                              bool showIntermediateImages);
-
-void drawMarkers(cv::InputOutputArray image,
-                 std::vector<cv::KeyPoint> const &markers);
-
-Position blobToCameraPosition(cv::KeyPoint const &keyPoint, double focalLength,
-                              cv::Point2f const &imageCenter,
-                              cv::Size const &imageSize, double markerDiameter);
+// function : find
+//
+// description: Detects markers in the image and transforms the
+// pixel values into a position in the camera's coordinate system,
+// using the same length unit as knownMarkerDiameter uses.
+//
+// focalLength and imageCenter uses pixels as their length unit
+//
+// The marker detection, and the interpretation of marker detection results are
+// (sadly) intertwined, so find performs both detection and interpretation
+std::vector<CameraFramedPosition>
+find(cv::InputArray undistortedImage, double knownMarkerDiameter,
+     double focalLength, cv::Point2f const &imageCenter,
+     bool showIntermediateImages, bool showResultImage);

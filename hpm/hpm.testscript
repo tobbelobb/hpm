@@ -21,13 +21,13 @@ EOE
 : End-as-expected
 : Checks what gets printed when run was successful
 $* $src_base/example-cam-params/myExampleCamParams.xml 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
-/Point: \[\d\d?\d?\d?\.?\d?\d?, \d\d?\d?\d?\.?\d?\d?\]px Size: \d\d?\.?\d\d?\d?\d?px Camera: \[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]mm/
+/\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]mm/
 END
 
 : Non-existent-calibration-file
 : Checks behviour when calibration coeffs file doesn't exist
 $* 'nonfile' 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
-Failed to load nonfile
+Failed to load cam params file: nonfile
 EOE
 
 : Non-existent-image-file
