@@ -75,13 +75,10 @@ auto main(int argc, char **argv) -> int {
 
         // This is what SimpleBlobDetector gave us back
         std::vector<cv::KeyPoint> const mockedResult{
-            {.pt = {7790.05F, 2685.5F}, .size = 595.324F},
-            {.pt = {6454.76F, 372.741F}, .size = 595.764F},
-            {.pt = {2448.95F, 2685.5F}, .size = 595.324F},
-            {.pt = {3784.24F, 372.741F}, .size = 595.764F},
-            {.pt = {6454.77F, 4998.27F}, .size = 595.762F},
-            {.pt = {3784.23F, 4998.27F}, .size = 595.762F},
-            {.pt = {5119.5F, 2685.5F}, .size = 572.927F}};
+            {{7790.05F, 2685.5F}, 595.324F},  {{6454.76F, 372.741F}, 595.764F},
+            {{2448.95F, 2685.5F}, 595.324F},  {{3784.24F, 372.741F}, 595.764F},
+            {{6454.77F, 4998.27F}, 595.762F}, {{3784.23F, 4998.27F}, 595.762F},
+            {{5119.5F, 2685.5F}, 572.927F}};
 
         // This is what we want to test.
         // Given all of the above, are we able to get back the
