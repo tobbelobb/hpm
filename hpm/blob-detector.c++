@@ -1,8 +1,11 @@
 #include <numeric>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
+#pragma GCC diagnostic pop
 
 #include <hpm/blob-detector.h++>
 

@@ -2,9 +2,12 @@
 #include <numeric>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#pragma GCC diagnostic pop
 
 #include <boost/ut.hpp> //import boost.ut;
 

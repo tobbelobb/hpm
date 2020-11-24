@@ -1,9 +1,12 @@
 #include <cmath> // atan
 #include <string>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#pragma GCC diagnostic pop
 
 #include <hpm/hpm.h++>
 
