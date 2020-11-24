@@ -16,10 +16,3 @@ public:
       : cv::Point3d(rotation * cameraFramePosition + translation) {}
   WorldPosition(double x, double y, double z) : cv::Point3d(x, y, z){};
 };
-
-namespace {
-std::ostream &operator<<(std::ostream &os, cv::KeyPoint const &keyPoint) {
-  return os << "Point: " << keyPoint.pt << "px Size: " << keyPoint.size
-            << "px ";
-}
-} // namespace

@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
         auto constexpr EPS{0.448_d};
         // Check the absolute positions first.
-        for (auto i{0}; i < positions.size(); ++i) {
+        for (size_t i{0}; i < positions.size(); ++i) {
           expect(cv::norm(positions[i] - knownPositions[i]) < EPS);
           expect(abs(positions[i].x - knownPositions[i].x) < EPS)
               << idxNames[i] << "x too"
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
             << "The largest crossovers should have the correct length";
 
         if (argc > 1 and argv[1][0] == 'f') {
-          for (auto i{0}; i < positions.size(); ++i) {
+          for (size_t i{0}; i < positions.size(); ++i) {
             std::cout << idxNames[i] << ' ' << positions[i];
             auto const err{positions[i] - knownPositions[i]};
             cv::Point3d const knownPositionXy{knownPositions[i].x,
@@ -246,7 +246,7 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{1.0_d};
-        for (auto i{0}; i < positions.size(); ++i) {
+        for (size_t i{0}; i < positions.size(); ++i) {
           expect(cv::norm(positions[i] - knownPositions[i]) < EPS);
           expect(abs(positions[i].x - knownPositions[i].x) < EPS)
               << idxNames[i] << "x too"
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
         // A little analysis of the kind of error we get
         if (argc > 1 and argv[1][0] == 's') {
-          for (auto i{0}; i < knownPositions.size(); ++i) {
+          for (size_t i{0}; i < knownPositions.size(); ++i) {
             auto const err{positions[i] - knownPositions[i]};
             cv::Point3d const knownPositionXy{knownPositions[i].x,
                                               knownPositions[i].y, 0};
@@ -396,7 +396,7 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (auto i{0}; i < positions.size(); ++i) {
+        for (size_t i{0}; i < positions.size(); ++i) {
           expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
               << positions[i];
           expect(abs(positions[i].x - knownPositions[i].x) < EPS)
@@ -523,7 +523,7 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (auto i{0}; i < positions.size(); ++i) {
+        for (size_t i{0}; i < positions.size(); ++i) {
           expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
               << positions[i];
           expect(abs(positions[i].x - knownPositions[i].x) < EPS)
@@ -650,7 +650,7 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (auto i{0}; i < positions.size(); ++i) {
+        for (size_t i{0}; i < positions.size(); ++i) {
           expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
               << positions[i];
           expect(abs(positions[i].x - knownPositions[i].x) < EPS)
