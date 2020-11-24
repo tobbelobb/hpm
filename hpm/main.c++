@@ -6,6 +6,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include <opencv2/calib3d.hpp> // undistort
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>

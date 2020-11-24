@@ -3,13 +3,14 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #pragma GCC diagnostic pop
 
 #include <hpm/blob-detector.h++>
 
-static auto getSingleColor(cv::InputArray image, size_t color) -> cv::Mat {
+static auto getSingleColor(cv::InputArray image, int color) -> cv::Mat {
   cv::Mat singleColorImage{};
   cv::extractChannel(image, singleColorImage, color);
   return singleColorImage;
@@ -47,14 +48,14 @@ static auto getBlobDetector() {
     params_.minArea = 250.0;            // NOLINT
     params_.maxArea = 500000.0;         // NOLINT
     params_.filterByCircularity = true; // NOLINT
-    params_.minCircularity = 0.8;       // NOLINT
-    params_.maxCircularity = 3.4e38;    // NOLINT
+    params_.minCircularity = 0.8F;      // NOLINT
+    params_.maxCircularity = 3.4e38F;   // NOLINT
     params_.filterByInertia = true;     // NOLINT
-    params_.minInertiaRatio = 0.1;      // NOLINT
-    params_.maxInertiaRatio = 3.4e38;   // NOLINT
+    params_.minInertiaRatio = 0.1F;     // NOLINT
+    params_.maxInertiaRatio = 3.4e38F;  // NOLINT
     params_.filterByConvexity = true;   // NOLINT
-    params_.minConvexity = 0.95;        // NOLINT
-    params_.maxConvexity = 3.4e38;      // NOLINT
+    params_.minConvexity = 0.95F;       // NOLINT
+    params_.maxConvexity = 3.4e38F;     // NOLINT
     return params_;
   }();
   cv::Ptr<cv::Feature2D> simpleBlobDetector =
