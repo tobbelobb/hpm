@@ -59,8 +59,8 @@ auto find(cv::InputArray undistortedImage, double const knownMarkerDiameter,
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(blobs.size());
   for (auto const &blob : blobs) {
-    positions.emplace_back(blobToPosition(blob, focalLength, imageCenter,
-                                          knownMarkerDiameter));
+    positions.emplace_back(
+        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
   }
 
   return positions;

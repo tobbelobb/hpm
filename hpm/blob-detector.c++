@@ -5,6 +5,7 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #pragma GCC diagnostic pop
@@ -114,12 +115,13 @@ auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
   // size
   //         So we know its semi-major axis size and direction,
   //         We also know the position of its center
-  cv::Point2f const fromCenter{blob.pt - imageCenter};
+  cv::Point2d const fromCenter =
+      static_cast<cv::Point2d>(blob.pt - imageCenter);
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
 
   // The semi major axis is oriented along this direction
-  cv::Point2f const dirToOrigin = -fromCenter / cv::norm(fromCenter);
+  cv::Point2d const dirToOrigin = -fromCenter / cv::norm(fromCenter);
 
   // These were empirically determined for the SimpleBlobDetector
   // xyOffness:
@@ -133,7 +135,8 @@ auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
   // the SimpleBlobDetector include/enclose in its marker size?
   double constexpr detectorEllipsenessInclusion{0.5};
 
-  double const semiMajorAxis = (blob.size / 2.0) * xyOffnessFactor;
+  double const semiMajorAxis =
+      (static_cast<double>(blob.size) / 2.0) * xyOffnessFactor;
   double const majorAxis = 2 * semiMajorAxis;
 
   // Step 2: We know that this ellipsis is a projection cast by a circular
