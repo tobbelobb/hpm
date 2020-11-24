@@ -5,6 +5,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -93,20 +94,23 @@ int main(int argc, char **argv) {
 
         auto constexpr EPS{0.448_d};
         // Check the absolute positions first.
-        for (size_t i{0}; i < positions.size(); ++i) {
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS);
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << idxNames[i] << "x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << idxNames[i] << "y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << idxNames[i] << "z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+        for (auto i{0}; i < std::ssize(positions); ++i) {
+          auto const iu{static_cast<size_t>(i)};
+          assert(iu < knownPositions.size() and iu < idxNames.size());
+
+          expect(cv::norm(positions[i] - knownPositions[iu]) < EPS);
+          expect(abs(positions[i].x - knownPositions[iu].x) < EPS)
+              << idxNames[iu] << "x too"
+              << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].y - knownPositions[iu].y) < EPS)
+              << idxNames[iu] << "y too"
+              << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].z - knownPositions[iu].z) < EPS)
+              << idxNames[iu] << "z too"
+              << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
+                                                                : "small");
         }
 
         // If the top check fails, then we want to know in what way it failed.
@@ -171,15 +175,18 @@ int main(int argc, char **argv) {
             << "The largest crossovers should have the correct length";
 
         if (argc > 1 and argv[1][0] == 'f') {
-          for (size_t i{0}; i < positions.size(); ++i) {
-            std::cout << idxNames[i] << ' ' << positions[i];
-            auto const err{positions[i] - knownPositions[i]};
-            cv::Point3d const knownPositionXy{knownPositions[i].x,
-                                              knownPositions[i].y, 0};
+          for (auto i{0}; i < std::ssize(positions); ++i) {
+            auto const iu{static_cast<size_t>(i)};
+            assert(iu < knownPositions.size());
+
+            std::cout << idxNames[iu] << ' ' << positions[i];
+            auto const err{positions[i] - knownPositions[iu]};
+            cv::Point3d const knownPositionXy{knownPositions[iu].x,
+                                              knownPositions[iu].y, 0};
             cv::Point3d const errXy{err.x, err.y, 0};
             if (cv::norm(knownPositionXy) > 0.001 and cv::norm(errXy) > 0.001) {
               cv::Point3d const knownPositionDirection{
-                  knownPositions[i] / cv::norm(knownPositions[i])};
+                  knownPositions[iu] / cv::norm(knownPositions[iu])};
               cv::Point3d const knownPositionXyDirection{
                   knownPositionXy / cv::norm(knownPositionXy)};
               cv::Point3d const errDirection{err / cv::norm(err)};
@@ -248,28 +255,34 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{1.0_d};
-        for (size_t i{0}; i < positions.size(); ++i) {
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS);
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << idxNames[i] << "x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << idxNames[i] << "y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << idxNames[i] << "z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+        for (auto i{0}; i < std::ssize(positions); ++i) {
+          auto const iu{static_cast<size_t>(i)};
+          assert(iu < knownPositions.size() and iu < idxNames.size());
+
+          expect(cv::norm(positions[i] - knownPositions[iu]) < EPS);
+          expect(abs(positions[i].x - knownPositions[iu].x) < EPS)
+              << idxNames[iu] << "x too"
+              << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].y - knownPositions[iu].y) < EPS)
+              << idxNames[iu] << "y too"
+              << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].z - knownPositions[iu].z) < EPS)
+              << idxNames[iu] << "z too"
+              << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
+                                                                : "small");
         }
 
         // A little analysis of the kind of error we get
         if (argc > 1 and argv[1][0] == 's') {
-          for (size_t i{0}; i < knownPositions.size(); ++i) {
-            auto const err{positions[i] - knownPositions[i]};
-            cv::Point3d const knownPositionXy{knownPositions[i].x,
-                                              knownPositions[i].y, 0};
+          for (auto i{0}; i < std::ssize(positions); ++i) {
+            auto const iu{static_cast<size_t>(i)};
+            assert(iu < knownPositions.size());
+
+            auto const err{positions[i] - knownPositions[iu]};
+            cv::Point3d const knownPositionXy{knownPositions[iu].x,
+                                              knownPositions[iu].y, 0};
 
             std::cout << std::fixed << std::setprecision(5) << positions[i]
                       << err << std::left << " norm: " << cv::norm(err);
@@ -397,21 +410,24 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (size_t i{0}; i < positions.size(); ++i) {
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
+        for (auto i{0}; i < std::ssize(positions); ++i) {
+          auto const iu{static_cast<size_t>(i)};
+          assert(iu < knownPositions.size());
+
+          expect(cv::norm(positions[i] - knownPositions[iu]) < EPS)
               << positions[i];
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << positions[i] << knownPositions[i] << " x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << positions[i] << knownPositions[i] << " y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << positions[i] << knownPositions[i] << " z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+          expect(abs(positions[i].x - knownPositions[iu].x) < EPS)
+              << positions[i] << knownPositions[iu] << " x too"
+              << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].y - knownPositions[iu].y) < EPS)
+              << positions[i] << knownPositions[iu] << " y too"
+              << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].z - knownPositions[iu].z) < EPS)
+              << positions[i] << knownPositions[iu] << " z too"
+              << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
+                                                                : "small");
         }
       };
 
@@ -523,21 +539,24 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (size_t i{0}; i < positions.size(); ++i) {
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
+        for (auto i{0}; i < std::ssize(positions); ++i) {
+          auto const iu{static_cast<size_t>(i)};
+          assert(iu < knownPositions.size());
+
+          expect(cv::norm(positions[i] - knownPositions[iu]) < EPS)
               << positions[i];
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << positions[i] << knownPositions[i] << " x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << positions[i] << knownPositions[i] << " y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << positions[i] << knownPositions[i] << " z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+          expect(abs(positions[i].x - knownPositions[iu].x) < EPS)
+              << positions[i] << knownPositions[iu] << " x too"
+              << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].y - knownPositions[iu].y) < EPS)
+              << positions[i] << knownPositions[iu] << " y too"
+              << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].z - knownPositions[iu].z) < EPS)
+              << positions[i] << knownPositions[iu] << " z too"
+              << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
+                                                                : "small");
         }
       };
 
@@ -649,21 +668,24 @@ int main(int argc, char **argv) {
             });
 
         auto constexpr EPS{3.0_d};
-        for (size_t i{0}; i < positions.size(); ++i) {
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS)
+        for (auto i{0}; i < std::ssize(positions); ++i) {
+          auto const iu{static_cast<size_t>(i)};
+          assert(iu < knownPositions.size());
+
+          expect(cv::norm(positions[i] - knownPositions[iu]) < EPS)
               << positions[i];
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << positions[i] << knownPositions[i] << " x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << positions[i] << knownPositions[i] << " y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << positions[i] << knownPositions[i] << " z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+          expect(abs(positions[i].x - knownPositions[iu].x) < EPS)
+              << positions[i] << knownPositions[iu] << " x too"
+              << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].y - knownPositions[iu].y) < EPS)
+              << positions[i] << knownPositions[iu] << " y too"
+              << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
+                                                                : "small");
+          expect(abs(positions[i].z - knownPositions[iu].z) < EPS)
+              << positions[i] << knownPositions[iu] << " z too"
+              << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
+                                                                : "small");
         }
       };
 }
