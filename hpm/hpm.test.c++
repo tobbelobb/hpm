@@ -30,7 +30,6 @@ int main(int argc, char **argv) {
   "interpretation of simpleBlobDetector's results on the OpenScad generated image nr1"_test =
       [&openScadCamParams4x, argc, &argv] {
         // This is what we fed into openScad when generating the image
-        cv::Size const imageSize{.width = 10240, .height = 5372};
         std::vector<CameraFramedPosition> const knownPositions{
             {144.896, 0, 733},         // blue on x-axis
             {72.4478, -125.483, 733},  // blue back
@@ -85,7 +84,7 @@ int main(int argc, char **argv) {
         auto const positions =
             mockedResult | std::views::transform([&](cv::KeyPoint const &blob) {
               return blobToPosition(blob, meanFocalLength, imageCenter,
-                                    imageSize, knownMarkerDiameter);
+                                    knownMarkerDiameter);
             });
 
         auto constexpr EPS{0.448_d};
@@ -194,7 +193,6 @@ int main(int argc, char **argv) {
 
   "interpretation simpleBlobDetector's results on the OpenScad generated 123Mpx benchmark image"_test =
       [&openScadCamParams6x, argc, argv] {
-        cv::Size const imageSize{.width = 15360, .height = 8058};
         auto const cameraMatrix = openScadCamParams6x;
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
@@ -242,7 +240,7 @@ int main(int argc, char **argv) {
             detectedBlobs |
             std::views::transform([&](cv::KeyPoint const &keyPoint) {
               return blobToPosition(keyPoint, meanFocalLength, imageCenter,
-                                    imageSize, knownMarkerDiameter);
+                                    knownMarkerDiameter);
             });
 
         auto constexpr EPS{1.0_d};
@@ -288,7 +286,6 @@ int main(int argc, char **argv) {
       };
   "interpretation simpleBlobDetector's results on grid-red-2000.png"_test =
       [&openScadCamParams6x, argc, argv] {
-        cv::Size const imageSize{.width = 15360, .height = 8058};
         auto const cameraMatrix = openScadCamParams6x;
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
@@ -392,7 +389,7 @@ int main(int argc, char **argv) {
             detectedBlobs |
             std::views::transform([&](cv::KeyPoint const &blob) {
               return blobToPosition(blob, meanFocalLength, imageCenter,
-                                    imageSize, knownMarkerDiameter);
+                                    knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};
@@ -416,7 +413,6 @@ int main(int argc, char **argv) {
 
   "interpretation simpleBlobDetector's results on grid-green-2000.png"_test =
       [&openScadCamParams6x, argc, argv] {
-        cv::Size const imageSize{.width = 15360, .height = 8058};
         auto const cameraMatrix = openScadCamParams6x;
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
@@ -519,7 +515,7 @@ int main(int argc, char **argv) {
             detectedBlobs |
             std::views::transform([&](cv::KeyPoint const &blob) {
               return blobToPosition(blob, meanFocalLength, imageCenter,
-                                    imageSize, knownMarkerDiameter);
+                                    knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};
@@ -543,7 +539,6 @@ int main(int argc, char **argv) {
 
   "interpretation simpleBlobDetector's results on grid-blue-2000.png"_test =
       [&openScadCamParams6x, argc, argv] {
-        cv::Size const imageSize{.width = 15360, .height = 8058};
         auto const cameraMatrix = openScadCamParams6x;
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
@@ -646,7 +641,7 @@ int main(int argc, char **argv) {
             detectedBlobs |
             std::views::transform([&](cv::KeyPoint const &blob) {
               return blobToPosition(blob, meanFocalLength, imageCenter,
-                                    imageSize, knownMarkerDiameter);
+                                    knownMarkerDiameter);
             });
 
         auto constexpr EPS{3.0_d};

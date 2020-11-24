@@ -55,7 +55,6 @@ auto find(cv::InputArray undistortedImage, double const knownMarkerDiameter,
   positions.reserve(blobs.size());
   for (auto const &blob : blobs) {
     positions.emplace_back(blobToPosition(blob, focalLength, imageCenter,
-                                          undistortedImage.size(),
                                           knownMarkerDiameter));
   }
 

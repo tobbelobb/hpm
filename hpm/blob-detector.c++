@@ -103,8 +103,8 @@ auto blobDetect(cv::InputArray image) -> std::vector<cv::KeyPoint> {
 }
 
 auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
-                    cv::Point2f const &imageCenter, cv::Size const &imageSize,
-                    double const markerDiameter) -> CameraFramedPosition {
+                    cv::Point2f const &imageCenter, double const markerDiameter)
+    -> CameraFramedPosition {
   // Step 1: We have an ellipsis within an xy-direced square with a given
   // size
   //         So we know its semi-major axis size and direction,
