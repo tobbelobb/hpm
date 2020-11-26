@@ -128,7 +128,14 @@ auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
   // How much does the reported marker size grow or shrink
   // when the marker does not lie along the y=0 or x=0 axes?
   double const xyOffnessFactor =
-      1.00052 * cos(0.09 * abs(dirToOrigin.x * dirToOrigin.y));
+      cos(0.08 * abs(dirToOrigin.x * dirToOrigin.y) *
+          cos(cv::norm(fromCenter) / cv::norm(imageCenter)));
+  // double const xyOffnessFactor =
+  //    cos(0.06825 * abs(dirToOrigin.x * dirToOrigin.y));
+  // double const xyOffnessFactor =
+  //    cos(0.025 * cv::norm(fromCenter) / cv::norm(imageCenter));
+  // double const xyOffnessFactor = 1.0;
+  //
   // detectorEllipsenessInclusion:
   // If a circle has been stretched out by a scaling factor x along one axis,
   // and turned into an ellipse, how large part of that elongation does

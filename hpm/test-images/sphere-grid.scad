@@ -13,13 +13,13 @@ $fn=21;
 squareWidth = 100;
 gridWidthx = 7;
 gridWidthy = 4;
-$vpt=[0,0,0];
-$vpr=[0,0,0];
-$vpd=2000;
+//$vpt=[0,0,0];
+//$vpr=[0,0,0];
+//$vpd=2000;
 
 for (nx = [-gridWidthx:gridWidthx])
   for (ny = [-gridWidthy:gridWidthy])
     translate([nx*squareWidth, ny*squareWidth, 0])
-      color([0,0,1])
+      color([1,0,0])
         geodesic_sphere(d=32);
 

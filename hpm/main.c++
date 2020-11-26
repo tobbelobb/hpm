@@ -146,10 +146,13 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers detected\n";
   }
 
+  std::string delimeter{""};
   for (auto const &cameraFramedPosition : cameraFramedPositions) {
     // std::cout << Position{cameraFramePosition} << "mm\n";
-    std::cout << cameraFramedPosition << "mm\n";
+    std::cout << delimeter << cameraFramedPosition;
+    delimeter = ",\n";
   }
+  std::cout << '\n';
 
   return 0;
 }
