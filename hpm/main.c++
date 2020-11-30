@@ -16,6 +16,7 @@
 
 #include <hpm/command-line.h++>
 #include <hpm/hpm.h++>
+#include <hpm/solve-pnp.h++>
 
 static inline auto toDouble(std::string const &s) -> double {
   std::size_t charCount = 0;
@@ -138,9 +139,17 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  auto const cameraFramedPositions{
-      findMarkers(undistortedImage, knownMarkerDiameter, meanFocalLength,
-                  imageCenter, showIntermediateImages, showResultImage)};
+  auto const effectorPose{solvePnp(cameraMatrix, findMarks(undistortedImage))};
+
+  if (effectorPose.has_value()) {
+    std::cout << effectorPose.value() << '\n';
+  } else {
+    std::cout << "Found no effector pose\n";
+  }
+
+  auto const cameraFramedPositions{findIndividualMarkerPositions(
+      undistortedImage, knownMarkerDiameter, meanFocalLength, imageCenter,
+      showIntermediateImages, showResultImage)};
 
   if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected\n";

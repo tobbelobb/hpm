@@ -1,4 +1,5 @@
 #include <cmath> // atan
+#include <ranges>
 #include <string>
 
 #pragma GCC diagnostic push
@@ -41,10 +42,13 @@ static void showImage(cv::InputArray image, std::string const &name) {
   }
 }
 
-auto findMarkers(cv::InputArray undistortedImage,
-                 double const knownMarkerDiameter, double const focalLength,
-                 cv::Point2f const &imageCenter, bool showIntermediateImages,
-                 bool showResultImage) -> std::vector<CameraFramedPosition> {
+auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
+                                   double const knownMarkerDiameter,
+                                   double const focalLength,
+                                   cv::Point2f const &imageCenter,
+                                   bool showIntermediateImages,
+                                   bool showResultImage)
+    -> std::vector<CameraFramedPosition> {
   if (undistortedImage.empty()) {
     return {};
   }
@@ -64,4 +68,16 @@ auto findMarkers(cv::InputArray undistortedImage,
   }
 
   return positions;
+}
+
+auto findMarks(cv::InputArray undistortedImage) -> std::vector<PixelPosition> {
+  if (undistortedImage.empty()) {
+    return {};
+  }
+  auto const blobs{blobDetect(undistortedImage)};
+  std::vector<PixelPosition> pixelPositions{};
+  std::ranges::transform(
+      blobs, std::back_inserter(pixelPositions),
+      [](auto const &blob) -> PixelPosition { return blob.pt; });
+  return pixelPositions;
 }
