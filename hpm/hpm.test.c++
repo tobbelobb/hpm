@@ -74,8 +74,8 @@ auto main(int argc, char **argv) -> int {
             static_cast<float>(cameraMatrix.at<double>(1, 2))};
 
         std::vector<CameraFramedPosition> const positions{
-            find(image, knownMarkerDiameter, meanFocalLength, imageCenter,
-                 false, false)};
+            findMarkers(image, knownMarkerDiameter, meanFocalLength,
+                        imageCenter, false, false)};
 
         // This is what we want to test.
         // Given all of the above, are we able to get back the

@@ -139,8 +139,8 @@ auto main(int const argc, char **const argv) -> int {
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
   auto const cameraFramedPositions{
-      find(undistortedImage, knownMarkerDiameter, meanFocalLength, imageCenter,
-           showIntermediateImages, showResultImage)};
+      findMarkers(undistortedImage, knownMarkerDiameter, meanFocalLength,
+                  imageCenter, showIntermediateImages, showResultImage)};
 
   if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected\n";

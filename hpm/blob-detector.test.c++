@@ -309,13 +309,13 @@ auto main() -> int {
         interpret6xOpenScad(detectedRedBlobs);
       };
 
-  //"interpretation simpleBlobDetector's results on grid-green-2000.png"_test =
-  //    [&interpret6xOpenScad, &detectedGreenBlobs] {
-  //      interpret6xOpenScad(detectedGreenBlobs);
-  //    };
+  "interpretation simpleBlobDetector's results on grid-green-2000.png"_test =
+      [&interpret6xOpenScad, &detectedGreenBlobs] {
+        interpret6xOpenScad(detectedGreenBlobs);
+      };
 
-  //"interpretation simpleBlobDetector's results on grid-blue-2000.png"_test =
-  //    [&interpret6xOpenScad, &detectedGreenBlobs] {
-  //      interpret6xOpenScad(detectedBlueBlobs);
-  //    };
+  "interpretation simpleBlobDetector's results on grid-blue-2000.png"_test =
+      [&interpret6xOpenScad, &detectedBlueBlobs] {
+        interpret6xOpenScad(detectedBlueBlobs);
+      };
 }

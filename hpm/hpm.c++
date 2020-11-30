@@ -41,10 +41,10 @@ static void showImage(cv::InputArray image, std::string const &name) {
   }
 }
 
-auto find(cv::InputArray undistortedImage, double const knownMarkerDiameter,
-          double const focalLength, cv::Point2f const &imageCenter,
-          bool showIntermediateImages, bool showResultImage)
-    -> std::vector<CameraFramedPosition> {
+auto findMarkers(cv::InputArray undistortedImage,
+                 double const knownMarkerDiameter, double const focalLength,
+                 cv::Point2f const &imageCenter, bool showIntermediateImages,
+                 bool showResultImage) -> std::vector<CameraFramedPosition> {
   if (undistortedImage.empty()) {
     return {};
   }

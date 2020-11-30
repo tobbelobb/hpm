@@ -19,6 +19,6 @@
 // The marker detection, and the interpretation of marker detection results are
 // (sadly) intertwined, so find performs both detection and interpretation
 std::vector<CameraFramedPosition>
-find(cv::InputArray undistortedImage, double knownMarkerDiameter,
-     double focalLength, cv::Point2f const &imageCenter,
-     bool showIntermediateImages, bool showResultImage);
+findMarkers(cv::InputArray undistortedImage, double knownMarkerDiameter,
+            double focalLength, cv::Point2f const &imageCenter,
+            bool showIntermediateImages, bool showResultImage);
