@@ -31,4 +31,3 @@ struct SixDof {
                << sixDof.reprojectionError;
   };
 };
-
