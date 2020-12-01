@@ -4,7 +4,7 @@
 
 #include <hpm/types.h++>
 
-std::vector<cv::KeyPoint> blobDetect(cv::InputArray image);
+DetectionResult blobDetect(cv::InputArray image);
 
 CameraFramedPosition blobToPosition(cv::KeyPoint const &blob,
                                     double focalLength,

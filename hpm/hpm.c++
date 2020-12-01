@@ -24,10 +24,11 @@ static void drawKeyPoints(cv::InputArray image,
 }
 
 static auto imageWithKeyPoints(cv::InputArray image,
-                               std::vector<cv::KeyPoint> const &markers)
-    -> cv::Mat {
+                               DetectionResult const &markers) -> cv::Mat {
   cv::Mat result{};
-  drawKeyPoints(image, markers, result);
+  drawKeyPoints(image, markers.red, result);
+  drawKeyPoints(result, markers.green, result);
+  drawKeyPoints(result, markers.blue, result);
   return result;
 }
 
@@ -62,7 +63,15 @@ auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
 
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(blobs.size());
-  for (auto const &blob : blobs) {
+  for (auto const &blob : blobs.red) {
+    positions.emplace_back(
+        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
+  }
+  for (auto const &blob : blobs.green) {
+    positions.emplace_back(
+        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
+  }
+  for (auto const &blob : blobs.blue) {
     positions.emplace_back(
         blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
   }
@@ -70,14 +79,6 @@ auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
   return positions;
 }
 
-auto findMarks(cv::InputArray undistortedImage) -> std::vector<PixelPosition> {
-  if (undistortedImage.empty()) {
-    return {};
-  }
-  auto const blobs{blobDetect(undistortedImage)};
-  std::vector<PixelPosition> pixelPositions{};
-  std::ranges::transform(
-      blobs, std::back_inserter(pixelPositions),
-      [](auto const &blob) -> PixelPosition { return blob.pt; });
-  return pixelPositions;
+auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
+  return blobDetect(undistortedImage);
 }

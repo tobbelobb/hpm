@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<!--
+     There are six markers:
+     marker 0, marker 1, marker 2, marker 3, marker 4, and marker 5
+
+     They are ordered in counter clockwise order, and red-green-blue order,
+     starting with the two red markers:
+     marker 0 = red 0
+     marker 1 = red 1
+     marker 2 = green 0
+     marker 3 = green 1
+     marker 4 = blue 0
+     marker 5 = blue 1
+
+     The side with the red markers are directed straight towards
+     the A-anchor (which is on the negative y-axis).
+
+     We want the positions of the (centers of the) markers,
+     expressed in the global coordinate system,
+     (that is the XYZ-one that the slicer uses),
+     measured when the nozzle is placed at the origin.
+
+     In this toy example, the markers are all placed
+     at the same Z-height as the nozzle,
+     which would be very impractical in a real use case.
+
+     The positions of the markers must be co-planar for the algorithm to work.
+-->
+<marker_positions type_id="opencv-matrix">
+  <rows>6</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+     -72.4478  -125.483  0.0  <!-- Marker 0,   Red 0 -->
+      72.4478  -125.483  0.0  <!-- Marker 1,   Red 1 -->
+     144.8960       0.0  0.0  <!-- Marker 2, Green 0 -->
+      72.4478   125.483  0.0  <!-- Marker 3, Green 1 -->
+     -72.4478   125.483  0.0  <!-- Marker 4,  Blue 0 -->
+    -144.8960       0.0  0.0  <!-- Marker 5,  Blue 1 -->
+  </data></marker_positions>
+<marker_diameter>32.0</marker_diameter>
+</opencv_storage>

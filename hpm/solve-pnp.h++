@@ -13,4 +13,5 @@
  */
 
 std::optional<SixDof> solvePnp(cv::InputArray cameraMatrix,
-                               std::vector<PixelPosition> const &marks);
+                               cv::InputArray markerPositionsRelativeToNozzle,
+                               IdentifiedHpMarks const &marks);

@@ -78,34 +78,21 @@ static auto detect(cv::InputArray image,
 // https://docs.opencv.org/4.4.0/d0/d7a/classcv_1_1SimpleBlobDetector.html#details
 // and also
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
-auto blobDetect(cv::InputArray image) -> std::vector<cv::KeyPoint> {
+auto blobDetect(cv::InputArray image) -> DetectionResult {
   auto const detector = getBlobDetector();
   // Combine channels in a way that turns markers into dark regions
   constexpr double THIRD{0.33333};
-  cv::Mat antiRed = getGreen(image) * THIRD + getBlue(image) * THIRD +
-                    invert(getRed(image)) * THIRD;
-  cv::Mat antiBlue = getGreen(image) * THIRD + invert(getBlue(image)) * THIRD +
-                     getRed(image) * THIRD;
-  cv::Mat antiGreen = invert(getGreen(image)) * THIRD + getBlue(image) * THIRD +
-                      getRed(image) * THIRD;
+  cv::Mat antiRed = invert(getRed(image)) * THIRD + getGreen(image) * THIRD +
+                    getBlue(image) * THIRD;
+  cv::Mat antiGreen = getRed(image) * THIRD + invert(getGreen(image)) * THIRD +
+                      getBlue(image) * THIRD;
+  cv::Mat antiBlue = getRed(image) * THIRD + getGreen(image) * THIRD +
+                     invert(getBlue(image)) * THIRD;
 
-  // The three detect lines take up ~90% of execution time
-  // auto const t0{cv::getTickCount()};
-  auto redMarkers{detect(antiRed, detector)};
-  auto greenMarkers{detect(antiGreen, detector)};
-  auto blueMarkers{detect(antiBlue, detector)};
-  // auto const t1{cv::getTickCount()};
-  // std::cout << "Time to detect: " << (t1 - t0) / cv::getTickFrequency()
-  //          << " seconds" << std::endl;
-
-  std::vector<cv::KeyPoint> keyPoints{};
-  keyPoints.reserve(redMarkers.size() + blueMarkers.size() +
-                    greenMarkers.size());
-  keyPoints.insert(keyPoints.end(), blueMarkers.begin(), blueMarkers.end());
-  keyPoints.insert(keyPoints.end(), greenMarkers.begin(), greenMarkers.end());
-  keyPoints.insert(keyPoints.end(), redMarkers.begin(), redMarkers.end());
-
-  return keyPoints;
+  // With SimpleBlobDetector the three detect lines are very expensive,
+  // like ~90% of execution time
+  return {detect(antiRed, detector), detect(antiGreen, detector),
+          detect(antiBlue, detector)};
 }
 
 auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,

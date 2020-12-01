@@ -10,7 +10,7 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <calibration-coefficients> <marker-diameter> <image> [-h|--help] [-s|--show <value>]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-s|--show <value>]
 
 -s, --show  [result, intermediate, all, none]. none is the default. During
             any pop up you may press s to write the image, or any other key
@@ -20,30 +20,51 @@ EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
 /\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
 
 : Non-existent-calibration-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* 'nonfile' 25.84 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+$* 'nonfile' $src_base/example-marker-params/marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
 Failed to load cam params file: nonfile
 EOE
 
 : Non-existent-image-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/example-cam-params/myExampleCamParams.xml 25.84 'noimage' 2>>EOE != 0
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml 'noimage' 2>>EOE != 0
 Could not read the image: noimage
 EOE
 
 : Swaps-image-file-and-camera-parameters
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png 25.84 $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
-%.+/test-images/ball_25_84_dist_1001_08_Z.png does not seem to contain camera parameters%
+$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png $src_base/example-marker-params/marker-params.xml $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
+%Could not read camera parameters from file .+/test-images/ball_25_84_dist_1001_08_Z.png%
+%.+Input file is invalid.+%
+%%
 EOE
 
 : Zero-marker-diameter
-: Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/example-cam-params/myExampleCamParams.xml 0 $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+: Checks behviour when the marker diameter is zero
+cat <<EOI >=zero-marker-diameter.xml;
+<?xml version="1.0"?>
+<opencv_storage>
+<marker_positions type_id="opencv-matrix">
+  <rows>6</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+     -72.4478  -125.483  0.0
+      72.4478  -125.483  0.0
+     144.8960       0.0  0.0
+      72.4478   125.483  0.0
+     -72.4478   125.483  0.0
+    -144.8960       0.0  0.0
+  </data>
+</marker_positions>
+<marker_diameter>0.0</marker_diameter>
+</opencv_storage>
+EOI
+$* $src_base/example-cam-params/myExampleCamParams.xml zero-marker-diameter.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
 Need a positive marker diameter. Can not use 0
 EOE

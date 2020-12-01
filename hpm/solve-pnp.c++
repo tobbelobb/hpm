@@ -10,30 +10,24 @@
 #include <hpm/solve-pnp.h++>
 
 std::optional<SixDof> solvePnp(cv::InputArray cameraMatrix,
-                               std::vector<PixelPosition> const &marks) {
-  //
-  // This should come all the way from the command line
-  std::vector<cv::Point3d> const markersPositionsRelativeToNozzle{
-      {144.896, 0.0, 0.0},       // blue on x-axis
-      {72.4478, -125.483, 0.0},  // blue back
-      {-144.896, 0.0, 0.0},      // green on x-axis
-      {-72.4478, -125.483, 0.0}, // green back
-      {72.4478, 125.483, 0.0},   // red right
-      {-72.4478, 125.483, 0.0},  // red left
-      {0.0, 0.0, 0.0}};
-
-  if (marks.size() != markersPositionsRelativeToNozzle.size()) {
-    std::cerr << "Found positions and known positions have different sizes: "
-              << "founds: " << marks.size()
-              << ", knowns: " << markersPositionsRelativeToNozzle.size()
-              << std::endl;
+                               cv::InputArray markerPositionsRelativeToNozzle,
+                               IdentifiedHpMarks const &marks) {
+  if (not(marks.allIdentified())) {
+    std::cerr << "solvePnp got mark set with missing marker" << std::endl;
     return {};
   }
+
+  cv::Mat const markerPositionsMatrix =
+      markerPositionsRelativeToNozzle.getMat();
+
+  std::vector<PixelPosition> const markVec{
+      marks.red0.value(),   marks.red1.value(),  marks.green0.value(),
+      marks.green1.value(), marks.blue0.value(), marks.blue1.value()};
 
   std::vector<cv::Mat> rvecs{};
   std::vector<cv::Mat> tvecs{};
   std::vector<double> reprojectionErrors{};
-  cv::solvePnPGeneric(markersPositionsRelativeToNozzle, marks, cameraMatrix,
+  cv::solvePnPGeneric(markerPositionsMatrix, markVec, cameraMatrix,
                       cv::noArray(), rvecs, tvecs, false, cv::SOLVEPNP_IPPE,
                       cv::noArray(), cv::noArray(), reprojectionErrors);
 

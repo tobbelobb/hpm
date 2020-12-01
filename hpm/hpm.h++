@@ -18,9 +18,11 @@
 //
 // The marker detection, and the interpretation of marker detection results are
 // (sadly) intertwined, so find performs both detection and interpretation
+//
+// Also, results come out unsorted for now
 std::vector<CameraFramedPosition> findIndividualMarkerPositions(
     cv::InputArray undistortedImage, double knownMarkerDiameter,
     double focalLength, cv::Point2f const &imageCenter,
     bool showIntermediateImages, bool showResultImage);
 
-std::vector<PixelPosition> findMarks(cv::InputArray undistortedImage);
+DetectionResult findMarks(cv::InputArray undistortedImage);

@@ -36,32 +36,29 @@ auto main(int argc, char **argv) -> int {
 
         // This is what we fed into openScad when generating the image
         std::vector<CameraFramedPosition> const knownPositions{
-            {144.896, 0, 733},         // blue on x-axis
-            {72.4478, -125.483, 733},  // blue back
-            {-144.896, 0, 733},        // green on x-axis
-            {-72.4478, -125.483, 733}, // green back
-            {72.4478, 125.483, 733},   // red right
-            {-72.4478, 125.483, 733},  // red left
-            {0, 0, 755}};              // center
+            {72.4478, 125.483, 755},    // red right
+            {-72.4478, 125.483, 755},   // red left
+            {144.896, 0, 755},          // blue on x-axis
+            {72.4478, -125.483, 755},   // blue back
+            {-144.896, 0, 755},         // green on x-axis
+            {-72.4478, -125.483, 755}}; // green back
 
         // Let's give the indices names for convenience
         enum IDX : size_t {
-          RIGHTEST = 0,
-          TOPRIGHT = 1,
-          LEFTEST = 2,
-          TOPLEFT = 3,
-          BOTTOMRIGHT = 4,
-          BOTTOMLEFT = 5,
-          CENTER = 6
+          BOTTOMRIGHT = 0,
+          BOTTOMLEFT = 1,
+          RIGHTEST = 2,
+          TOPRIGHT = 3,
+          LEFTEST = 4,
+          TOPLEFT = 5,
         };
-        std::array<std::string, 7> idxNames{};
+        std::array<std::string, 6> idxNames{};
         idxNames[RIGHTEST] = "Rightest";
         idxNames[TOPRIGHT] = "Topright";
         idxNames[LEFTEST] = "Leftest";
         idxNames[TOPLEFT] = "Topleft";
         idxNames[BOTTOMRIGHT] = "Bottomright";
         idxNames[BOTTOMLEFT] = "Bottomleft";
-        idxNames[CENTER] = "Center";
 
         // This is what we fed into SimpleBlobDetector together with the
         // generated image
