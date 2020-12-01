@@ -71,12 +71,20 @@ struct IdentifiedHpMarks {
   std::optional<PixelPosition> blue1;
 
   IdentifiedHpMarks(DetectionResult const &foundMarkers) {
+    auto const reds = foundMarkers.red.size();
+    auto const greens = foundMarkers.green.size();
+    auto const blues = foundMarkers.blue.size();
+
     std::vector<cv::KeyPoint> all{};
-    all.reserve(foundMarkers.red.size() + foundMarkers.green.size() +
-                foundMarkers.blue.size());
+    all.reserve(reds + blues + greens);
+
     all.insert(all.end(), foundMarkers.red.begin(), foundMarkers.red.end());
     all.insert(all.end(), foundMarkers.green.begin(), foundMarkers.green.end());
     all.insert(all.end(), foundMarkers.blue.begin(), foundMarkers.blue.end());
+
+    if (all.size() < 6) {
+      return;
+    }
 
     // Points come out left handed from the detector
     // We temporarily don't want that while we're sorting
@@ -84,7 +92,7 @@ struct IdentifiedHpMarks {
       keyPoint.pt.y = -keyPoint.pt.y;
     }
     // First element will be used as pivot
-    if (isLeft(all[0].pt, all[1].pt, all[2].pt)) {
+    if (not(isLeft(all[0].pt, all[1].pt, all[2].pt))) {
       std::swap(all[0], all[1]);
     }
     fanSort(all);
@@ -92,9 +100,6 @@ struct IdentifiedHpMarks {
       keyPoint.pt.y = -keyPoint.pt.y;
     }
 
-    auto const reds = foundMarkers.red.size();
-    auto const greens = foundMarkers.green.size();
-    auto const blues = foundMarkers.blue.size();
     if (reds == 2) {
       red0 = {all[0].pt};
       red1 = {all[1].pt};
