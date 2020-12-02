@@ -26,7 +26,7 @@ auto main() -> int {
   double constexpr knownMarkerDiameter{32.0};
   auto interpret6xOpenScad =
       [&openScadCamParams6x](std::vector<cv::KeyPoint> const &detectedBlobs) {
-        auto const cameraMatrix = openScadCamParams6x;
+        auto const &cameraMatrix = openScadCamParams6x;
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
         cv::Point2f const imageCenter{
@@ -69,6 +69,9 @@ auto main() -> int {
             {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
             {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
 
+        expect(detectedBlobs.size() ==
+               knownPositions.size() >> fatal); // NOLINT
+
         std::vector<CameraFramedPosition> positions{};
         std::transform(
             detectedBlobs.begin(), detectedBlobs.end(),
@@ -97,7 +100,6 @@ auto main() -> int {
         expect(percentJumbos < ALLOWED_JUMBOS_FRACTION) << "Too many jumbos";
         if (not(percentJumbos < ALLOWED_JUMBOS_FRACTION)) {
           for (size_t i{0}; i < positions.size(); ++i) {
-            expect((i < knownPositions.size()) >> fatal);
             expect(cv::norm(positions[i] - knownPositions[i]) < EPS_JUMBO)
                 << positions[i];
             expect(abs(positions[i].x - knownPositions[i].x) < EPS_JUMBO)

@@ -12,9 +12,9 @@
 
 #include <hpm/solve-pnp.h++>
 
-std::optional<SixDof> solvePnp(cv::InputArray cameraMatrix,
-                               cv::InputArray markerPositionsRelativeToNozzle,
-                               IdentifiedHpMarks const &marks) {
+auto solvePnp(cv::InputArray cameraMatrix,
+              cv::InputArray markerPositionsRelativeToNozzle,
+              IdentifiedHpMarks const &marks) -> std::optional<SixDof> {
   if (not(marks.allIdentified())) {
     std::cerr << "solvePnp got mark set with missing marker" << std::endl;
     return {};

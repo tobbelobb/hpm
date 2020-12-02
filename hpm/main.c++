@@ -139,7 +139,7 @@ auto main(int const argc, char **const argv) -> int {
                 return markerPositions_;
               }(),
               [&markerParamsFile]() {
-                double markerDiameter_;
+                double markerDiameter_ = 0.0;
                 markerParamsFile["marker_diameter"] >> markerDiameter_;
                 return markerDiameter_;
               }()};
@@ -194,7 +194,7 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers detected\n";
   }
 
-  std::string delimeter{""};
+  std::string delimeter{};
   for (auto const &cameraFramedPosition : cameraFramedPositions) {
     // std::cout << Position{cameraFramePosition} << "mm\n";
     std::cout << delimeter << cameraFramedPosition;

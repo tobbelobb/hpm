@@ -2,6 +2,8 @@
 #include <numeric>
 #include <vector>
 
+#include <gsl/span_ext>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -55,7 +57,8 @@ auto main(int argc, char **argv) -> int {
           LEFTEST = 4,
           TOPLEFT = 5,
         };
-        std::array<std::string, 6> idxNames{};
+        constexpr size_t NUM_MARKERS{6};
+        std::array<std::string, NUM_MARKERS> idxNames{};
         idxNames[RIGHTEST] = "Rightest";
         idxNames[TOPRIGHT] = "Topright";
         idxNames[LEFTEST] = "Leftest";
@@ -83,22 +86,24 @@ auto main(int argc, char **argv) -> int {
         // values that we fed into OpenScad?
         auto constexpr EPS{1.0_d};
         // Check the absolute positions first.
-        for (size_t i{0}; i < positions.size(); ++i) {
-          assert(i < knownPositions.size() and i < idxNames.size());
+        for (gsl::index i{0}; i < std::ssize(positions); ++i) {
+          expect(
+              (i < std::ssize(knownPositions) and i < std::ssize(idxNames)) >>
+              fatal);
+          auto const position{gsl::at(positions, i)};
+          auto const knownPosition{gsl::at(knownPositions, i)};
+          auto const idxName{gsl::at(idxNames, i)};
 
-          expect(cv::norm(positions[i] - knownPositions[i]) < EPS);
-          expect(abs(positions[i].x - knownPositions[i].x) < EPS)
-              << idxNames[i] << "x too"
-              << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].y - knownPositions[i].y) < EPS)
-              << idxNames[i] << "y too"
-              << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                               : "small");
-          expect(abs(positions[i].z - knownPositions[i].z) < EPS)
-              << idxNames[i] << "z too"
-              << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                               : "small");
+          expect(cv::norm(position - knownPosition) < EPS);
+          expect(abs(position.x - knownPosition.x) < EPS)
+              << idxName << "x too"
+              << ((position.x - knownPosition.x) > 0.0 ? "large" : "small");
+          expect(abs(position.y - knownPosition.y) < EPS)
+              << idxName << "y too"
+              << ((position.y - knownPosition.y) > 0.0 ? "large" : "small");
+          expect(abs(position.z - knownPosition.z) < EPS)
+              << idxName << "z too"
+              << ((position.z - knownPosition.z) > 0.0 ? "large" : "small");
         }
 
         // If the top check fails, then we want to know in what way it failed.
@@ -109,8 +114,7 @@ auto main(int argc, char **argv) -> int {
             << "Blue markers must be on the right";
         expect(positions[LEFTEST].x < 0 and positions[TOPLEFT].x < 0)
             << "Green markers must be on the left";
-        expect((positions[BOTTOMLEFT].x < 0.0 and positions[BOTTOMRIGHT].x) >
-               0.0)
+        expect(positions[BOTTOMLEFT].x < 0.0 and positions[BOTTOMRIGHT].x > 0.0)
             << "Red markers must be left/right";
         for (auto const &pos : positions) {
           expect(pos.z > 0) << "All marker positions must have positive z";
@@ -162,18 +166,22 @@ auto main(int argc, char **argv) -> int {
                                  knownPositions[LEFTEST])) < EPS)
             << "The largest crossovers should have the correct length";
 
-        if (argc > 1 and argv[1][0] == 'f') {
-          for (size_t i{0}; i < positions.size(); ++i) {
-            assert(i < knownPositions.size());
-
-            std::cout << idxNames[i] << ' ' << positions[i];
-            auto const err{positions[i] - knownPositions[i]};
-            cv::Point3d const knownPositionXy{knownPositions[i].x,
-                                              knownPositions[i].y, 0};
+        if (argc > 1 and argv[1][0] == 'f') { // NOLINT
+          for (gsl::index i{0}; i < std::ssize(positions); ++i) {
+            auto const position{gsl::at(positions, i)};
+            auto const knownPosition{gsl::at(knownPositions, i)};
+            auto const idxName{gsl::at(idxNames, i)};
+            auto const err{position - knownPosition};
+            cv::Point3d const knownPositionXy{knownPosition.x, knownPosition.y,
+                                              0};
             cv::Point3d const errXy{err.x, err.y, 0};
-            if (cv::norm(knownPositionXy) > 0.001 and cv::norm(errXy) > 0.001) {
-              cv::Point3d const knownPositionDirection{
-                  knownPositions[i] / cv::norm(knownPositions[i])};
+
+            std::cout << idxName << ' ' << position;
+            double constexpr PRINTWORTHY_ERROR{0.001};
+            if (cv::norm(knownPositionXy) > PRINTWORTHY_ERROR and
+                cv::norm(errXy) > PRINTWORTHY_ERROR) {
+              cv::Point3d const knownPositionDirection{knownPosition /
+                                                       cv::norm(knownPosition)};
               cv::Point3d const knownPositionXyDirection{
                   knownPositionXy / cv::norm(knownPositionXy)};
               cv::Point3d const errDirection{err / cv::norm(err)};
