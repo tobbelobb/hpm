@@ -5,6 +5,9 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#endif
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
 #pragma GCC diagnostic pop
@@ -65,9 +68,11 @@ auto main() -> int {
             {100, -300, 2000},  {0, -300, 2000},    {-100, -300, 2000},
             {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
             {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
-        auto const positions =
-            detectedBlobs |
-            std::views::transform([&](cv::KeyPoint const &blob) {
+
+        std::vector<CameraFramedPosition> positions{};
+        std::transform(
+            detectedBlobs.begin(), detectedBlobs.end(),
+            std::back_inserter(positions), [&](cv::KeyPoint const &blob) {
               return blobToPosition(blob, meanFocalLength, imageCenter,
                                     knownMarkerDiameter);
             });
@@ -76,12 +81,11 @@ auto main() -> int {
         auto constexpr EPS_PERFECT{1.0_d};
         auto jumbos{0};
         auto perfects{0};
-        for (auto i{0}; i < std::ssize(positions); ++i) {
-          auto const iu{static_cast<size_t>(i)};
-          if (cv::norm(positions[i] - knownPositions[iu]) > EPS_JUMBO) {
+        for (size_t i{0}; i < positions.size(); ++i) {
+          if (cv::norm(positions[i] - knownPositions[i]) > EPS_JUMBO) {
             jumbos = jumbos + 1;
           }
-          if (cv::norm(positions[i] - knownPositions[iu]) < EPS_PERFECT) {
+          if (cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT) {
             perfects = perfects + 1;
           }
         }
@@ -92,23 +96,22 @@ auto main() -> int {
         auto constexpr ALLOWED_JUMBOS_FRACTION{0.03_d};
         expect(percentJumbos < ALLOWED_JUMBOS_FRACTION) << "Too many jumbos";
         if (not(percentJumbos < ALLOWED_JUMBOS_FRACTION)) {
-          for (auto i{0}; i < std::ssize(positions); ++i) {
-            auto const iu{static_cast<size_t>(i)};
-            assert(iu < knownPositions.size());
-            expect(cv::norm(positions[i] - knownPositions[iu]) < EPS_JUMBO)
+          for (size_t i{0}; i < positions.size(); ++i) {
+            expect((i < knownPositions.size()) >> fatal);
+            expect(cv::norm(positions[i] - knownPositions[i]) < EPS_JUMBO)
                 << positions[i];
-            expect(abs(positions[i].x - knownPositions[iu].x) < EPS_JUMBO)
-                << positions[i] << knownPositions[iu] << " x too"
-                << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
-                                                                  : "small");
-            expect(abs(positions[i].y - knownPositions[iu].y) < EPS_JUMBO)
-                << positions[i] << knownPositions[iu] << " y too"
-                << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
-                                                                  : "small");
-            expect(abs(positions[i].z - knownPositions[iu].z) < EPS_JUMBO)
-                << positions[i] << knownPositions[iu] << " z too"
-                << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
-                                                                  : "small");
+            expect(abs(positions[i].x - knownPositions[i].x) < EPS_JUMBO)
+                << positions[i] << knownPositions[i] << " x too"
+                << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
+                                                                 : "small");
+            expect(abs(positions[i].y - knownPositions[i].y) < EPS_JUMBO)
+                << positions[i] << knownPositions[i] << " y too"
+                << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
+                                                                 : "small");
+            expect(abs(positions[i].z - knownPositions[i].z) < EPS_JUMBO)
+                << positions[i] << knownPositions[i] << " z too"
+                << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
+                                                                 : "small");
           }
         }
 
@@ -119,23 +122,21 @@ auto main() -> int {
         expect(percentPerfects >= EXPECTED_PERFECTS_FRACTION)
             << "Not enough perfects";
         if (not(percentPerfects >= EXPECTED_PERFECTS_FRACTION)) {
-          for (auto i{0}; i < std::ssize(positions); ++i) {
-            auto const iu{static_cast<size_t>(i)};
-            assert(iu < knownPositions.size());
-            expect(cv::norm(positions[i] - knownPositions[iu]) < EPS_PERFECT)
+          for (size_t i{0}; i < positions.size(); ++i) {
+            expect(cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT)
                 << positions[i];
-            expect(abs(positions[i].x - knownPositions[iu].x) < EPS_PERFECT)
-                << positions[i] << knownPositions[iu] << " x too"
-                << ((positions[i].x - knownPositions[iu].x) > 0.0 ? "large"
-                                                                  : "small");
-            expect(abs(positions[i].y - knownPositions[iu].y) < EPS_PERFECT)
-                << positions[i] << knownPositions[iu] << " y too"
-                << ((positions[i].y - knownPositions[iu].y) > 0.0 ? "large"
-                                                                  : "small");
-            expect(abs(positions[i].z - knownPositions[iu].z) < EPS_PERFECT)
-                << positions[i] << knownPositions[iu] << " z too"
-                << ((positions[i].z - knownPositions[iu].z) > 0.0 ? "large"
-                                                                  : "small");
+            expect(abs(positions[i].x - knownPositions[i].x) < EPS_PERFECT)
+                << positions[i] << knownPositions[i] << " x too"
+                << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
+                                                                 : "small");
+            expect(abs(positions[i].y - knownPositions[i].y) < EPS_PERFECT)
+                << positions[i] << knownPositions[i] << " y too"
+                << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
+                                                                 : "small");
+            expect(abs(positions[i].z - knownPositions[i].z) < EPS_PERFECT)
+                << positions[i] << knownPositions[i] << " z too"
+                << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
+                                                                 : "small");
           }
         }
       };
