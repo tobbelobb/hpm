@@ -12,9 +12,9 @@ $* >>"EOE"
 Usage:
 $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-s|--show <value>]
 
--s, --show  [result, intermediate, all, none]. none is the default. During
-            any pop up you may press s to write the image, or any other key
-            to continue without saving.
+-s, --show  <result|intermediate|all|none>. none is the default. During any
+            pop up you may press s to write the image, or any other key to
+            continue without saving.
 -h, --help  Print this help.
 EOE
 

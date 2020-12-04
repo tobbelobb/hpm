@@ -56,7 +56,7 @@ auto main(int const argc, char **const argv) -> int {
   bool showResultImage{false};
   bool showIntermediateImages{false};
   args.addArgument({"-s", "--show"}, &show,
-                   "[result, intermediate, all, none]. none is the default."
+                   "<result|intermediate|all|none>. none is the default."
                    " During any pop up you may press s to write the image, or"
                    " any other key to continue without saving.");
   bool printHelp{false};
