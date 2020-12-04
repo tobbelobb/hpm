@@ -85,3 +85,11 @@ auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
 auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
   return blobDetect(undistortedImage);
 }
+
+auto cameraPoseToEffectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
+                                   SixDof const &cameraPoseRelativeToWorld)
+    -> SixDof {
+  // TODO. Transform here.
+  (void)cameraPoseRelativeToWorld;
+  return effectorPoseRelativeToCamera;
+}

@@ -21,21 +21,6 @@
 #include <hpm/hpm.h++>
 #include <hpm/solve-pnp.h++>
 
-static inline auto toDouble(std::string const &s) -> double {
-  std::size_t charCount = 0;
-  double res = 0;
-  try {
-    res = std::stod(s, &charCount);
-    if (s.size() != charCount) {
-      throw std::invalid_argument("Could not parse all characters");
-    }
-  } catch (...) {
-    std::cerr << "Could not parse \"" << s << "\" to a double, returning 0"
-              << std::endl;
-  }
-  return res;
-}
-
 static auto undistort(cv::InputArray image, cv::InputArray cameraMatrix,
                       cv::InputArray distortionCoefficients) -> cv::Mat {
   cv::Mat undistortedImage =
@@ -176,14 +161,28 @@ auto main(int const argc, char **const argv) -> int {
   IdentifiedHpMarks const identifiedMarks{marks};
 
   if (identifiedMarks.allIdentified()) {
-    auto const effectorPose{
+    // Make Camera into a class?
+    // Camera object must hold a SixDof const worldPose,
+    // and a cameraMatrix,
+    // and distortionCoefficients,
+    // and crucially, a SixDof relativeToEffectorPose.
+    // Once worldPose and relativeToEffectorPose are populated,
+    // then the function (affine transformation) getEffectorPose
+    // has a clean and easy job, reading data from one object only
+    auto const effectorPoseRelativeToCamera{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
 
-    if (effectorPose.has_value()) {
-      std::cout << effectorPose.value() << '\n';
+    // TODO: This should be determined only once, like when the
+    // effector is at the origin, and maybe be written to a config file.
+    // After that, it should be read in from the file on every invocation.
+    if (effectorPoseRelativeToCamera.has_value()) {
+      auto const cameraWorldPose{effectorPoseRelativeToCamera.value()};
+      std::cout << cameraPoseToEffectorWorldPose(
+          effectorPoseRelativeToCamera.value(), cameraWorldPose);
     } else {
-      std::cout << "Found no effector pose\n";
+      std::cout << "Found no camera pose";
     }
+    std::cout << '\n';
   }
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
@@ -191,7 +190,7 @@ auto main(int const argc, char **const argv) -> int {
       showIntermediateImages, showResultImage)};
 
   if (cameraFramedPositions.empty()) {
-    std::cout << "No markers detected\n";
+    std::cout << "No markers detected";
   }
 
   std::string delimeter{};
