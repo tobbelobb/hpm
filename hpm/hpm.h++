@@ -27,5 +27,5 @@ std::vector<CameraFramedPosition> findIndividualMarkerPositions(
 
 DetectionResult findMarks(cv::InputArray undistortedImage);
 
-SixDof cameraPoseToEffectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
-                                     SixDof const &cameraPoseRelativeToWorld);
+SixDof effectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
+                         SixDof const &cameraPoseRelativeToWorld);

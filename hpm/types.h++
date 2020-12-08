@@ -25,7 +25,7 @@ public:
 struct SixDof {
   cv::Mat rotation;
   cv::Mat translation;
-  double reprojectionError;
+  double reprojectionError{0};
   friend std::ostream &operator<<(std::ostream &out, SixDof const &sixDof) {
     return out << sixDof.rotation << '\n'
                << sixDof.translation << '\n'

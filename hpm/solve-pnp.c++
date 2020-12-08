@@ -37,5 +37,7 @@ auto solvePnp(cv::InputArray cameraMatrix,
   if (rvecs.empty() or tvecs.empty() or reprojectionErrors.empty()) {
     return {};
   }
-  return {SixDof{rvecs[0], tvecs[0], reprojectionErrors[0]}};
+  return {SixDof{.rotation = rvecs[0],
+                 .translation = tvecs[0],
+                 .reprojectionError = reprojectionErrors[0]}};
 }

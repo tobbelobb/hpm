@@ -79,8 +79,8 @@ auto main(int const argc, char **const argv) -> int {
     return 0;
   }
 
-  auto const [cameraMatrix, distortionCoefficients] =
-      [&camParamsFileName]() -> std::tuple<cv::Mat, cv::Mat> {
+  auto const [cameraMatrix, distortionCoefficients, cameraWorldPose] =
+      [&camParamsFileName]() -> std::tuple<cv::Mat, cv::Mat, SixDof> {
     try {
       cv::FileStorage const camParamsFile(camParamsFileName,
                                           cv::FileStorage::READ);
@@ -99,7 +99,17 @@ auto main(int const argc, char **const argv) -> int {
                 camParamsFile["distortion_coefficients"] >>
                     distortionCoefficients_;
                 return distortionCoefficients_;
-              }()};
+              }(),
+              {[&camParamsFile]() {
+                 cv::Mat cameraRotation_;
+                 camParamsFile["camera_rotation"] >> cameraRotation_;
+                 return cameraRotation_;
+               }(),
+               [&camParamsFile]() {
+                 cv::Mat cameraTranslation_;
+                 camParamsFile["camera_translation"] >> cameraTranslation_;
+                 return cameraTranslation_;
+               }()}};
     } catch (std::exception const &e) {
       std::cerr << "Could not read camera parameters from file "
                 << camParamsFileName << '\n';
@@ -161,24 +171,12 @@ auto main(int const argc, char **const argv) -> int {
   IdentifiedHpMarks const identifiedMarks{marks};
 
   if (identifiedMarks.allIdentified()) {
-    // Make Camera into a class?
-    // Camera object must hold a SixDof const worldPose,
-    // and a cameraMatrix,
-    // and distortionCoefficients,
-    // and crucially, a SixDof relativeToEffectorPose.
-    // Once worldPose and relativeToEffectorPose are populated,
-    // then the function (affine transformation) getEffectorPose
-    // has a clean and easy job, reading data from one object only
-    auto const effectorPoseRelativeToCamera{
+    std::optional<SixDof> const effectorPoseRelativeToCamera{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
 
-    // TODO: This should be determined only once, like when the
-    // effector is at the origin, and maybe be written to a config file.
-    // After that, it should be read in from the file on every invocation.
     if (effectorPoseRelativeToCamera.has_value()) {
-      auto const cameraWorldPose{effectorPoseRelativeToCamera.value()};
-      std::cout << cameraPoseToEffectorWorldPose(
-          effectorPoseRelativeToCamera.value(), cameraWorldPose);
+      std::cout << effectorWorldPose(effectorPoseRelativeToCamera.value(),
+                                     cameraWorldPose);
     } else {
       std::cout << "Found no camera pose";
     }

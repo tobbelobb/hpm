@@ -9,6 +9,7 @@
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 #endif
+#include <opencv2/calib3d.hpp> // Rodrigues
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -86,10 +87,24 @@ auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
   return blobDetect(undistortedImage);
 }
 
-auto cameraPoseToEffectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
-                                   SixDof const &cameraPoseRelativeToWorld)
-    -> SixDof {
-  // TODO. Transform here.
-  (void)cameraPoseRelativeToWorld;
-  return effectorPoseRelativeToCamera;
+auto effectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
+                       SixDof const &cameraPoseRelativeToWorld) -> SixDof {
+
+  cv::Mat const rotationMatrix = [&]() {
+    cv::Mat rotationMatrix_;
+    cv::Rodrigues(cameraPoseRelativeToWorld.rotation, rotationMatrix_);
+    return rotationMatrix_;
+  }();
+
+  cv::Mat rotation = effectorPoseRelativeToCamera.rotation -
+                     cameraPoseRelativeToWorld.rotation;
+  for (int i{0}; i < rotation.rows; ++i) {
+    rotation.at<double>(i) = remainder(rotation.at<double>(i), CV_PI);
+  }
+
+  const auto translation =
+      rotationMatrix * effectorPoseRelativeToCamera.translation +
+      cameraPoseRelativeToWorld.translation;
+  const auto reprojectionError = effectorPoseRelativeToCamera.reprojectionError;
+  return {rotation, translation, reprojectionError};
 }

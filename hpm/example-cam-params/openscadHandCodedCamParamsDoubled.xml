@@ -9,15 +9,34 @@
   <cols>3</cols>
   <dt>d</dt>
   <data>
-    6.75160e+03 0. 2.560e+03 0.
-    6.75160e+03 1.343e+03 0. 0. 1.</data></camera_matrix>
+    6751.6    0   2560
+       0   6751.6 1343
+       0      0      1
+  </data>
+</camera_matrix>
 <distortion_coefficients type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
   <dt>d</dt>
   <data>
-    0 0
-    0 0
-    0</data></distortion_coefficients>
+    0 0 0 0 0
+  </data>
+</distortion_coefficients>
 <avg_reprojection_error>0</avg_reprojection_error>
+<camera_rotation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    3.14 0 0
+  </data>
+</camera_rotation>
+<camera_translation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0 0 755
+  </data>
+</camera_translation>
 </opencv_storage>
