@@ -181,6 +181,8 @@ auto main(int const argc, char **const argv) -> int {
       std::cout << "Found no camera pose";
     }
     std::cout << '\n';
+  } else {
+    std::cout << "Identified more or less than six markers\n";
   }
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(

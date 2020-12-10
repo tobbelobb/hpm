@@ -23,9 +23,17 @@ public:
 };
 
 struct SixDof {
-  cv::Mat rotation;
-  cv::Mat translation;
+  cv::Mat rotation = (cv::Mat_<double>(1, 3) << 0, 0, 0);
+  cv::Mat translation = (cv::Mat_<double>(1, 3) << 0, 0, 0);
   double reprojectionError{0};
+
+  double x() const { return translation.at<double>(0, 0); }
+  double y() const { return translation.at<double>(0, 1); }
+  double z() const { return translation.at<double>(0, 2); }
+  double rotX() const { return rotation.at<double>(0, 0); }
+  double rotY() const { return rotation.at<double>(0, 1); }
+  double rotZ() const { return rotation.at<double>(0, 2); }
+
   friend std::ostream &operator<<(std::ostream &out, SixDof const &sixDof) {
     return out << sixDof.rotation << '\n'
                << sixDof.translation << '\n'
@@ -69,6 +77,19 @@ struct IdentifiedHpMarks {
   std::optional<PixelPosition> green1;
   std::optional<PixelPosition> blue0;
   std::optional<PixelPosition> blue1;
+
+  explicit IdentifiedHpMarks(PixelPosition const &red0_,
+                             PixelPosition const &red1_,
+                             PixelPosition const &green0_,
+                             PixelPosition const &green1_,
+                             PixelPosition const &blue0_,
+                             PixelPosition const &blue1_)
+      : red0(red0_), red1(red1_), green0(green0_), green1(green1_),
+        blue0(blue0_), blue1(blue1_) {}
+
+  explicit IdentifiedHpMarks(std::array<PixelPosition, 6> const marks)
+      : red0(marks[0]), red1(marks[1]), green0(marks[2]), green1(marks[3]),
+        blue0(marks[4]), blue1(marks[5]) {}
 
   IdentifiedHpMarks(DetectionResult const &foundMarkers) {
     auto const reds = foundMarkers.red.size();
@@ -119,4 +140,45 @@ struct IdentifiedHpMarks {
     return red0.has_value() and red1.has_value() and green0.has_value() and
            green1.has_value() and blue0.has_value() and blue1.has_value();
   }
+
+  friend std::ostream &operator<<(std::ostream &out,
+                                  IdentifiedHpMarks const &identifiedHpMarks) {
+    if (identifiedHpMarks.red0.has_value()) {
+      out << identifiedHpMarks.red0.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    if (identifiedHpMarks.red1.has_value()) {
+      out << identifiedHpMarks.red1.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    if (identifiedHpMarks.green0.has_value()) {
+      out << identifiedHpMarks.green0.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    if (identifiedHpMarks.green1.has_value()) {
+      out << identifiedHpMarks.green1.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    if (identifiedHpMarks.blue0.has_value()) {
+      out << identifiedHpMarks.blue0.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    if (identifiedHpMarks.blue1.has_value()) {
+      out << identifiedHpMarks.blue1.value();
+    } else {
+      out << '?';
+    }
+    out << '\n';
+    return out;
+  };
 };

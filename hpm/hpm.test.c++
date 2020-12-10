@@ -19,19 +19,19 @@
 #include <boost/ut.hpp> //import boost.ut;
 
 #include <hpm/hpm.h++>
-#include <hpm/test-util.h++>
+#include <hpm/test-util.h++> // getPath
 
 auto main(int argc, char **argv) -> int {
   using namespace boost::ut;
   // clang-format off
-  cv::Mat const openScadCamParams2x = (cv::Mat_<double>(3, 3) << 2 * 3377.17,        0.00, 2 * 1280.0,
-                                                                        0.00, 2 * 3378.36, 2 *  671.5,
-                                                                        0.00,        0.00,        1.0);
+  cv::Mat const openScadCameraMatrix2x = (cv::Mat_<double>(3, 3) << 2 * 3377.17,        0.00, 2 * 1280.0,
+                                                                           0.00, 2 * 3378.36, 2 *  671.5,
+                                                                           0.00,        0.00,        1.0);
   // clang-format on
   double constexpr knownMarkerDiameter{32.0};
 
   "interpretation of results on the OpenScad generated image nr1"_test =
-      [&openScadCamParams2x, argc, &argv] {
+      [&openScadCameraMatrix2x, argc, &argv] {
         // Get the image
         std::string const imageFileName{hpm::getPath(
             "test-images/"
@@ -68,7 +68,7 @@ auto main(int argc, char **argv) -> int {
 
         // This is what we fed into SimpleBlobDetector together with the
         // generated image
-        auto const &cameraMatrix = openScadCamParams2x;
+        auto const &cameraMatrix = openScadCameraMatrix2x;
 
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};

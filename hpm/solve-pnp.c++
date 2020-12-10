@@ -5,7 +5,7 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #if defined(__clang__)
-#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 #endif
 #include <opencv2/calib3d.hpp>
 #pragma GCC diagnostic pop
@@ -31,8 +31,9 @@ auto solvePnp(cv::InputArray cameraMatrix,
   std::vector<cv::Mat> tvecs{};
   std::vector<double> reprojectionErrors{};
   cv::solvePnPGeneric(markerPositionsMatrix, markVec, cameraMatrix,
-                      cv::noArray(), rvecs, tvecs, false, cv::SOLVEPNP_IPPE,
-                      cv::noArray(), cv::noArray(), reprojectionErrors);
+                      cv::noArray(), rvecs, tvecs, false,
+                      cv::SOLVEPNP_ITERATIVE, cv::noArray(), cv::noArray(),
+                      reprojectionErrors);
 
   if (rvecs.empty() or tvecs.empty() or reprojectionErrors.empty()) {
     return {};

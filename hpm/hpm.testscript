@@ -21,6 +21,7 @@ EOE
 : End-as-expected
 : Checks what gets printed when run was successful
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
+Identified more or less than six markers
 /\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
 

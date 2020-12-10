@@ -56,4 +56,20 @@
     0 0
     0</data></distortion_coefficients>
 <avg_reprojection_error>0</avg_reprojection_error>
+<camera_rotation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    3.14 0 0
+  </data>
+</camera_rotation>
+<camera_translation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0 0 1000
+  </data>
+</camera_translation>
 </opencv_storage>
