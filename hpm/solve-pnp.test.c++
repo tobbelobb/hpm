@@ -18,12 +18,12 @@ auto main() -> int {
 
   "No rotation"_test = [&]() {
     IdentifiedHpMarks const identifiedMarks{
-        .red0 = {CENTER - PIX_DIST, CENTER - PIX_DIST},
-        .red1 = {CENTER + PIX_DIST, CENTER - PIX_DIST},
-        .green0 = {CENTER + PIX_DIST, CENTER},
-        .green1 = {CENTER + PIX_DIST, CENTER + PIX_DIST},
-        .blue0 = {CENTER - PIX_DIST, CENTER + PIX_DIST},
-        .blue1 = {CENTER - PIX_DIST, CENTER}};
+        {CENTER - PIX_DIST, CENTER - PIX_DIST},
+        {CENTER + PIX_DIST, CENTER - PIX_DIST},
+        {CENTER + PIX_DIST, CENTER},
+        {CENTER + PIX_DIST, CENTER + PIX_DIST},
+        {CENTER - PIX_DIST, CENTER + PIX_DIST},
+        {CENTER - PIX_DIST, CENTER}};
 
     std::optional<SixDof> const result{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
@@ -90,12 +90,12 @@ auto main() -> int {
     float const farthersY{F / (X0 + sqrt2Inv)};
 
     IdentifiedHpMarks const identifiedMarks{
-        .red0 = {CENTER - closersX, CENTER - closersY},
-        .red1 = {CENTER + farthersX, CENTER - farthersY},
-        .green0 = {CENTER + farthersX, CENTER},
-        .green1 = {CENTER + farthersX, CENTER + farthersY},
-        .blue0 = {CENTER - closersX, CENTER + closersY},
-        .blue1 = {CENTER - closersX, CENTER}};
+        {CENTER - closersX, CENTER - closersY},
+        {CENTER + farthersX, CENTER - farthersY},
+        {CENTER + farthersX, CENTER},
+        {CENTER + farthersX, CENTER + farthersY},
+        {CENTER - closersX, CENTER + closersY},
+        {CENTER - closersX, CENTER}};
 
     std::optional<SixDof> const result{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};

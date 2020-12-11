@@ -7,7 +7,7 @@
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
 #if defined(__clang__)
-#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 #endif
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>

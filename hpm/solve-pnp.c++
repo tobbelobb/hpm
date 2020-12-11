@@ -38,6 +38,9 @@ auto solvePnp(cv::InputArray cameraMatrix,
   if (rvecs.empty() or tvecs.empty() or reprojectionErrors.empty()) {
     return {};
   }
+  if (rvecs.size() > 1) {
+    std::cerr << "solve-pnp found " << rvecs.size() << " solutions\n";
+  }
   return {SixDof{.rotation = rvecs[0],
                  .translation = tvecs[0],
                  .reprojectionError = reprojectionErrors[0]}};

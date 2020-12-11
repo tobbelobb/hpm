@@ -9,7 +9,7 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #if defined(__clang__)
-#pragma clang diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 #endif
 #include <opencv2/calib3d.hpp> // undistort
 #include <opencv2/core.hpp>
@@ -19,6 +19,7 @@
 
 #include <hpm/command-line.h++>
 #include <hpm/hpm.h++>
+#include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 
 static auto undistort(cv::InputArray image, cv::InputArray cameraMatrix,
@@ -101,12 +102,12 @@ auto main(int const argc, char **const argv) -> int {
                 return distortionCoefficients_;
               }(),
               {[&camParamsFile]() {
-                 cv::Mat cameraRotation_;
+                 Vector3d cameraRotation_;
                  camParamsFile["camera_rotation"] >> cameraRotation_;
                  return cameraRotation_;
                }(),
                [&camParamsFile]() {
-                 cv::Mat cameraTranslation_;
+                 cv::Matx31d cameraTranslation_;
                  camParamsFile["camera_translation"] >> cameraTranslation_;
                  return cameraTranslation_;
                }()}};
@@ -118,8 +119,8 @@ auto main(int const argc, char **const argv) -> int {
     }
   }();
 
-  auto const [markerPositions, markerDiameter] =
-      [&markerParamsFileName]() -> std::tuple<cv::Mat, double> {
+  auto const [inputMarkerPositions, markerDiameter] =
+      [&markerParamsFileName]() -> std::tuple<InputMarkerPositions, double> {
     try {
       cv::FileStorage const markerParamsFile(markerParamsFileName,
                                              cv::FileStorage::READ);
@@ -129,9 +130,9 @@ auto main(int const argc, char **const argv) -> int {
         exit(1);
       }
       return {[&markerParamsFile]() {
-                cv::Mat markerPositions_;
-                markerParamsFile["marker_positions"] >> markerPositions_;
-                return markerPositions_;
+                InputMarkerPositions inputMarkerPositions_;
+                markerParamsFile["marker_positions"] >> inputMarkerPositions_;
+                return inputMarkerPositions_;
               }(),
               [&markerParamsFile]() {
                 double markerDiameter_ = 0.0;
@@ -172,7 +173,7 @@ auto main(int const argc, char **const argv) -> int {
 
   if (identifiedMarks.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, inputMarkerPositions, identifiedMarks)};
 
     if (effectorPoseRelativeToCamera.has_value()) {
       std::cout << effectorWorldPose(effectorPoseRelativeToCamera.value(),
@@ -180,10 +181,10 @@ auto main(int const argc, char **const argv) -> int {
     } else {
       std::cout << "Found no camera pose";
     }
-    std::cout << '\n';
   } else {
-    std::cout << "Identified more or less than six markers\n";
+    std::cout << "Identified more or less than six markers";
   }
+  std::cout << '\n';
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
       undistortedImage, markerDiameter, meanFocalLength, imageCenter,
@@ -193,13 +194,15 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers detected";
   }
 
-  std::string delimeter{};
-  for (auto const &cameraFramedPosition : cameraFramedPositions) {
-    // std::cout << Position{cameraFramePosition} << "mm\n";
-    std::cout << delimeter << cameraFramedPosition;
-    delimeter = ",\n";
+  if (not identifiedMarks.allIdentified()) {
+    std::string delimeter{};
+    for (auto const &cameraFramedPosition : cameraFramedPositions) {
+      // std::cout << Position{cameraFramePosition} << "mm\n";
+      std::cout << delimeter << cameraFramedPosition;
+      delimeter = ",\n";
+    }
+    std::cout << '\n';
   }
-  std::cout << '\n';
 
   return 0;
 }

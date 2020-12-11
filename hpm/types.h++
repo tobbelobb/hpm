@@ -22,17 +22,20 @@ public:
   WorldPosition(double x, double y, double z) : cv::Point3d(x, y, z){};
 };
 
+using Vector3d = cv::Matx31d;
+using InputMarkerPositions = cv::Matx<double, 6, 3>;
+
 struct SixDof {
-  cv::Mat rotation = (cv::Mat_<double>(1, 3) << 0, 0, 0);
-  cv::Mat translation = (cv::Mat_<double>(1, 3) << 0, 0, 0);
+  Vector3d rotation{0, 0, 0};
+  Vector3d translation{0, 0, 0};
   double reprojectionError{0};
 
-  double x() const { return translation.at<double>(0, 0); }
-  double y() const { return translation.at<double>(0, 1); }
-  double z() const { return translation.at<double>(0, 2); }
-  double rotX() const { return rotation.at<double>(0, 0); }
-  double rotY() const { return rotation.at<double>(0, 1); }
-  double rotZ() const { return rotation.at<double>(0, 2); }
+  double x() const { return translation(0); }
+  double y() const { return translation(1); }
+  double z() const { return translation(2); }
+  double rotX() const { return rotation(0); }
+  double rotY() const { return rotation(1); }
+  double rotZ() const { return rotation(2); }
 
   friend std::ostream &operator<<(std::ostream &out, SixDof const &sixDof) {
     return out << sixDof.rotation << '\n'
@@ -91,7 +94,7 @@ struct IdentifiedHpMarks {
       : red0(marks[0]), red1(marks[1]), green0(marks[2]), green1(marks[3]),
         blue0(marks[4]), blue1(marks[5]) {}
 
-  IdentifiedHpMarks(DetectionResult const &foundMarkers) {
+  explicit IdentifiedHpMarks(DetectionResult const &foundMarkers) {
     auto const reds = foundMarkers.red.size();
     auto const greens = foundMarkers.green.size();
     auto const blues = foundMarkers.blue.size();
