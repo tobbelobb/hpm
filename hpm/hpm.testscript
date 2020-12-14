@@ -1,4 +1,4 @@
-: Missing-filename
+: No-arguments-given
 : Checks error printout if no arguments given
 :
 : The $* means "executable and options string"
@@ -10,12 +10,14 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-s|--show <value>]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>]
 
--s, --show  <result|intermediate|all|none>. none is the default. During any
-            pop up you may press s to write the image, or any other key to
-            continue without saving.
--h, --help  Print this help.
+-s, --show     <result|intermediate|all|none>. none is the default. During any
+               pop up you may press s to write the image, or any other key to
+               continue without saving.
+-h, --help     Print this help.
+-v, --verbose  Print rotation, translation, and reprojection_error of the found
+               pose. The default is to only print the translation.
 EOE
 
 : End-as-expected

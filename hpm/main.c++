@@ -37,10 +37,11 @@ auto main(int const argc, char **const argv) -> int {
   usage << "Usage:\n"
         << *argv
         << " <camera-parameters> <marker-parameters> <image> "
-           "[-h|--help] [-s|--show <value>]\n";
+           "[-h|--help] [-v|--verbose] [-s|--show <value>]\n";
   CommandLine args(usage.str());
 
   std::string show{};
+  bool verbose{false};
   bool showResultImage{false};
   bool showIntermediateImages{false};
   args.addArgument({"-s", "--show"}, &show,
@@ -49,6 +50,9 @@ auto main(int const argc, char **const argv) -> int {
                    " any other key to continue without saving.");
   bool printHelp{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
+  args.addArgument({"-v", "--verbose"}, &verbose,
+                   "Print rotation, translation, and reprojection_error of the "
+                   "found pose. The default is to only print the translation.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
   constexpr unsigned int NUM_OPTIONAL_ARGS = 2;
@@ -168,8 +172,13 @@ auto main(int const argc, char **const argv) -> int {
         solvePnp(cameraMatrix, inputMarkerPositions, identifiedMarks)};
 
     if (effectorPoseRelativeToCamera.has_value()) {
-      std::cout << effectorWorldPose(effectorPoseRelativeToCamera.value(),
-                                     cameraWorldPose);
+      SixDof const worldPose{effectorWorldPose(
+          effectorPoseRelativeToCamera.value(), cameraWorldPose)};
+      if (verbose) {
+        std::cout << worldPose;
+      } else {
+        std::cout << worldPose.translation;
+      }
     } else {
       std::cout << "Found no camera pose";
     }
