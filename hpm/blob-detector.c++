@@ -16,6 +16,8 @@
 
 #include <hpm/blob-detector.h++>
 
+using namespace hpm;
+
 static auto getSingleColor(cv::InputArray image, int color) -> cv::Mat {
   cv::Mat singleColorImage{};
   cv::extractChannel(image, singleColorImage, color);

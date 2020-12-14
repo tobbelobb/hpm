@@ -12,6 +12,8 @@
 
 #include <hpm/solve-pnp.h++>
 
+using namespace hpm;
+
 auto solvePnp(cv::InputArray cameraMatrix,
               cv::InputArray markerPositionsRelativeToNozzle,
               IdentifiedHpMarks const &marks) -> std::optional<SixDof> {

@@ -17,6 +17,8 @@
 #include <hpm/blob-detector.h++>
 #include <hpm/individual-markers-mode.h++>
 
+using namespace hpm;
+
 static void drawKeyPoints(cv::InputArray image,
                           std::vector<hpm::KeyPoint> const &keyPoints,
                           cv::InputOutputArray result) {

@@ -16,6 +16,8 @@
 
 #include <hpm/blob-detector.h++>
 
+using namespace hpm;
+
 auto main() -> int {
   using namespace boost::ut;
   // clang-format off

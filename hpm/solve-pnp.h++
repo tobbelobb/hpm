@@ -20,6 +20,7 @@
  * coming implementation of the SQPnP algorithm.
  */
 
-std::optional<SixDof> solvePnp(cv::InputArray cameraMatrix,
-                               cv::InputArray markerPositionsRelativeToNozzle,
-                               IdentifiedHpMarks const &marks);
+std::optional<hpm::SixDof>
+solvePnp(cv::InputArray cameraMatrix,
+         cv::InputArray markerPositionsRelativeToNozzle,
+         hpm::IdentifiedHpMarks const &marks);

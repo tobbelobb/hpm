@@ -22,6 +22,8 @@
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 
+using namespace hpm;
+
 static auto undistort(cv::InputArray image, cv::InputArray cameraMatrix,
                       cv::InputArray distortionCoefficients) -> cv::Mat {
   cv::Mat undistortedImage =

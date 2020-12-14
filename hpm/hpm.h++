@@ -6,5 +6,5 @@
 
 #include <hpm/types.h++>
 
-SixDof effectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
-                         SixDof const &cameraPoseRelativeToWorld);
+hpm::SixDof effectorWorldPose(hpm::SixDof const &effectorPoseRelativeToCamera,
+                              hpm::SixDof const &cameraPoseRelativeToWorld);

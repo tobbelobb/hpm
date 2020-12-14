@@ -5,6 +5,7 @@
 
 #include <opencv2/core.hpp>
 
+namespace hpm {
 using PixelPosition = cv::Point2d;
 
 // using CameraFramedPosition = cv::Point3d;
@@ -44,7 +45,6 @@ struct SixDof {
   };
 };
 
-namespace hpm {
 struct KeyPoint {
   PixelPosition center{0, 0};
   double size{0.0};
@@ -59,7 +59,6 @@ struct KeyPoint {
     return {static_cast<cv::Point2f>(center), static_cast<float>(size)};
   }
 };
-} // namespace hpm
 
 struct DetectionResult {
   std::vector<hpm::KeyPoint> red;
@@ -203,3 +202,4 @@ struct IdentifiedHpMarks {
     return out;
   };
 };
+} // namespace hpm

@@ -13,7 +13,7 @@
 // description : Finds individual markers in image.
 //               Groups them in red, green, and blue markers.
 //               Each group is unsorted.
-DetectionResult findMarks(cv::InputArray undistortedImage);
+hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
 
 // function : findIndividualMarkerPositions
 //
@@ -27,7 +27,7 @@ DetectionResult findMarks(cv::InputArray undistortedImage);
 // (sadly) intertwined, so find performs both detection and interpretation
 //
 // Also, results come out unsorted for now
-std::vector<CameraFramedPosition> findIndividualMarkerPositions(
+std::vector<hpm::CameraFramedPosition> findIndividualMarkerPositions(
     cv::InputArray undistortedImage, double knownMarkerDiameter,
-    double focalLength, PixelPosition const &imageCenter,
+    double focalLength, hpm::PixelPosition const &imageCenter,
     bool showIntermediateImages, bool showResultImage);

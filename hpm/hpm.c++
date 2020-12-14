@@ -10,6 +10,8 @@
 
 #include <hpm/hpm.h++>
 
+using namespace hpm;
+
 auto effectorWorldPose(SixDof const &effectorPoseRelativeToCamera,
                        SixDof const &cameraPoseRelativeToWorld) -> SixDof {
 

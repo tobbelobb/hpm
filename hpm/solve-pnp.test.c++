@@ -2,6 +2,8 @@
 
 #include <hpm/solve-pnp.h++>
 
+using namespace hpm;
+
 auto main() -> int {
   using namespace boost::ut;
   // clang-format off

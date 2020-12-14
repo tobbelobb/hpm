@@ -20,6 +20,8 @@
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/test-util.h++> // getPath
 
+using namespace hpm;
+
 auto main() -> int {
   using namespace boost::ut;
   // clang-format off
