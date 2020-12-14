@@ -10,11 +10,13 @@
 #endif
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 #pragma GCC diagnostic pop
 
 #include <boost/ut.hpp> //import boost.ut;
 
 #include <hpm/blob-detector.h++>
+#include <hpm/test-util.h++> // getPath
 
 using namespace hpm;
 
@@ -322,4 +324,14 @@ auto main() -> int {
       [&interpret6xOpenScad, &detectedBlueBlobs] {
         interpret6xOpenScad(detectedBlueBlobs);
       };
+
+  "slightly challenging image"_test = [] {
+    std::string const imageFileName{
+        hpm::getPath("test-images/"
+                     "generated_benchmark_nr5_32_0_0_0_0_0_0_1000_45rotX.png")};
+    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+    expect((not image.empty()) >> fatal);
+    auto const result{blobDetect(image)};
+    expect(result.size() == 6_ul);
+  };
 }

@@ -53,7 +53,7 @@ static auto getBlobDetector() {
     params_.filterByColor = true;       // NOLINT
     params_.blobColor = 0;              // NOLINT
     params_.filterByArea = true;        // NOLINT
-    params_.minArea = 1250.0;           // NOLINT
+    params_.minArea = 500.0F;           // NOLINT
     params_.maxArea = 500000.0;         // NOLINT
     params_.filterByCircularity = true; // NOLINT
     params_.minCircularity = 0.8F;      // NOLINT

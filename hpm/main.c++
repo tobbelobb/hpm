@@ -90,29 +90,20 @@ auto main(int const argc, char **const argv) -> int {
       if (not camParamsFile.isOpened()) {
         std::cerr << "Failed to load cam params file: " << camParamsFileName
                   << '\n';
-        exit(1);
+        std::exit(1);
       }
-      return {[&camParamsFile]() {
-                cv::Mat cameraMatrix_;
-                camParamsFile["camera_matrix"] >> cameraMatrix_;
-                return cameraMatrix_;
-              }(),
-              [&camParamsFile]() {
-                cv::Mat distortionCoefficients_;
-                camParamsFile["distortion_coefficients"] >>
-                    distortionCoefficients_;
-                return distortionCoefficients_;
-              }(),
-              {[&camParamsFile]() {
-                 Vector3d cameraRotation_;
-                 camParamsFile["camera_rotation"] >> cameraRotation_;
-                 return cameraRotation_;
-               }(),
-               [&camParamsFile]() {
-                 Vector3d cameraTranslation_;
-                 camParamsFile["camera_translation"] >> cameraTranslation_;
-                 return cameraTranslation_;
-               }()}};
+      cv::Mat cameraMatrix_;
+      camParamsFile["camera_matrix"] >> cameraMatrix_;
+      cv::Mat distortionCoefficients_;
+      camParamsFile["distortion_coefficients"] >> distortionCoefficients_;
+      cv::Mat cameraRotation_;
+      camParamsFile["camera_rotation"] >> cameraRotation_;
+      cv::Mat cameraTranslation_{};
+      camParamsFile["camera_translation"] >> cameraTranslation_;
+      return {cameraMatrix_,
+              distortionCoefficients_,
+              {cameraRotation_, cameraTranslation_}};
+
     } catch (std::exception const &e) {
       std::cerr << "Could not read camera parameters from file "
                 << camParamsFileName << '\n';
