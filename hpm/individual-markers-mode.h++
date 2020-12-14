@@ -29,5 +29,5 @@ DetectionResult findMarks(cv::InputArray undistortedImage);
 // Also, results come out unsorted for now
 std::vector<CameraFramedPosition> findIndividualMarkerPositions(
     cv::InputArray undistortedImage, double knownMarkerDiameter,
-    double focalLength, cv::Point2f const &imageCenter,
+    double focalLength, PixelPosition const &imageCenter,
     bool showIntermediateImages, bool showResultImage);

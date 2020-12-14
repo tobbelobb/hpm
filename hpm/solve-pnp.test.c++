@@ -11,10 +11,10 @@ auto main() -> int {
   std::vector<cv::Point3d> const markerPositions{
       {-1, -1, 0}, {1, -1, 0}, {1, 0, 0}, {1, 1, 0}, {-1, 1, 0}, {-1, 0, 0}};
   // clang-format on
-  float constexpr PIX_DIST{100};
-  float const CENTER{static_cast<float>(cameraMatrix.at<double>(0, 2))};
-  float const F{static_cast<float>(cameraMatrix.at<double>(0, 0))};
-  float const X0{F / PIX_DIST};
+  auto constexpr PIX_DIST{100.0};
+  auto const CENTER{cameraMatrix.at<double>(0, 2)};
+  auto const F{cameraMatrix.at<double>(0, 0)};
+  auto const X0{F / PIX_DIST};
 
   "No rotation"_test = [&]() {
     IdentifiedHpMarks const identifiedMarks{
@@ -28,7 +28,7 @@ auto main() -> int {
     std::optional<SixDof> const result{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
-    auto const value{result.value()};
+    auto const &value{result.value()};
 
     auto constexpr EPS{0.000001_d};
     expect(abs(value.rotX()) < EPS) << "X rotation";
@@ -48,9 +48,9 @@ auto main() -> int {
                                         {CENTER - PIX_DIST, CENTER + PIX_DIST},
                                         {CENTER - PIX_DIST, CENTER}}};
 
-    float const ang{0.1F};
-    float const sin{std::sin(ang)};
-    float const cos{std::cos(ang)};
+    auto const ang{0.1};
+    auto const sin{std::sin(ang)};
+    auto const cos{std::cos(ang)};
     PixelPosition const center{CENTER, CENTER};
 
     for (auto &mark : marks) {
@@ -63,7 +63,7 @@ auto main() -> int {
     std::optional<SixDof> const result{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
-    auto const value{result.value()};
+    auto const &value{result.value()};
 
     /* Right above is a particularly sensitive angle that makes the PnP problem
      * a bit unstable, so allow quite large errors. */
@@ -74,20 +74,20 @@ auto main() -> int {
     expect(abs(value.x()) < EPS) << "X translation";
     expect(abs(value.y()) < EPS) << "Y translation";
     expect(abs(value.z() - static_cast<double>(X0)) < EPS) << "Z translation";
-    expect(value.reprojectionError < 0.3_d) << "Reprojection error";
+    expect(value.reprojectionError < 0.45_d) << "Reprojection error";
   };
 
   "Pi over four Y-rotation from right above"_test = [&]() {
-    float const sqrt2Inv{1.0F / std::sqrt(2.0F)};
+    auto const sqrt2Inv{1.0 / std::sqrt(2.0)};
     // Some markers get closer to the camera by such a rotation
     // Instead of PIX_DIST, they will have the following X
     // and Y offsets from the images center
-    float const closersX{F * sqrt2Inv / (X0 - sqrt2Inv)};
-    float const closersY{F / (X0 - sqrt2Inv)};
+    auto const closersX{F * sqrt2Inv / (X0 - sqrt2Inv)};
+    auto const closersY{F / (X0 - sqrt2Inv)};
     // Some markers are moved farther away from the camera
     // by the rotation
-    float const farthersX{F * sqrt2Inv / (X0 + sqrt2Inv)};
-    float const farthersY{F / (X0 + sqrt2Inv)};
+    auto const farthersX{F * sqrt2Inv / (X0 + sqrt2Inv)};
+    auto const farthersY{F / (X0 + sqrt2Inv)};
 
     IdentifiedHpMarks const identifiedMarks{
         {CENTER - closersX, CENTER - closersY},
@@ -100,7 +100,7 @@ auto main() -> int {
     std::optional<SixDof> const result{
         solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
-    auto const value{result.value()};
+    auto const &value{result.value()};
 
     auto constexpr EPS{0.0000051_d};
     expect(abs(value.rotX()) < EPS) << "X rotation";

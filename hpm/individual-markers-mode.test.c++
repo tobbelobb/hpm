@@ -63,9 +63,8 @@ auto main() -> int {
 
         double const meanFocalLength{std::midpoint(
             cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
-        cv::Point2f const imageCenter{
-            static_cast<float>(cameraMatrix.at<double>(0, 2)),
-            static_cast<float>(cameraMatrix.at<double>(1, 2))};
+        PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                        cameraMatrix.at<double>(1, 2)};
 
         std::vector<CameraFramedPosition> const positions{
             findIndividualMarkerPositions(image, knownMarkerDiameter,

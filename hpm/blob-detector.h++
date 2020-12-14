@@ -6,7 +6,7 @@
 
 DetectionResult blobDetect(cv::InputArray image);
 
-CameraFramedPosition blobToPosition(cv::KeyPoint const &blob,
+CameraFramedPosition blobToPosition(hpm::KeyPoint const &blob,
                                     double focalLength,
-                                    cv::Point2f const &imageCenter,
+                                    PixelPosition const &imageCenter,
                                     double markerDiameter);

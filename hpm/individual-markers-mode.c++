@@ -18,12 +18,16 @@
 #include <hpm/individual-markers-mode.h++>
 
 static void drawKeyPoints(cv::InputArray image,
-                          std::vector<cv::KeyPoint> const &keyPoints,
+                          std::vector<hpm::KeyPoint> const &keyPoints,
                           cv::InputOutputArray result) {
   const auto BLACK{cv::Scalar(0)};
-  cv::drawKeypoints(image, keyPoints, result, BLACK,
+  std::vector<cv::KeyPoint> cvKeyPoints{};
+  std::transform(keyPoints.begin(), keyPoints.end(),
+                 std::back_inserter(cvKeyPoints),
+                 [](hpm::KeyPoint const &keyPoint) { return keyPoint.toCv(); });
+  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  cv::drawKeypoints(image, keyPoints, result, BLACK,
+  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
                     cv::DrawMatchesFlags::DRAW_OVER_OUTIMG);
 }
 
@@ -50,7 +54,7 @@ static void showImage(cv::InputArray image, std::string const &name) {
 auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
-                                   cv::Point2f const &imageCenter,
+                                   PixelPosition const &imageCenter,
                                    bool showIntermediateImages,
                                    bool showResultImage)
     -> std::vector<CameraFramedPosition> {
@@ -68,16 +72,16 @@ auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(blobs.size());
   for (auto const &blob : blobs.red) {
-    positions.emplace_back(
-        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
+    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
+                                          imageCenter, knownMarkerDiameter));
   }
   for (auto const &blob : blobs.green) {
-    positions.emplace_back(
-        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
+    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
+                                          imageCenter, knownMarkerDiameter));
   }
   for (auto const &blob : blobs.blue) {
-    positions.emplace_back(
-        blobToPosition(blob, focalLength, imageCenter, knownMarkerDiameter));
+    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
+                                          imageCenter, knownMarkerDiameter));
   }
 
   return positions;

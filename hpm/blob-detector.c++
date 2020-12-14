@@ -1,3 +1,4 @@
+#include <cmath>
 #include <numeric>
 #include <vector>
 
@@ -69,10 +70,13 @@ static auto getBlobDetector() {
   return simpleBlobDetector;
 }
 
-static auto detect(cv::InputArray image,
-                   cv::Ptr<cv::Feature2D> const &detector) {
-  std::vector<cv::KeyPoint> blobs{};
-  detector->detect(image, blobs);
+static auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector)
+    -> std::vector<hpm::KeyPoint> {
+  std::vector<cv::KeyPoint> blobs_{};
+  detector->detect(image, blobs_);
+  std::vector<hpm::KeyPoint> blobs{};
+  std::transform(blobs_.begin(), blobs_.end(), std::back_inserter(blobs),
+                 [](cv::KeyPoint const &kp) { return hpm::KeyPoint(kp); });
   return blobs;
 }
 
@@ -98,27 +102,26 @@ auto blobDetect(cv::InputArray image) -> DetectionResult {
           detect(antiBlue, detector)};
 }
 
-auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
-                    cv::Point2f const &imageCenter, double const markerDiameter)
-    -> CameraFramedPosition {
+auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
+                    PixelPosition const &imageCenter,
+                    double const markerDiameter) -> CameraFramedPosition {
   // Step 1: We have an ellipsis within an xy-direced square with a given
   // size
   //         So we know its semi-major axis size and direction,
   //         We also know the position of its center
-  cv::Point2d const fromCenter =
-      static_cast<cv::Point2d>(blob.pt - imageCenter);
+  PixelPosition const fromCenter = blob.center - imageCenter;
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
 
   // The semi major axis is oriented along this direction
-  cv::Point2d const dirToOrigin = -fromCenter / cv::norm(fromCenter);
+  PixelPosition const dirToOrigin = -fromCenter / cv::norm(fromCenter);
 
   // These were empirically determined for the SimpleBlobDetector
   // xyOffness:
   // How much does the reported marker size grow or shrink
   // when the marker does not lie along the y=0 or x=0 axes?
   double const xyOffnessFactor =
-      cos(0.08 * abs(dirToOrigin.x * dirToOrigin.y) *
+      cos(0.08 * std::abs(dirToOrigin.x * dirToOrigin.y) *
           cos(cv::norm(fromCenter) / cv::norm(imageCenter)));
   // double const xyOffnessFactor =
   //    cos(0.06825 * abs(dirToOrigin.x * dirToOrigin.y));
@@ -132,8 +135,7 @@ auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
   // the SimpleBlobDetector include/enclose in its marker size?
   double constexpr detectorEllipsenessInclusion{0.5};
 
-  double const semiMajorAxis =
-      (static_cast<double>(blob.size) / 2.0) * xyOffnessFactor;
+  double const semiMajorAxis = (blob.size / 2.0) * xyOffnessFactor;
   double const majorAxis = 2 * semiMajorAxis;
 
   // Step 2: We know that this ellipsis is a projection cast by a circular
@@ -146,8 +148,8 @@ auto blobToPosition(cv::KeyPoint const &blob, double const focalLength,
   //         and the ray that is farthest from the image center,
   //         have entered the pinhole at two deducable angles
   //         (angles measured from z-axis to ray)
-  cv::Point2f const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
-  cv::Point2f const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
+  PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
+  PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
   double smallestAng = atan(cv::norm(closestPoint) / focalLength);
   double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
   if (cv::norm(fromCenter) < semiMajorAxis) {

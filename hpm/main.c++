@@ -107,7 +107,7 @@ auto main(int const argc, char **const argv) -> int {
                  return cameraRotation_;
                }(),
                [&camParamsFile]() {
-                 cv::Matx31d cameraTranslation_;
+                 Vector3d cameraTranslation_;
                  camParamsFile["camera_translation"] >> cameraTranslation_;
                  return cameraTranslation_;
                }()}};
@@ -149,9 +149,8 @@ auto main(int const argc, char **const argv) -> int {
 
   const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
                                              cameraMatrix.at<double>(1, 1))};
-  cv::Point2f const imageCenter{
-      static_cast<float>(cameraMatrix.at<double>(0, 2)),
-      static_cast<float>(cameraMatrix.at<double>(1, 2))};
+  PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                  cameraMatrix.at<double>(1, 2)};
 
   if (markerDiameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "

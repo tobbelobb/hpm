@@ -5,7 +5,7 @@
 
 #include <opencv2/core.hpp>
 
-using PixelPosition = cv::Point2f;
+using PixelPosition = cv::Point2d;
 
 // using CameraFramedPosition = cv::Point3d;
 class CameraFramedPosition : public cv::Point3d {
@@ -22,7 +22,7 @@ public:
   WorldPosition(double x, double y, double z) : cv::Point3d(x, y, z){};
 };
 
-using Vector3d = cv::Matx31d;
+using Vector3d = cv::Vec3d;
 using InputMarkerPositions = cv::Matx<double, 6, 3>;
 
 struct SixDof {
@@ -44,10 +44,27 @@ struct SixDof {
   };
 };
 
+namespace hpm {
+struct KeyPoint {
+  PixelPosition center{0, 0};
+  double size{0.0};
+
+  explicit KeyPoint(cv::KeyPoint const &keyPointIn)
+      : center(static_cast<PixelPosition>(keyPointIn.pt)),
+        size(static_cast<double>(keyPointIn.size)) {}
+  KeyPoint(PixelPosition const &center_, double size_)
+      : center(center_), size(size_) {}
+
+  cv::KeyPoint toCv() const {
+    return {static_cast<cv::Point2f>(center), static_cast<float>(size)};
+  }
+};
+} // namespace hpm
+
 struct DetectionResult {
-  std::vector<cv::KeyPoint> red;
-  std::vector<cv::KeyPoint> green;
-  std::vector<cv::KeyPoint> blue;
+  std::vector<hpm::KeyPoint> red;
+  std::vector<hpm::KeyPoint> green;
+  std::vector<hpm::KeyPoint> blue;
 
   size_t size() const { return red.size() + green.size() + blue.size(); }
 };
@@ -60,17 +77,18 @@ static inline auto signed2DCross(PixelPosition const &v0,
 
 static inline auto isLeft(PixelPosition const &v0, PixelPosition const &v1,
                           PixelPosition const &v2) -> bool {
-  return signed2DCross(v0, v1, v2) > 0.0F;
+  return signed2DCross(v0, v1, v2) > 0.0;
 }
 
-static void fanSort(std::vector<cv::KeyPoint> &fan) {
+static void fanSort(std::vector<hpm::KeyPoint> &fan) {
   // Establish a reference point
   const auto &pivot = fan[0];
   // Sort points in a ccw radially ordered "fan" with pivot in fan[0]
-  std::sort(std::next(fan.begin()), fan.end(),
-            [&pivot](cv::KeyPoint const &lhs, cv::KeyPoint const &rhs) -> bool {
-              return isLeft(pivot.pt, lhs.pt, rhs.pt);
-            });
+  std::sort(
+      std::next(fan.begin()), fan.end(),
+      [&pivot](hpm::KeyPoint const &lhs, hpm::KeyPoint const &rhs) -> bool {
+        return isLeft(pivot.center, lhs.center, rhs.center);
+      });
 }
 
 struct IdentifiedHpMarks {
@@ -99,7 +117,7 @@ struct IdentifiedHpMarks {
     auto const greens = foundMarkers.green.size();
     auto const blues = foundMarkers.blue.size();
 
-    std::vector<cv::KeyPoint> all{};
+    std::vector<hpm::KeyPoint> all{};
     all.reserve(reds + blues + greens);
 
     all.insert(all.end(), foundMarkers.red.begin(), foundMarkers.red.end());
@@ -113,29 +131,29 @@ struct IdentifiedHpMarks {
     // Points come out left handed from the detector
     // We temporarily don't want that while we're sorting
     for (auto &keyPoint : all) {
-      keyPoint.pt.y = -keyPoint.pt.y;
+      keyPoint.center.y = -keyPoint.center.y;
     }
     // First element will be used as pivot
-    if (not(isLeft(all[0].pt, all[1].pt, all[2].pt))) {
+    if (not(isLeft(all[0].center, all[1].center, all[2].center))) {
       std::swap(all[0], all[1]);
     }
     fanSort(all);
     for (auto &keyPoint : all) {
-      keyPoint.pt.y = -keyPoint.pt.y;
+      keyPoint.center.y = -keyPoint.center.y;
     }
 
     if (reds == 2) {
-      red0 = {all[0].pt};
-      red1 = {all[1].pt};
+      red0 = {all[0].center};
+      red1 = {all[1].center};
     }
     if (greens == 2) {
-      green0 = {all[reds].pt};
-      green1 = {all[reds + 1].pt};
+      green0 = {all[reds].center};
+      green1 = {all[reds + 1].center};
     }
     auto const nonBlues = reds + greens;
     if (blues == 2) {
-      blue0 = {all[nonBlues].pt};
-      blue1 = {all[nonBlues + 1].pt};
+      blue0 = {all[nonBlues].center};
+      blue1 = {all[nonBlues + 1].center};
     }
   }
 
