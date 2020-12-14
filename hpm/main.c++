@@ -179,6 +179,11 @@ auto main(int const argc, char **const argv) -> int {
       } else {
         std::cout << worldPose.translation;
       }
+      double constexpr HIGH_REPROJECTION_ERROR{1.0};
+      if (worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
+        std::cout << "\nWarning! High reprojection error: "
+                  << worldPose.reprojectionError;
+      }
     } else {
       std::cout << "Found no camera pose";
     }
