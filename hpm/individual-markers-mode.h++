@@ -27,7 +27,7 @@ hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
 // (sadly) intertwined, so find performs both detection and interpretation
 //
 // Also, results come out unsorted for now
-std::vector<hpm::CameraFramedPosition> findIndividualMarkerPositions(
-    cv::InputArray undistortedImage, double knownMarkerDiameter,
-    double focalLength, hpm::PixelPosition const &imageCenter,
-    bool showIntermediateImages, bool showResultImage);
+std::vector<hpm::CameraFramedPosition>
+findIndividualMarkerPositions(hpm::DetectionResult const &blobs,
+                              double knownMarkerDiameter, double focalLength,
+                              hpm::PixelPosition const &imageCenter);

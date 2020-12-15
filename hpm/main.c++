@@ -80,6 +80,8 @@ auto main(int const argc, char **const argv) -> int {
   }
   showResultImage = (show == "result") or (show == "all");
   showIntermediateImages = (show == "intermediate") or (show == "all");
+  (void)showResultImage;
+  (void)showIntermediateImages;
 
   if (printHelp) {
     args.printHelp();
@@ -193,8 +195,7 @@ auto main(int const argc, char **const argv) -> int {
   std::cout << '\n';
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
-      undistortedImage, markerDiameter, meanFocalLength, imageCenter,
-      showIntermediateImages, showResultImage)};
+      marks, markerDiameter, meanFocalLength, imageCenter)};
 
   if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected";

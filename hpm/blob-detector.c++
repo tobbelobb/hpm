@@ -15,6 +15,7 @@
 #pragma GCC diagnostic pop
 
 #include <hpm/blob-detector.h++>
+#include <hpm/util.h++>
 
 using namespace hpm;
 
@@ -97,6 +98,10 @@ auto blobDetect(cv::InputArray image) -> DetectionResult {
                       getBlue(image) * THIRD;
   cv::Mat antiBlue = getRed(image) * THIRD + getGreen(image) * THIRD +
                      invert(getBlue(image)) * THIRD;
+
+  showImage(antiRed, "antiRed");
+  showImage(antiGreen, "antiGreen");
+  showImage(antiBlue, "antiBlue");
 
   // With SimpleBlobDetector the three detect lines are very expensive,
   // like ~90% of execution time

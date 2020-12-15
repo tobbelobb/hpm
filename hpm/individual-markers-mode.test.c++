@@ -69,9 +69,8 @@ auto main() -> int {
                                         cameraMatrix.at<double>(1, 2)};
 
         std::vector<CameraFramedPosition> const positions{
-            findIndividualMarkerPositions(image, knownMarkerDiameter,
-                                          meanFocalLength, imageCenter, false,
-                                          false)};
+            findIndividualMarkerPositions(findMarks(image), knownMarkerDiameter,
+                                          meanFocalLength, imageCenter)};
 
         // This is what we want to test.
         // Given all of the above, are we able to get back the

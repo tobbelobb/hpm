@@ -16,61 +16,31 @@
 
 #include <hpm/blob-detector.h++>
 #include <hpm/individual-markers-mode.h++>
+#include <hpm/util.h++>
 
 using namespace hpm;
 
-static void drawKeyPoints(cv::InputArray image,
-                          std::vector<hpm::KeyPoint> const &keyPoints,
-                          cv::InputOutputArray result) {
-  const auto BLACK{cv::Scalar(0)};
-  std::vector<cv::KeyPoint> cvKeyPoints{};
-  std::transform(keyPoints.begin(), keyPoints.end(),
-                 std::back_inserter(cvKeyPoints),
-                 [](hpm::KeyPoint const &keyPoint) { return keyPoint.toCv(); });
-  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
-                    cv::DrawMatchesFlags::DRAW_OVER_OUTIMG);
+auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
+  auto const detectionResult{blobDetect(undistortedImage)};
+  showImage(imageWithKeyPoints(undistortedImage, {detectionResult.red, {}, {}}),
+            "reds");
+  showImage(
+      imageWithKeyPoints(undistortedImage, {{}, detectionResult.green, {}}),
+      "greens");
+  showImage(
+      imageWithKeyPoints(undistortedImage, {{}, {}, detectionResult.blue}),
+      "blues");
+  std::cout << detectionResult.red.size() << std::endl;
+  std::cout << detectionResult.green.size() << std::endl;
+  std::cout << detectionResult.blue.size() << std::endl;
+  return detectionResult;
 }
 
-static auto imageWithKeyPoints(cv::InputArray image,
-                               DetectionResult const &markers) -> cv::Mat {
-  cv::Mat result{};
-  drawKeyPoints(image, markers.red, result);
-  drawKeyPoints(result, markers.green, result);
-  drawKeyPoints(result, markers.blue, result);
-  return result;
-}
-
-static void showImage(cv::InputArray image, std::string const &name) {
-  cv::namedWindow(name, cv::WINDOW_NORMAL);
-  constexpr auto SHOW_PIXELS_X{1500};
-  constexpr auto SHOW_PIXELS_Y{1500};
-  cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
-  cv::imshow(name, image);
-  if (cv::waitKey(0) == 's') {
-    cv::imwrite(name, image);
-  }
-}
-
-auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
+auto findIndividualMarkerPositions(DetectionResult const &blobs,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
-                                   PixelPosition const &imageCenter,
-                                   bool showIntermediateImages,
-                                   bool showResultImage)
+                                   PixelPosition const &imageCenter)
     -> std::vector<CameraFramedPosition> {
-  if (undistortedImage.empty()) {
-    return {};
-  }
-
-  auto const blobs{blobDetect(undistortedImage)};
-
-  if (showIntermediateImages or showResultImage) {
-    showImage(imageWithKeyPoints(undistortedImage, blobs),
-              "markersDetected.png");
-  }
-
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(blobs.size());
   for (auto const &blob : blobs.red) {
@@ -87,8 +57,4 @@ auto findIndividualMarkerPositions(cv::InputArray undistortedImage,
   }
 
   return positions;
-}
-
-auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
-  return blobDetect(undistortedImage);
 }
