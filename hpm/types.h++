@@ -60,6 +60,15 @@ struct KeyPoint {
   }
 };
 
+struct ColorBounds {
+  cv::Scalar darkRed{0, 0, 50};
+  cv::Scalar brightRed{50, 50, 255};
+  cv::Scalar darkGreen{0, 50, 0};
+  cv::Scalar brightGreen{0, 255, 0};
+  cv::Scalar darkBlue{50, 0, 0};
+  cv::Scalar brightBlue{255, 0, 0};
+};
+
 struct DetectionResult {
   std::vector<hpm::KeyPoint> red;
   std::vector<hpm::KeyPoint> green;

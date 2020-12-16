@@ -88,12 +88,49 @@ static auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector)
 // https://docs.opencv.org/4.4.0/d0/d7a/classcv_1_1SimpleBlobDetector.html#details
 // and also
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
-auto blobDetect(cv::InputArray image) -> DetectionResult {
+auto blobDetect(cv::InputArray image, ColorBounds const &colorBounds)
+    -> DetectionResult {
   auto const detector = getBlobDetector();
+
+  cv::Mat imageMat{image.getMat()};
+
+  cv::Mat hsv{};
+  cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+  cv::Mat foundRedPx(imageMat.rows, imageMat.cols, CV_8U);
+  cv::Mat foundRedPx2(imageMat.rows, imageMat.cols, CV_8U);
+
+  (void)colorBounds;
+  // showImage(getBlue(hsv), "getBlue(hsv)");
+  // showImage(getGreen(hsv), "getGreen(hsv)");
+  // showImage(getRed(hsv), "getRed(hsv)");
+
+  // ColorBounds hsvColorBounds{};
+  // hsvColorBounds.darkRed = ScalarBGR2HSV(colorBounds.darkRed);
+  // hsvColorBounds.brightRed = ScalarBGR2HSV(colorBounds.brightRed);
+  // cvtColor(colorBounds.brightRed, hsvColorBounds.brightRed,
+  // cv::COLOR_BGR2HSV); cvtColor(colorBounds.darkGreen,
+  // hsvColorBounds.darkGreen, cv::COLOR_BGR2HSV);
+  // cvtColor(colorBounds.brightGreen, hsvColorBounds.brightGreen,
+  //         cv::COLOR_BGR2HSV);
+  // cvtColor(colorBounds.darkBlue, hsvColorBounds.darkBlue, cv::COLOR_BGR2HSV);
+  // cvtColor(colorBounds.brightBlue, hsvColorBounds.brightBlue,
+  //         cv::COLOR_BGR2HSV);
+
+  auto const colorGap{5};
+  auto const bottomSat{230};
+  auto const maxSat{255};
+  auto const bottomValue{140};
+  auto const maxValue{255};
+  cv::inRange(hsv, cv::Scalar{180 - colorGap, bottomSat, bottomValue},
+              cv::Scalar{180 + colorGap, maxSat, maxValue}, foundRedPx);
+  cv::inRange(hsv, cv::Scalar{-colorGap, bottomSat, bottomValue},
+              cv::Scalar{colorGap, maxSat, maxValue}, foundRedPx2);
+
   // Combine channels in a way that turns markers into dark regions
   constexpr double THIRD{0.33333};
-  cv::Mat antiRed = invert(getRed(image)) * THIRD + getGreen(image) * THIRD +
-                    getBlue(image) * THIRD;
+  cv::Mat antiRed = invert(foundRedPx + foundRedPx2);
+  // cv::Mat antiRed = invert(getRed(image)) * THIRD + getGreen(image) * THIRD +
+  //                  getBlue(image) * THIRD;
   cv::Mat antiGreen = getRed(image) * THIRD + invert(getGreen(image)) * THIRD +
                       getBlue(image) * THIRD;
   cv::Mat antiBlue = getRed(image) * THIRD + getGreen(image) * THIRD +
@@ -107,6 +144,10 @@ auto blobDetect(cv::InputArray image) -> DetectionResult {
   // like ~90% of execution time
   return {detect(antiRed, detector), detect(antiGreen, detector),
           detect(antiBlue, detector)};
+}
+
+auto blobDetect(cv::InputArray image) -> DetectionResult {
+  return blobDetect(image, {});
 }
 
 auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,

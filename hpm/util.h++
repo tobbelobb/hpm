@@ -21,3 +21,5 @@ void drawKeyPoints(cv::InputArray image,
 
 cv::Mat imageWithKeyPoints(cv::InputArray image,
                            hpm::DetectionResult const &markers);
+
+cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);

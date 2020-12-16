@@ -20,8 +20,9 @@
 
 using namespace hpm;
 
-auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
-  auto const detectionResult{blobDetect(undistortedImage)};
+auto findMarks(cv::InputArray undistortedImage, ColorBounds const &colorBounds)
+    -> DetectionResult {
+  auto const detectionResult{blobDetect(undistortedImage, colorBounds)};
   showImage(imageWithKeyPoints(undistortedImage, {detectionResult.red, {}, {}}),
             "reds");
   showImage(
@@ -34,6 +35,10 @@ auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
   std::cout << detectionResult.green.size() << std::endl;
   std::cout << detectionResult.blue.size() << std::endl;
   return detectionResult;
+}
+
+auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
+  return findMarks(undistortedImage, {});
 }
 
 auto findIndividualMarkerPositions(DetectionResult const &blobs,
@@ -57,4 +62,4 @@ auto findIndividualMarkerPositions(DetectionResult const &blobs,
   }
 
   return positions;
-}
+  }

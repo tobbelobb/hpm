@@ -4,6 +4,9 @@
 
 #include <hpm/types.h++>
 
+hpm::DetectionResult blobDetect(cv::InputArray image,
+                                hpm::ColorBounds const &colorBounds);
+
 hpm::DetectionResult blobDetect(cv::InputArray image);
 
 hpm::CameraFramedPosition blobToPosition(hpm::KeyPoint const &blob,

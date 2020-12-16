@@ -166,7 +166,9 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  DetectionResult const marks{findMarks(undistortedImage)};
+  ColorBounds const colorBounds{{0, 0, 50},    {30, 30, 255}, {0, 50, 0},
+                                {50, 255, 50}, {50, 0, 0},    {255, 50, 50}};
+  DetectionResult const marks{findMarks(undistortedImage, colorBounds)};
   IdentifiedHpMarks const identifiedMarks{marks};
 
   if (identifiedMarks.allIdentified()) {

@@ -13,6 +13,10 @@
 // description : Finds individual markers in image.
 //               Groups them in red, green, and blue markers.
 //               Each group is unsorted.
+//               The colors are defined to be any color within the
+//               specified bounds.
+hpm::DetectionResult findMarks(cv::InputArray undistortedImage,
+                               hpm::ColorBounds const &colorBounds);
 hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
 
 // function : findIndividualMarkerPositions
