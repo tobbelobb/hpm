@@ -15,29 +15,29 @@
 
      The side with the red markers are directed straight towards
      the A-anchor (which is on the negative y-axis).
+     Therefore the two red markers should have the same y-coordinate.
 
      We want the positions of the (centers of the) markers,
      expressed in the global coordinate system,
      (that is the XYZ-one that the slicer uses),
      measured when the nozzle is placed at the origin.
 
-     In this toy example, the markers are all placed
-     at the same Z-height as the nozzle,
-     which would be very impractical in a real use case.
-
-     The positions of the markers must be co-planar for the algorithm to work.
+     The marker positions in this file were computed with
+     the help of hp-mark/find-marker-positions/solve.py
+     Run/study that script if you don't know how to find your
+     marker positions.
 -->
 <marker_positions type_id="opencv-matrix">
   <rows>6</rows>
   <cols>3</cols>
   <dt>d</dt>
   <data>
-   -58.95005455 -123.62989559  156.39794965 <!-- Marker 0,   Red 0 -->
-    64.39433975 -123.62989559  156.39794965 <!-- Marker 1,   Red 1 -->
-   151.25783767  -17.11313964  156.39794965 <!-- Marker 2, Green 0 -->
-    66.5087323   136.58060397  156.39794965 <!-- Marker 3, Green 1 -->
-   -76.09272438  114.55655976  156.39794965 <!-- Marker 4,  Blue 0 -->
-  -152.99011109  -17.84566167  156.39794965 <!-- Marker 5,  Blue 1 -->
+   -63.69265526 -120.83311656  157.67675604 <!-- Marker 0,   Red 0 -->
+    59.202343   -120.83311656  157.67675604 <!-- Marker 1,   Red 1 -->
+   145.86717724  -13.78345574  157.67675604 <!-- Marker 2, Green 0 -->
+    59.13922508  139.24343034  157.67675604 <!-- Marker 3, Green 1 -->
+   -82.79230912  115.47456893  157.67675604 <!-- Marker 4,  Blue 0 -->
+  -160.4202408   -17.16617147  157.67675604 <!-- Marker 5,  Blue 1 -->
   </data></marker_positions>
 <marker_diameter>31.8</marker_diameter>
 </opencv_storage>
