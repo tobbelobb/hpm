@@ -12,6 +12,7 @@
 #endif
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
+#include <opencv2/imgproc.hpp>
 #pragma GCC diagnostic pop
 
 #include <hpm/blob-detector.h++>
@@ -19,22 +20,36 @@
 
 using namespace hpm;
 
-static auto getSingleColor(cv::InputArray image, int color) -> cv::Mat {
+static auto getSingleChannel(cv::InputArray image, int channel) -> cv::Mat {
   cv::Mat singleColorImage{};
-  cv::extractChannel(image, singleColorImage, color);
+  cv::extractChannel(image, singleColorImage, channel);
   return singleColorImage;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 static auto getRed(cv::InputArray image) -> cv::Mat {
-  return getSingleColor(image, 2);
+  return getSingleChannel(image, 2);
 }
 
 static auto getGreen(cv::InputArray image) -> cv::Mat {
-  return getSingleColor(image, 1);
+  return getSingleChannel(image, 1);
 }
 
 static auto getBlue(cv::InputArray image) -> cv::Mat {
-  return getSingleColor(image, 0);
+  return getSingleChannel(image, 0);
+}
+
+static auto getValueChannel(cv::InputArray image) -> cv::Mat {
+  return getSingleChannel(image, 2);
+}
+
+static auto getSaturationChannel(cv::InputArray image) -> cv::Mat {
+  return getSingleChannel(image, 1);
+}
+
+static auto getHueChannel(cv::InputArray image) -> cv::Mat {
+  return getSingleChannel(image, 0);
 }
 
 static auto invert(cv::InputArray image) -> cv::Mat {
@@ -42,6 +57,7 @@ static auto invert(cv::InputArray image) -> cv::Mat {
   cv::bitwise_not(image, inverted);
   return inverted;
 }
+#pragma GCC diagnostic pop
 
 static auto getBlobDetector() {
   cv::SimpleBlobDetector::Params params = []() {
@@ -54,10 +70,10 @@ static auto getBlobDetector() {
     params_.filterByColor = true;       // NOLINT
     params_.blobColor = 0;              // NOLINT
     params_.filterByArea = true;        // NOLINT
-    params_.minArea = 500.0F;           // NOLINT
+    params_.minArea = 3700.0F;          // NOLINT
     params_.maxArea = 500000.0;         // NOLINT
     params_.filterByCircularity = true; // NOLINT
-    params_.minCircularity = 0.8F;      // NOLINT
+    params_.minCircularity = 0.7F;      // NOLINT
     params_.maxCircularity = 3.4e38F;   // NOLINT
     params_.filterByInertia = true;     // NOLINT
     params_.minInertiaRatio = 0.1F;     // NOLINT
@@ -83,6 +99,11 @@ static auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector)
   return blobs;
 }
 
+static auto bellCurve(double const x, double const center,
+                      double const standardDeviation) {
+  return exp(-0.5 * pow(((x - center) / standardDeviation), 2));
+}
+
 // Algorithm: Blob Detector
 // See:
 // https://docs.opencv.org/4.4.0/d0/d7a/classcv_1_1SimpleBlobDetector.html#details
@@ -100,45 +121,41 @@ auto blobDetect(cv::InputArray image, ColorBounds const &colorBounds)
   cv::Mat foundRedPx2(imageMat.rows, imageMat.cols, CV_8U);
 
   (void)colorBounds;
-  // showImage(getBlue(hsv), "getBlue(hsv)");
-  // showImage(getGreen(hsv), "getGreen(hsv)");
-  // showImage(getRed(hsv), "getRed(hsv)");
+  cv::Mat hue = getHueChannel(hsv);
+  cv::Mat saturation = getSaturationChannel(hsv);
+  cv::Mat value = getSaturationChannel(hsv);
 
-  // ColorBounds hsvColorBounds{};
-  // hsvColorBounds.darkRed = ScalarBGR2HSV(colorBounds.darkRed);
-  // hsvColorBounds.brightRed = ScalarBGR2HSV(colorBounds.brightRed);
-  // cvtColor(colorBounds.brightRed, hsvColorBounds.brightRed,
-  // cv::COLOR_BGR2HSV); cvtColor(colorBounds.darkGreen,
-  // hsvColorBounds.darkGreen, cv::COLOR_BGR2HSV);
-  // cvtColor(colorBounds.brightGreen, hsvColorBounds.brightGreen,
-  //         cv::COLOR_BGR2HSV);
-  // cvtColor(colorBounds.darkBlue, hsvColorBounds.darkBlue, cv::COLOR_BGR2HSV);
-  // cvtColor(colorBounds.brightBlue, hsvColorBounds.brightBlue,
-  //         cv::COLOR_BGR2HSV);
+  // Massaging the image to the blobDetector's delight...
+  // This is heavily manually done, and very fragile.
+  // The whole marker setup must be changed to get rid of this
+  // fragile code here.
+  cv::Mat antiRed = getHueChannel(hsv);
+  antiRed.forEach<uint8_t>([](uint8_t &x, const int *position) {
+    x = static_cast<uint8_t>(255.0 *
+                             (1.0 - bellCurve(x, 0, 4) - bellCurve(x, 179, 4)));
+    (void)position;
+  });
+  cv::GaussianBlur(antiRed, antiRed, {7, 7}, 2);
 
-  auto const colorGap{5};
-  auto const bottomSat{230};
-  auto const maxSat{255};
-  auto const bottomValue{140};
-  auto const maxValue{255};
-  cv::inRange(hsv, cv::Scalar{180 - colorGap, bottomSat, bottomValue},
-              cv::Scalar{180 + colorGap, maxSat, maxValue}, foundRedPx);
-  cv::inRange(hsv, cv::Scalar{-colorGap, bottomSat, bottomValue},
-              cv::Scalar{colorGap, maxSat, maxValue}, foundRedPx2);
+  cv::Mat antiGreen = getHueChannel(hsv);
+  antiGreen.forEach<uint8_t>([](uint8_t &x, const int *position) {
+    x = static_cast<uint8_t>(255.0 * (1 - bellCurve(x, 30, 4)));
+    (void)position;
+  });
+  cv::GaussianBlur(antiGreen, antiGreen, {7, 7}, 2);
 
-  // Combine channels in a way that turns markers into dark regions
-  constexpr double THIRD{0.33333};
-  cv::Mat antiRed = invert(foundRedPx + foundRedPx2);
-  // cv::Mat antiRed = invert(getRed(image)) * THIRD + getGreen(image) * THIRD +
-  //                  getBlue(image) * THIRD;
-  cv::Mat antiGreen = getRed(image) * THIRD + invert(getGreen(image)) * THIRD +
-                      getBlue(image) * THIRD;
-  cv::Mat antiBlue = getRed(image) * THIRD + getGreen(image) * THIRD +
-                     invert(getBlue(image)) * THIRD;
-
-  showImage(antiRed, "antiRed");
-  showImage(antiGreen, "antiGreen");
-  showImage(antiBlue, "antiBlue");
+  cv::Mat antiBlue = getHueChannel(hsv);
+  for (auto r = 0; r < antiBlue.rows; ++r) {
+    for (auto c = 0; c < antiBlue.cols; ++c) {
+      auto const x = antiBlue.at<uint8_t>(r, c);
+      antiBlue.at<uint8_t>(r, c) =
+          static_cast<uint8_t>(255.0 * (1.0 - bellCurve(x, 120, 20)));
+      if (saturation.at<uint8_t>(r, c) < 120 or value.at<uint8_t>(r, c) < 120) {
+        antiBlue.at<uint8_t>(r, c) =
+            std::min(saturation.at<uint8_t>(r, c), value.at<uint8_t>(r, c));
+      }
+    }
+  }
 
   // With SimpleBlobDetector the three detect lines are very expensive,
   // like ~90% of execution time

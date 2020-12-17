@@ -43,13 +43,9 @@ void showImage(cv::InputArray image, std::string const &name) {
   constexpr auto SHOW_PIXELS_X{1500};
   constexpr auto SHOW_PIXELS_Y{1500};
   cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
-  try {
-    cv::imshow(name, image);
-    if (cv::waitKey(0) == 's') {
-      cv::imwrite(name, image);
-    }
-  } catch (std::exception const &e) {
-    std::cerr << "Can't show that!\n";
+  cv::imshow(name, image);
+  if (cv::waitKey(0) == 's') {
+    cv::imwrite(name, image);
   }
 }
 
