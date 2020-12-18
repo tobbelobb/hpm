@@ -15,27 +15,33 @@
 
 using namespace hpm;
 
-void drawKeyPoints(cv::InputArray image,
+void drawKeyPoints(cv::InputOutputArray image,
                    std::vector<hpm::KeyPoint> const &keyPoints,
-                   cv::InputOutputArray result) {
-  const auto BLACK{cv::Scalar(0)};
-  std::vector<cv::KeyPoint> cvKeyPoints{};
-  std::transform(keyPoints.begin(), keyPoints.end(),
-                 std::back_inserter(cvKeyPoints),
-                 [](hpm::KeyPoint const &keyPoint) { return keyPoint.toCv(); });
-  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
-                    cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  cv::drawKeypoints(image, cvKeyPoints, result, BLACK,
-                    cv::DrawMatchesFlags::DRAW_OVER_OUTIMG);
+                   cv::Scalar const &color) {
+  for (auto const &keyPoint : keyPoints) {
+    cv::circle(image, keyPoint.center, static_cast<int>(keyPoint.size / 2.0),
+               color, 3);
+    cv::circle(image, keyPoint.center, 2, color, 3);
+  }
 }
 
-auto imageWithKeyPoints(cv::InputArray image, DetectionResult const &markers)
+void drawDetectionResult(cv::InputOutputArray image,
+                         DetectionResult const &markers) {
+  const auto AQUA{cv::Scalar(255, 255, 0)};
+  const auto FUCHSIA{cv::Scalar(255, 0, 255)};
+  const auto YELLOW{cv::Scalar(0, 255, 255)};
+  drawKeyPoints(image, markers.red, AQUA);
+  drawKeyPoints(image, markers.green, FUCHSIA);
+  drawKeyPoints(image, markers.blue, YELLOW);
+}
+
+auto imageWithDetectionResult(cv::InputArray image,
+                              DetectionResult const &detectionResult)
     -> cv::Mat {
-  cv::Mat result{};
-  drawKeyPoints(image, markers.red, result);
-  drawKeyPoints(result, markers.green, result);
-  drawKeyPoints(result, markers.blue, result);
-  return result;
+  cv::Mat imageCopy{};
+  image.copyTo(imageCopy);
+  drawDetectionResult(imageCopy, detectionResult);
+  return imageCopy;
 }
 
 void showImage(cv::InputArray image, std::string const &name) {

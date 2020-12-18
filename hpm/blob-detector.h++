@@ -2,10 +2,11 @@
 
 #include <opencv2/core.hpp>
 
-#include <hpm/types.h++>
+#include <hpm/detection-result.h++>
+#include <hpm/simple-types.h++>
 
 hpm::DetectionResult blobDetect(cv::InputArray image,
-                                hpm::ColorBounds const &colorBounds);
+                                bool showIntermediateImages);
 
 hpm::DetectionResult blobDetect(cv::InputArray image);
 

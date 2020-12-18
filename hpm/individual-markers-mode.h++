@@ -6,7 +6,8 @@
 #include <opencv2/core.hpp>
 
 #include <hpm/blob-detector.h++>
-#include <hpm/types.h++>
+#include <hpm/detection-result.h++>
+#include <hpm/simple-types.h++>
 
 // function : findMarks
 //
@@ -16,7 +17,8 @@
 //               The colors are defined to be any color within the
 //               specified bounds.
 hpm::DetectionResult findMarks(cv::InputArray undistortedImage,
-                               hpm::ColorBounds const &colorBounds);
+                               bool showIntermediateImages);
+
 hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
 
 // function : findIndividualMarkerPositions
@@ -30,8 +32,20 @@ hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
 // The marker detection, and the interpretation of marker detection results are
 // (sadly) intertwined, so find performs both detection and interpretation
 //
-// Also, results come out unsorted for now
+// Also, results come out unsorted
 std::vector<hpm::CameraFramedPosition>
 findIndividualMarkerPositions(hpm::DetectionResult const &blobs,
                               double knownMarkerDiameter, double focalLength,
                               hpm::PixelPosition const &imageCenter);
+
+// function : findIndividualMarkerPositions
+//
+// description : A detection result sometimes includes
+// too many markers. In that case, we can use the knowledge
+// we have about the real distances between the markers,
+// to try to weed out the false markers.
+void filterMarksByDistance(hpm::DetectionResult &marks,
+                           hpm::ProvidedMarkerPositions const &markPos,
+                           double const focalLength,
+                           hpm::PixelPosition const &imageCenter,
+                           double const markerDiameter);

@@ -12,7 +12,9 @@
 #include <opencv2/core.hpp>
 #pragma GCC diagnostic pop
 
-#include <hpm/types.h++>
+#include <hpm/identified-hp-marks.h++>
+#include <hpm/simple-types.h++>
+#include <hpm/six-dof.h++>
 
 /* We want to use OpenCV's implementation of an IPPE PnP solver
  * as long as the points are co-planar.

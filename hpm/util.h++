@@ -11,15 +11,19 @@
 #include <opencv2/imgproc.hpp>
 #pragma GCC diagnostic pop
 
-#include <hpm/types.h++>
+#include <hpm/detection-result.h++>
+#include <hpm/simple-types.h++>
 
 void showImage(cv::InputArray image, std::string const &name);
 
-void drawKeyPoints(cv::InputArray image,
+void drawKeyPoints(cv::InputOutputArray image,
                    std::vector<hpm::KeyPoint> const &keyPoints,
-                   cv::InputOutputArray result);
+                   cv::Scalar const &color);
 
-cv::Mat imageWithKeyPoints(cv::InputArray image,
-                           hpm::DetectionResult const &markers);
+void drawDetectionResult(cv::InputOutputArray image,
+                         hpm::DetectionResult const &markers);
+
+cv::Mat imageWithDetectionResult(cv::InputArray image,
+                                 hpm::DetectionResult const &detectionResult);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);

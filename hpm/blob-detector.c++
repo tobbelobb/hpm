@@ -16,11 +16,12 @@
 #pragma GCC diagnostic pop
 
 #include <hpm/blob-detector.h++>
+#include <hpm/detection-result.h++>
 #include <hpm/util.h++>
 
 using namespace hpm;
 
-static auto getSingleChannel(cv::InputArray image, int channel) -> cv::Mat {
+static auto getSingleChannelCopy(cv::InputArray image, int channel) -> cv::Mat {
   cv::Mat singleColorImage{};
   cv::extractChannel(image, singleColorImage, channel);
   return singleColorImage;
@@ -28,28 +29,28 @@ static auto getSingleChannel(cv::InputArray image, int channel) -> cv::Mat {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-static auto getRed(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 2);
+static auto getRedCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 2);
 }
 
-static auto getGreen(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 1);
+static auto getGreenCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 1);
 }
 
-static auto getBlue(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 0);
+static auto getBlueCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 0);
 }
 
-static auto getValueChannel(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 2);
+static auto getValueChannelCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 2);
 }
 
-static auto getSaturationChannel(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 1);
+static auto getSaturationChannelCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 1);
 }
 
-static auto getHueChannel(cv::InputArray image) -> cv::Mat {
-  return getSingleChannel(image, 0);
+static auto getHueChannelCopy(cv::InputArray image) -> cv::Mat {
+  return getSingleChannelCopy(image, 0);
 }
 
 static auto invert(cv::InputArray image) -> cv::Mat {
@@ -70,10 +71,10 @@ static auto getBlobDetector() {
     params_.filterByColor = true;       // NOLINT
     params_.blobColor = 0;              // NOLINT
     params_.filterByArea = true;        // NOLINT
-    params_.minArea = 3700.0F;          // NOLINT
+    params_.minArea = 1700.0F;          // NOLINT
     params_.maxArea = 500000.0;         // NOLINT
     params_.filterByCircularity = true; // NOLINT
-    params_.minCircularity = 0.7F;      // NOLINT
+    params_.minCircularity = 0.70F;     // NOLINT
     params_.maxCircularity = 3.4e38F;   // NOLINT
     params_.filterByInertia = true;     // NOLINT
     params_.minInertiaRatio = 0.1F;     // NOLINT
@@ -109,7 +110,7 @@ static auto bellCurve(double const x, double const center,
 // https://docs.opencv.org/4.4.0/d0/d7a/classcv_1_1SimpleBlobDetector.html#details
 // and also
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
-auto blobDetect(cv::InputArray image, ColorBounds const &colorBounds)
+auto blobDetect(cv::InputArray image, bool showIntermediateImages)
     -> DetectionResult {
   auto const detector = getBlobDetector();
 
@@ -117,44 +118,57 @@ auto blobDetect(cv::InputArray image, ColorBounds const &colorBounds)
 
   cv::Mat hsv{};
   cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
-  cv::Mat foundRedPx(imageMat.rows, imageMat.cols, CV_8U);
-  cv::Mat foundRedPx2(imageMat.rows, imageMat.cols, CV_8U);
-
-  (void)colorBounds;
-  cv::Mat hue = getHueChannel(hsv);
-  cv::Mat saturation = getSaturationChannel(hsv);
-  cv::Mat value = getSaturationChannel(hsv);
 
   // Massaging the image to the blobDetector's delight...
   // This is heavily manually done, and very fragile.
   // The whole marker setup must be changed to get rid of this
   // fragile code here.
-  cv::Mat antiRed = getHueChannel(hsv);
+  auto const BELL_WIDTH{10};
+  cv::Mat antiRed = getHueChannelCopy(hsv);
   antiRed.forEach<uint8_t>([](uint8_t &x, const int *position) {
-    x = static_cast<uint8_t>(255.0 *
-                             (1.0 - bellCurve(x, 0, 4) - bellCurve(x, 179, 4)));
+    x = static_cast<uint8_t>(
+        255.0 * (1.0 - bellCurve(x, 0, 2) - bellCurve(x, 179, BELL_WIDTH)));
     (void)position;
   });
-  cv::GaussianBlur(antiRed, antiRed, {7, 7}, 2);
 
-  cv::Mat antiGreen = getHueChannel(hsv);
+  cv::Mat antiGreen = getHueChannelCopy(hsv);
   antiGreen.forEach<uint8_t>([](uint8_t &x, const int *position) {
-    x = static_cast<uint8_t>(255.0 * (1 - bellCurve(x, 30, 4)));
+    x = static_cast<uint8_t>(255.0 * (1.0 - bellCurve(x, 60, BELL_WIDTH)));
     (void)position;
   });
-  cv::GaussianBlur(antiGreen, antiGreen, {7, 7}, 2);
 
-  cv::Mat antiBlue = getHueChannel(hsv);
-  for (auto r = 0; r < antiBlue.rows; ++r) {
-    for (auto c = 0; c < antiBlue.cols; ++c) {
-      auto const x = antiBlue.at<uint8_t>(r, c);
-      antiBlue.at<uint8_t>(r, c) =
-          static_cast<uint8_t>(255.0 * (1.0 - bellCurve(x, 120, 20)));
-      if (saturation.at<uint8_t>(r, c) < 120 or value.at<uint8_t>(r, c) < 120) {
-        antiBlue.at<uint8_t>(r, c) =
-            std::min(saturation.at<uint8_t>(r, c), value.at<uint8_t>(r, c));
-      }
+  cv::Mat antiBlue = getHueChannelCopy(hsv);
+  antiBlue.forEach<uint8_t>([](uint8_t &x, const int *position) {
+    x = static_cast<uint8_t>(255.0 * (1.0 - bellCurve(x, 120, BELL_WIDTH)));
+    (void)position;
+  });
+
+  // Special case for a completely white background
+  // White is represented confusingly similar to red in HSV.
+  // white is represented like hue=red (that is close to 0 or 179),
+  // and saturation~=0
+  cv::Mat const saturation = getSaturationChannelCopy(hsv);
+  cv::Mat const hue = getHueChannelCopy(hsv);
+  for (auto r{0}; r < antiRed.rows; ++r) {
+    for (auto c{0}; c < antiRed.cols; ++c) {
+      if (saturation.at<uint8_t>(r, c) < 50)
+        antiRed.at<uint8_t>(r, c) = 255;
     }
+  }
+
+  auto const BLUR_SIZE{7};
+  auto const BLUR_DEV{2};
+  cv::GaussianBlur(antiRed, antiRed, {BLUR_SIZE, BLUR_SIZE}, BLUR_DEV);
+  cv::GaussianBlur(antiGreen, antiGreen, {BLUR_SIZE, BLUR_SIZE}, BLUR_DEV);
+  cv::GaussianBlur(antiBlue, antiBlue, {BLUR_SIZE, BLUR_SIZE}, BLUR_DEV);
+
+  if (showIntermediateImages) {
+    showImage(getHueChannelCopy(hsv), "hue.png");
+    showImage(getSaturationChannelCopy(hsv), "saturation.png");
+    showImage(getValueChannelCopy(hsv), "value.png");
+    showImage(antiRed, "antiRed.png");
+    showImage(antiGreen, "antiGreen.png");
+    showImage(antiBlue, "antiBlue.png");
   }
 
   // With SimpleBlobDetector the three detect lines are very expensive,
@@ -164,7 +178,7 @@ auto blobDetect(cv::InputArray image, ColorBounds const &colorBounds)
 }
 
 auto blobDetect(cv::InputArray image) -> DetectionResult {
-  return blobDetect(image, {});
+  return blobDetect(image, false);
 }
 
 auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,

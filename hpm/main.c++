@@ -21,6 +21,7 @@
 #include <hpm/hpm.h++>
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
+#include <hpm/util.h++>
 
 using namespace hpm;
 
@@ -55,7 +56,7 @@ auto main(int const argc, char **const argv) -> int {
                    "found pose. The default is to only print the translation.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
-  constexpr unsigned int NUM_OPTIONAL_ARGS = 2;
+  constexpr unsigned int NUM_OPTIONAL_ARGS = 3;
   constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS + 1};
   constexpr int MIN_ARGC{NUM_MANDATORY_ARGS + 1};
 
@@ -80,8 +81,6 @@ auto main(int const argc, char **const argv) -> int {
   }
   showResultImage = (show == "result") or (show == "all");
   showIntermediateImages = (show == "intermediate") or (show == "all");
-  (void)showResultImage;
-  (void)showIntermediateImages;
 
   if (printHelp) {
     args.printHelp();
@@ -118,8 +117,8 @@ auto main(int const argc, char **const argv) -> int {
     }
   }();
 
-  auto const [inputMarkerPositions, markerDiameter] =
-      [&markerParamsFileName]() -> std::tuple<InputMarkerPositions, double> {
+  auto const [providedMarkerPositions, markerDiameter] =
+      [&markerParamsFileName]() -> std::tuple<ProvidedMarkerPositions, double> {
     try {
       cv::FileStorage const markerParamsFile(markerParamsFileName,
                                              cv::FileStorage::READ);
@@ -129,9 +128,10 @@ auto main(int const argc, char **const argv) -> int {
         exit(1);
       }
       return {[&markerParamsFile]() {
-                InputMarkerPositions inputMarkerPositions_;
-                markerParamsFile["marker_positions"] >> inputMarkerPositions_;
-                return inputMarkerPositions_;
+                ProvidedMarkerPositions providedMarkerPositions_;
+                markerParamsFile["marker_positions"] >>
+                    providedMarkerPositions_;
+                return providedMarkerPositions_;
               }(),
               [&markerParamsFile]() {
                 double markerDiameter_ = 0.0;
@@ -166,14 +166,25 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  ColorBounds const colorBounds{{0, 0, 50},    {30, 30, 255}, {0, 50, 0},
-                                {50, 255, 50}, {50, 0, 0},    {255, 50, 50}};
-  DetectionResult const marks{findMarks(undistortedImage, colorBounds)};
+  DetectionResult marks{findMarks(undistortedImage, showIntermediateImages)};
+  filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
+                        imageCenter, markerDiameter);
+
+  if (verbose) {
+    std::cout << "Found " << marks.red.size() << " red markers, "
+              << marks.green.size() << " green markers, and "
+              << marks.blue.size() << " blue markers\n";
+  }
+
+  if (showResultImage) {
+    showImage(imageWithDetectionResult(undistortedImage, marks),
+              "found-marks.png");
+  }
   IdentifiedHpMarks const identifiedMarks{marks};
 
   if (identifiedMarks.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cameraMatrix, inputMarkerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedMarkerPositions, identifiedMarks)};
 
     if (effectorPoseRelativeToCamera.has_value()) {
       SixDof const worldPose{effectorWorldPose(
@@ -192,7 +203,7 @@ auto main(int const argc, char **const argv) -> int {
       std::cout << "Found no camera pose";
     }
   } else {
-    std::cout << "Identified more or less than six markers";
+    std::cout << "Could not identify markers";
   }
   std::cout << '\n';
 

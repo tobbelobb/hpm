@@ -17,6 +17,7 @@
 #include <boost/ut.hpp> //import boost.ut;
 
 #include <hpm/hpm.h++>
+#include <hpm/identified-hp-marks.h++>
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
@@ -41,24 +42,22 @@ auto main() -> int {
     auto const &cameraMatrix = openScadCameraMatrix;
     SixDof const cameraWorldPose{{2.61799387799149, 0.0, 0.0},
                                  {0, -750.0, 1299.03810567666}};
-    InputMarkerPositions const inputMarkerPositions{
+    ProvidedMarkerPositions const providedMarkerPositions{
         -72.4478, -125.483, 150.43, 72.4478,   -125.483, 150.43,
         144.8960, 0.0,      150.43, 72.4478,   125.483,  150.43,
         -72.4478, 125.483,  150.43, -144.8960, 0.0,      150.43};
-    DetectionResult const marks{findMarks(
-        image)}; // individual-markers-mode.h++ which calls blob-detector.h++
-    IdentifiedHpMarks const identifiedMarks{marks}; // types.h++
+    DetectionResult const marks{findMarks(image)};
+    IdentifiedHpMarks const identifiedMarks{marks};
 
     expect((identifiedMarks.allIdentified()) >> fatal);
 
-    std::optional<SixDof> const effectorPoseRelativeToCamera{solvePnp(
-        cameraMatrix, inputMarkerPositions, identifiedMarks)}; // solve-pnp.h++
+    std::optional<SixDof> const effectorPoseRelativeToCamera{
+        solvePnp(cameraMatrix, providedMarkerPositions, identifiedMarks)};
 
     expect((effectorPoseRelativeToCamera.has_value()) >> fatal);
 
-    SixDof const pose{
-        effectorWorldPose(effectorPoseRelativeToCamera.value(), // hpm.h++
-                          cameraWorldPose)};
+    SixDof const pose{effectorWorldPose(effectorPoseRelativeToCamera.value(),
+                                        cameraWorldPose)};
 
     auto constexpr EPS{0.31_d};
     expect(abs(pose.x()) < EPS) << "translation X";

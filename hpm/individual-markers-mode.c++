@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath> // atan
 #include <ranges>
 #include <string>
@@ -20,19 +21,61 @@
 
 using namespace hpm;
 
-auto findMarks(cv::InputArray undistortedImage, ColorBounds const &colorBounds)
+auto findMarks(cv::InputArray undistortedImage, bool showIntermediateImages)
     -> DetectionResult {
-  auto const detectionResult{blobDetect(undistortedImage, colorBounds)};
-  // showImage(imageWithKeyPoints(undistortedImage, detectionResult),
-  // "blues.png");
-  // std::cout << detectionResult.red.size() << std::endl;
-  // std::cout << detectionResult.green.size() << std::endl;
-  // std::cout << detectionResult.blue.size() << std::endl;
-  return detectionResult;
+  return blobDetect(undistortedImage, showIntermediateImages);
+}
+
+void filterMarksByDistance(DetectionResult &marks,
+                           hpm::ProvidedMarkerPositions const &markPos,
+                           double const focalLength,
+                           PixelPosition const &imageCenter,
+                           double const markerDiameter) {
+  auto filterSingleColor = [&](std::vector<KeyPoint> &marksOfOneColor,
+                               double expectedDistance) {
+    if (marksOfOneColor.size() > 2) {
+      std::vector<CameraFramedPosition> allPositions{};
+      for (size_t i{0}; i < marksOfOneColor.size(); ++i) {
+        allPositions.emplace_back(blobToPosition(
+            marksOfOneColor[i], focalLength, imageCenter, markerDiameter));
+      }
+      std::vector<std::pair<size_t, size_t>> allPairs{};
+      for (size_t i{0}; i < marksOfOneColor.size(); ++i) {
+        for (size_t j{i + 1}; j < marksOfOneColor.size(); ++j) {
+          allPairs.emplace_back(i, j);
+        }
+      }
+      std::vector<double> allDistances{};
+      for (auto const &pair : allPairs) {
+        allDistances.emplace_back(
+            cv::norm(allPositions[pair.first] - allPositions[pair.second]));
+      }
+      size_t const closestPairIndex{static_cast<size_t>(std::distance(
+          allDistances.begin(),
+          std::min_element(
+              allDistances.begin(), allDistances.end(),
+              [expectedDistance](double distanceLeft, double distanceRight) {
+                return abs(distanceLeft - expectedDistance) <
+                       abs(distanceRight - expectedDistance);
+              })))};
+      auto const first{marksOfOneColor[allPairs[closestPairIndex].first]};
+      auto const second{marksOfOneColor[allPairs[closestPairIndex].second]};
+      marksOfOneColor.clear();
+      marksOfOneColor.push_back(first);
+      marksOfOneColor.push_back(second);
+    }
+  };
+
+  double const redDistance = cv::norm(markPos.row(0) - markPos.row(1));
+  double const greenDistance = cv::norm(markPos.row(2) - markPos.row(3));
+  double const blueDistance = cv::norm(markPos.row(4) - markPos.row(5));
+  filterSingleColor(marks.red, redDistance);
+  filterSingleColor(marks.green, greenDistance);
+  filterSingleColor(marks.blue, blueDistance);
 }
 
 auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
-  return findMarks(undistortedImage, {});
+  return findMarks(undistortedImage, false);
 }
 
 auto findIndividualMarkerPositions(DetectionResult const &blobs,
@@ -56,4 +99,4 @@ auto findIndividualMarkerPositions(DetectionResult const &blobs,
   }
 
   return positions;
-  }
+}
