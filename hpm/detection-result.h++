@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <pipes/pipes.hpp>
+
 #include <hpm/simple-types.h++>
 
 namespace hpm {
@@ -14,7 +16,6 @@ struct DetectionResult {
   size_t size() const { return red.size() + green.size() + blue.size(); }
 
   std::vector<hpm::KeyPoint> getFlatCopy() const {
-    // pipes? join?
     std::vector<hpm::KeyPoint> all{};
     all.reserve(size());
     all.insert(all.end(), red.begin(), red.end());

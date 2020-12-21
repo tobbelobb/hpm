@@ -18,25 +18,21 @@ auto solvePnp(cv::InputArray cameraMatrix,
               cv::InputArray providedPositionsRelativeToNozzle,
               IdentifiedHpMarks const &marks) -> std::optional<SixDof> {
 
-  cv::Mat const providedPositionsMatrix =
-      providedPositionsRelativeToNozzle.getMat();
-
-  auto const numMarkers{providedPositionsMatrix.rows};
+  cv::Mat providedPositionsMatrix = providedPositionsRelativeToNozzle.getMat();
+  size_t const numMarkers{static_cast<size_t>(providedPositionsMatrix.rows *
+                                              providedPositionsMatrix.cols) /
+                          3UL};
+  providedPositionsMatrix.resize(numMarkers, 3);
 
   std::vector<PixelPosition> usablePixelPositions{};
   cv::Mat relevantProvidedPositions(0, 3, CV_64F);
-  // Pipes?
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnarrowing"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wconversion"
   for (size_t i{0}; i < numMarkers; ++i) {
-    if (marks.m_identified[i]) {
-      usablePixelPositions.push_back(marks.m_pixelPositions[i]);
-      relevantProvidedPositions.push_back(providedPositionsMatrix.row(i));
+    if (marks.isIdentified(i)) {
+      usablePixelPositions.push_back(marks.getPixelPosition(i));
+      relevantProvidedPositions.push_back(
+          providedPositionsMatrix.row(static_cast<int>(i)));
     }
   }
-#pragma GCC diagnostic pop
 
   std::vector<cv::Mat> rvecs{};
   std::vector<cv::Mat> tvecs{};

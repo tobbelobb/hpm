@@ -1,0 +1,9 @@
+hxx{*}: extension = hpp
+
+lib{pipes}: {hxx ixx txx}{**}
+
+# Export options
+lib{pipes}:
+{
+  cxx.export.poptions = "-I$src_root/extern/pipes/"
+}

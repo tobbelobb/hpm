@@ -43,6 +43,8 @@ struct KeyPoint {
   friend std::ostream &operator<<(std::ostream &out, KeyPoint const &keyPoint) {
     return out << keyPoint.center << ' ' << keyPoint.size;
   };
+
+  bool operator==(KeyPoint const &) const = default;
 };
 
 } // namespace hpm

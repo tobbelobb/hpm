@@ -30,8 +30,9 @@ static void fanSort(std::vector<hpm::KeyPoint> &fan) {
 }
 
 struct IdentifiedHpMarks {
-  std::array<PixelPosition, 6> m_pixelPositions{};
-  std::array<bool, 6> m_identified{false};
+  static size_t constexpr NUM_MARKERS{6};
+  std::array<PixelPosition, NUM_MARKERS> m_pixelPositions{};
+  std::array<bool, NUM_MARKERS> m_identified{false};
 
   explicit IdentifiedHpMarks(PixelPosition const &red0_,
                              PixelPosition const &red1_,
@@ -42,9 +43,11 @@ struct IdentifiedHpMarks {
       : m_pixelPositions{red0_, red1_, green0_, green1_, blue0_, blue1_},
         m_identified{true, true, true, true, true, true} {}
 
-  explicit IdentifiedHpMarks(std::array<PixelPosition, 6> const positions_)
-      : m_pixelPositions{positions_}, m_identified{true, true, true,
-                                                   true, true, true} {}
+  explicit IdentifiedHpMarks(
+      std::array<PixelPosition, NUM_MARKERS> const positions_)
+      : m_pixelPositions{positions_} {
+    std::fill(m_identified.begin(), m_identified.end(), true);
+  }
 
   explicit IdentifiedHpMarks(DetectionResult const &foundMarkers) {
     if (foundMarkers.red.size() != 2 or foundMarkers.green.size() != 2 or
@@ -53,7 +56,6 @@ struct IdentifiedHpMarks {
     }
 
     std::vector<hpm::KeyPoint> all{foundMarkers.getFlatCopy()};
-
     if (not(isRight(all[0].center, all[1].center, all[2].center))) {
       std::swap(all[0], all[1]);
     }
@@ -64,6 +66,17 @@ struct IdentifiedHpMarks {
     m_identified = {true, true, true, true, true, true};
   }
 
+  bool isIdentified(size_t idx) const {
+    if (idx < NUM_MARKERS) {
+      return m_identified[idx];
+    }
+    return false;
+  }
+
+  PixelPosition getPixelPosition(size_t idx) const {
+    return m_pixelPositions[idx];
+  }
+
   bool allIdentified() const {
     return std::all_of(m_identified.begin(), m_identified.end(),
                        std::identity());
@@ -71,9 +84,8 @@ struct IdentifiedHpMarks {
 
   friend std::ostream &operator<<(std::ostream &out,
                                   IdentifiedHpMarks const &identifiedHpMarks) {
-    // Pipes mux?
     for (size_t i{0}; i < identifiedHpMarks.m_pixelPositions.size(); ++i) {
-      if (identifiedHpMarks.m_identified[i]) {
+      if (identifiedHpMarks.isIdentified(i)) {
         out << identifiedHpMarks.m_pixelPositions[i];
       } else {
         out << '?';

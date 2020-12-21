@@ -12,12 +12,12 @@ auto main() -> int {
   cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                              0.0, 3000.0, 1000.0,
                                                              0.0,    0.0,    1.0);
-  ProvidedMarkerPositions const markerPositions{-1, -1, 0,
-                                                 1, -1, 0,
-                                                 1,  0, 0,
-                                                 1,  1, 0,
-                                                -1,  1, 0,
-                                                -1,  0, 0};
+  ProvidedMarkerPositions const providedPositions{-1, -1, 0,
+                                                   1, -1, 0,
+                                                   1,  0, 0,
+                                                   1,  1, 0,
+                                                  -1,  1, 0,
+                                                  -1,  0, 0};
   // clang-format on
 
   auto constexpr PIX_DIST{100.0};
@@ -35,7 +35,7 @@ auto main() -> int {
         {CENTER - PIX_DIST, CENTER}};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -70,7 +70,7 @@ auto main() -> int {
     IdentifiedHpMarks const identifiedMarks{marks};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -107,7 +107,7 @@ auto main() -> int {
         {CENTER - closersX, CENTER}};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -139,7 +139,7 @@ auto main() -> int {
     identifiedMarks.m_identified[0] = false;
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
     expect((result.has_value()) >> fatal); // NOLINT
 
     auto const &value{result.value()};
