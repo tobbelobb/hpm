@@ -1,5 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
+#include <functional>
+
 #include <hpm/detection-result.h++>
 #include <hpm/simple-types.h++>
 
@@ -11,29 +15,23 @@ static inline auto signed2DCross(PixelPosition const &v0,
   return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y);
 }
 
-static inline auto isLeft(PixelPosition const &v0, PixelPosition const &v1,
-                          PixelPosition const &v2) -> bool {
-  return signed2DCross(v0, v1, v2) > 0.0;
+static inline auto isRight(PixelPosition const &v0, PixelPosition const &v1,
+                           PixelPosition const &v2) -> bool {
+  return signed2DCross(v0, v1, v2) <= 0.0;
 }
 
 static void fanSort(std::vector<hpm::KeyPoint> &fan) {
-  // Establish a reference point
   const auto &pivot = fan[0];
-  // Sort points in a ccw radially ordered "fan" with pivot in fan[0]
   std::sort(
       std::next(fan.begin()), fan.end(),
       [&pivot](hpm::KeyPoint const &lhs, hpm::KeyPoint const &rhs) -> bool {
-        return isLeft(pivot.center, lhs.center, rhs.center);
+        return isRight(pivot.center, lhs.center, rhs.center);
       });
 }
 
 struct IdentifiedHpMarks {
-  std::optional<PixelPosition> red0;
-  std::optional<PixelPosition> red1;
-  std::optional<PixelPosition> green0;
-  std::optional<PixelPosition> green1;
-  std::optional<PixelPosition> blue0;
-  std::optional<PixelPosition> blue1;
+  std::array<PixelPosition, 6> m_pixelPositions{};
+  std::array<bool, 6> m_identified{false};
 
   explicit IdentifiedHpMarks(PixelPosition const &red0_,
                              PixelPosition const &red1_,
@@ -41,101 +39,47 @@ struct IdentifiedHpMarks {
                              PixelPosition const &green1_,
                              PixelPosition const &blue0_,
                              PixelPosition const &blue1_)
-      : red0(red0_), red1(red1_), green0(green0_), green1(green1_),
-        blue0(blue0_), blue1(blue1_) {}
+      : m_pixelPositions{red0_, red1_, green0_, green1_, blue0_, blue1_},
+        m_identified{true, true, true, true, true, true} {}
 
-  explicit IdentifiedHpMarks(std::array<PixelPosition, 6> const marks)
-      : red0(marks[0]), red1(marks[1]), green0(marks[2]), green1(marks[3]),
-        blue0(marks[4]), blue1(marks[5]) {}
+  explicit IdentifiedHpMarks(std::array<PixelPosition, 6> const positions_)
+      : m_pixelPositions{positions_}, m_identified{true, true, true,
+                                                   true, true, true} {}
 
   explicit IdentifiedHpMarks(DetectionResult const &foundMarkers) {
-    auto const reds = foundMarkers.red.size();
-    auto const greens = foundMarkers.green.size();
-    auto const blues = foundMarkers.blue.size();
-
-    std::vector<hpm::KeyPoint> all{};
-    all.reserve(reds + blues + greens);
-
-    all.insert(all.end(), foundMarkers.red.begin(), foundMarkers.red.end());
-    all.insert(all.end(), foundMarkers.green.begin(), foundMarkers.green.end());
-    all.insert(all.end(), foundMarkers.blue.begin(), foundMarkers.blue.end());
-
-    if (all.size() < 6) {
+    if (foundMarkers.red.size() != 2 or foundMarkers.green.size() != 2 or
+        foundMarkers.blue.size() != 2) {
       return;
     }
 
-    // Points come out left handed from the detector
-    // We temporarily don't want that while we're sorting
-    for (auto &keyPoint : all) {
-      keyPoint.center.y = -keyPoint.center.y;
-    }
-    // First element will be used as pivot
-    if (not(isLeft(all[0].center, all[1].center, all[2].center))) {
+    std::vector<hpm::KeyPoint> all{foundMarkers.getFlatCopy()};
+
+    if (not(isRight(all[0].center, all[1].center, all[2].center))) {
       std::swap(all[0], all[1]);
     }
     fanSort(all);
-    for (auto &keyPoint : all) {
-      keyPoint.center.y = -keyPoint.center.y;
-    }
 
-    if (reds == 2) {
-      red0 = {all[0].center};
-      red1 = {all[1].center};
-    }
-    if (greens == 2) {
-      green0 = {all[reds].center};
-      green1 = {all[reds + 1].center};
-    }
-    auto const nonBlues = reds + greens;
-    if (blues == 2) {
-      blue0 = {all[nonBlues].center};
-      blue1 = {all[nonBlues + 1].center};
-    }
+    m_pixelPositions = {all[0].center, all[1].center, all[2].center,
+                        all[3].center, all[4].center, all[5].center};
+    m_identified = {true, true, true, true, true, true};
   }
 
   bool allIdentified() const {
-    return red0.has_value() and red1.has_value() and green0.has_value() and
-           green1.has_value() and blue0.has_value() and blue1.has_value();
+    return std::all_of(m_identified.begin(), m_identified.end(),
+                       std::identity());
   }
 
   friend std::ostream &operator<<(std::ostream &out,
                                   IdentifiedHpMarks const &identifiedHpMarks) {
-    if (identifiedHpMarks.red0.has_value()) {
-      out << identifiedHpMarks.red0.value();
-    } else {
-      out << '?';
+    // Pipes mux?
+    for (size_t i{0}; i < identifiedHpMarks.m_pixelPositions.size(); ++i) {
+      if (identifiedHpMarks.m_identified[i]) {
+        out << identifiedHpMarks.m_pixelPositions[i];
+      } else {
+        out << '?';
+      }
+      out << '\n';
     }
-    out << '\n';
-    if (identifiedHpMarks.red1.has_value()) {
-      out << identifiedHpMarks.red1.value();
-    } else {
-      out << '?';
-    }
-    out << '\n';
-    if (identifiedHpMarks.green0.has_value()) {
-      out << identifiedHpMarks.green0.value();
-    } else {
-      out << '?';
-    }
-    out << '\n';
-    if (identifiedHpMarks.green1.has_value()) {
-      out << identifiedHpMarks.green1.value();
-    } else {
-      out << '?';
-    }
-    out << '\n';
-    if (identifiedHpMarks.blue0.has_value()) {
-      out << identifiedHpMarks.blue0.value();
-    } else {
-      out << '?';
-    }
-    out << '\n';
-    if (identifiedHpMarks.blue1.has_value()) {
-      out << identifiedHpMarks.blue1.value();
-    } else {
-      out << '?';
-    }
-    out << '\n';
     return out;
   };
 };

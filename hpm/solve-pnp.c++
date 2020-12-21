@@ -15,25 +15,34 @@
 using namespace hpm;
 
 auto solvePnp(cv::InputArray cameraMatrix,
-              cv::InputArray markerPositionsRelativeToNozzle,
+              cv::InputArray providedPositionsRelativeToNozzle,
               IdentifiedHpMarks const &marks) -> std::optional<SixDof> {
-  if (not(marks.allIdentified())) {
-    std::cerr << "solvePnp got mark set with missing marker" << std::endl;
-    return {};
+
+  cv::Mat const providedPositionsMatrix =
+      providedPositionsRelativeToNozzle.getMat();
+
+  auto const numMarkers{providedPositionsMatrix.rows};
+
+  std::vector<PixelPosition> usablePixelPositions{};
+  cv::Mat relevantProvidedPositions(0, 3, CV_64F);
+  // Pipes?
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnarrowing"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wconversion"
+  for (size_t i{0}; i < numMarkers; ++i) {
+    if (marks.m_identified[i]) {
+      usablePixelPositions.push_back(marks.m_pixelPositions[i]);
+      relevantProvidedPositions.push_back(providedPositionsMatrix.row(i));
+    }
   }
-
-  cv::Mat const markerPositionsMatrix =
-      markerPositionsRelativeToNozzle.getMat();
-
-  std::vector<PixelPosition> const markVec{
-      marks.red0.value(),   marks.red1.value(),  marks.green0.value(),
-      marks.green1.value(), marks.blue0.value(), marks.blue1.value()};
+#pragma GCC diagnostic pop
 
   std::vector<cv::Mat> rvecs{};
   std::vector<cv::Mat> tvecs{};
   std::vector<double> reprojectionErrors{};
-  cv::solvePnPGeneric(markerPositionsMatrix, markVec, cameraMatrix,
-                      cv::noArray(), rvecs, tvecs, false,
+  cv::solvePnPGeneric(relevantProvidedPositions, usablePixelPositions,
+                      cameraMatrix, cv::noArray(), rvecs, tvecs, false,
                       cv::SOLVEPNP_ITERATIVE, cv::noArray(), cv::noArray(),
                       reprojectionErrors);
 
@@ -41,7 +50,8 @@ auto solvePnp(cv::InputArray cameraMatrix,
     return {};
   }
   if (rvecs.size() > 1) {
-    std::cerr << "solve-pnp found " << rvecs.size() << " solutions\n";
+    std::cerr << "Error: solve-pnp found " << rvecs.size()
+              << " solutions. Expected 1 solution.\n";
   }
   return {SixDof{.rotation = rvecs[0],
                  .translation = tvecs[0],

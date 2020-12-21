@@ -1,3 +1,5 @@
+#include <limits>
+
 #include <boost/ut.hpp> //import boost.ut;
 
 #include <hpm/solve-pnp.h++>
@@ -10,9 +12,14 @@ auto main() -> int {
   cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                              0.0, 3000.0, 1000.0,
                                                              0.0,    0.0,    1.0);
-  std::vector<cv::Point3d> const markerPositions{
-      {-1, -1, 0}, {1, -1, 0}, {1, 0, 0}, {1, 1, 0}, {-1, 1, 0}, {-1, 0, 0}};
+  ProvidedMarkerPositions const markerPositions{-1, -1, 0,
+                                                 1, -1, 0,
+                                                 1,  0, 0,
+                                                 1,  1, 0,
+                                                -1,  1, 0,
+                                                -1,  0, 0};
   // clang-format on
+
   auto constexpr PIX_DIST{100.0};
   auto const CENTER{cameraMatrix.at<double>(0, 2)};
   auto const F{cameraMatrix.at<double>(0, 0)};
@@ -104,6 +111,38 @@ auto main() -> int {
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
+    auto constexpr EPS{0.0000051_d};
+    expect(abs(value.rotX()) < EPS) << "X rotation";
+    expect(abs(value.rotY() + CV_PI / 4.0) < EPS) << "Y rotation";
+    expect(abs(value.rotZ()) < EPS) << "Z rotation";
+    expect(abs(value.x()) < EPS) << "X translation";
+    expect(abs(value.y()) < EPS) << "Y translation";
+    expect(abs(value.z() - static_cast<double>(X0)) < EPS) << "Z translation";
+    expect(value.reprojectionError < EPS) << "Reprojection error";
+  };
+
+  "Only five found markers"_test = [&]() {
+    auto const sqrt2Inv{1.0 / std::sqrt(2.0)};
+    auto const closersX{F * sqrt2Inv / (X0 - sqrt2Inv)};
+    auto const closersY{F / (X0 - sqrt2Inv)};
+    auto const farthersX{F * sqrt2Inv / (X0 + sqrt2Inv)};
+    auto const farthersY{F / (X0 + sqrt2Inv)};
+    IdentifiedHpMarks identifiedMarks{{CENTER - closersX, CENTER - closersY},
+                                      {CENTER + farthersX, CENTER - farthersY},
+                                      {CENTER + farthersX, CENTER},
+                                      {CENTER + farthersX, CENTER + farthersY},
+                                      {CENTER - closersX, CENTER + closersY},
+                                      {CENTER - closersX, CENTER}};
+    identifiedMarks.m_pixelPositions[0] = {
+        std::numeric_limits<double>::quiet_NaN(),
+        std::numeric_limits<double>::quiet_NaN()};
+    identifiedMarks.m_identified[0] = false;
+
+    std::optional<SixDof> const result{
+        solvePnp(cameraMatrix, markerPositions, identifiedMarks)};
+    expect((result.has_value()) >> fatal); // NOLINT
+
+    auto const &value{result.value()};
     auto constexpr EPS{0.0000051_d};
     expect(abs(value.rotX()) < EPS) << "X rotation";
     expect(abs(value.rotY() + CV_PI / 4.0) < EPS) << "Y rotation";
