@@ -27,3 +27,9 @@ cv::Mat imageWithDetectionResult(cv::InputArray image,
                                  hpm::DetectionResult const &detectionResult);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
+
+// Units of sphereCenter and sphereRadius must be the same.
+// Returned values will have the same units as focalLength has.
+std::pair<double, double>
+sphereToEllipseWidthHeight(hpm::CameraFramedPosition const &sphereCenter,
+                           double focalLength, double sphereRadius);

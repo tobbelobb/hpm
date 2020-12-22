@@ -30,10 +30,10 @@ auto main() -> int {
                                                                            0.00, 2 * 3378.36, 2 *  671.5,
                                                                            0.00,        0.00,        1.0);
   // clang-format on
-  double constexpr knownMarkerDiameter{32.0};
 
   "individual markers positions OpenScad generated image"_test =
       [&openScadCameraMatrix2x] {
+        double constexpr knownMarkerDiameter{32.0};
         std::string const imageFileName{hpm::getPath(
             "test-images/"
             "generated_benchmark_nr2_double_res_32_0_0_0_0_0_0_755.png")};
@@ -170,6 +170,7 @@ auto main() -> int {
                                                     -1,  1, 0,
                                                     -1,  0, 0};
     // clang-format on
+    double constexpr knownMarkerDiameter{0.032};
     auto const focalLength{cameraMatrix.at<double>(0, 0)};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
@@ -186,7 +187,7 @@ auto main() -> int {
                sqrt(distanceFromCenter * distanceFromCenter + X0 * X0))};
       auto const beta{midMarkerAngle - gamma};
       auto const alpha{midMarkerAngle + gamma};
-      return F * (tan(beta) - tan(alpha));
+      return F * (tan(alpha) - tan(beta));
     };
 
     auto const MARKER_SIZE_STRAIGHT{markerSize(1.0)};
@@ -195,8 +196,8 @@ auto main() -> int {
     // Random false positive red detection result
     KeyPoint const falsePositiveRed{{{200, 500}, 40}};
     // A bit harder to sort out false positive blue detection
-    KeyPoint const falsePositiveBlue{{CENTER + PIX_DIST + 40.0, CENTER},
-                                     MARKER_SIZE_STRAIGHT + 50.0};
+    KeyPoint const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
+                                     MARKER_SIZE_STRAIGHT * 1.08};
 
     DetectionResult detectionResult{
         {{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
@@ -208,17 +209,12 @@ auto main() -> int {
          falsePositiveBlue,
          {{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT}}};
 
-    std::cout << detectionResult.blue[0] << std::endl;
-    std::cout << detectionResult.blue[1] << std::endl;
     filterMarksByDistance(detectionResult, providedPositions, focalLength,
                           imageCenter, knownMarkerDiameter);
     expect(detectionResult.red.size() == 2_ul);
     expect(detectionResult.red[0] != falsePositiveRed);
     expect(detectionResult.red[1] != falsePositiveRed);
     expect(detectionResult.blue.size() == 2_ul);
-    std::cout << detectionResult.blue[0] << std::endl;
-    std::cout << detectionResult.blue[1] << std::endl;
-    std::cout << falsePositiveBlue << std::endl;
     expect(detectionResult.blue[0] != falsePositiveBlue);
     expect(detectionResult.blue[1] != falsePositiveBlue);
   };

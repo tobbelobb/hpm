@@ -22,9 +22,8 @@
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
 
-using namespace hpm;
-
 auto main() -> int {
+  using namespace hpm;
   using namespace boost::ut;
   // clang-format off
   cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 3377.17,    0.00, 1280.0,

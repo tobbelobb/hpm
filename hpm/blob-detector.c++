@@ -202,12 +202,7 @@ auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
   double const xyOffnessFactor =
       cos(0.08 * std::abs(dirToOrigin.x * dirToOrigin.y) *
           cos(cv::norm(fromCenter) / cv::norm(imageCenter)));
-  // double const xyOffnessFactor =
-  //    cos(0.06825 * abs(dirToOrigin.x * dirToOrigin.y));
-  // double const xyOffnessFactor =
-  //    cos(0.025 * cv::norm(fromCenter) / cv::norm(imageCenter));
-  // double const xyOffnessFactor = 1.0;
-  //
+
   // detectorEllipsenessInclusion:
   // If a circle has been stretched out by a scaling factor x along one axis,
   // and turned into an ellipse, how large part of that elongation does
