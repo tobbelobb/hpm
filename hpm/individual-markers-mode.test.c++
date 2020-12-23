@@ -20,6 +20,7 @@
 
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/test-util.h++> // getPath
+#include <hpm/util.h++>
 
 using namespace hpm;
 
@@ -177,21 +178,16 @@ auto main() -> int {
     auto constexpr PIX_DIST{100.0};
     auto const CENTER{cameraMatrix.at<double>(0, 2)};
     auto const F{cameraMatrix.at<double>(0, 0)};
-    auto const X0{F / PIX_DIST};
+    auto const Z0{F / PIX_DIST};
 
-    // The approximate marker size we'll see in pixels from each marker
-    auto markerSize = [&](double const distanceFromCenter) {
-      auto const midMarkerAngle{atan(distanceFromCenter / X0)};
-      auto const gamma{
-          atan((knownMarkerDiameter / 2) /
-               sqrt(distanceFromCenter * distanceFromCenter + X0 * X0))};
-      auto const beta{midMarkerAngle - gamma};
-      auto const alpha{midMarkerAngle + gamma};
-      return F * (tan(alpha) - tan(beta));
-    };
-
-    auto const MARKER_SIZE_STRAIGHT{markerSize(1.0)};
-    auto const MARKER_SIZE_DIAG{markerSize(sqrt(2.0))};
+    auto const MARKER_SIZE_STRAIGHT{
+        sphereToEllipseWidthHeight({1, 0, Z0}, focalLength,
+                                   knownMarkerDiameter / 2)
+            .first};
+    auto const MARKER_SIZE_DIAG{
+        sphereToEllipseWidthHeight({1, 1, Z0}, focalLength,
+                                   knownMarkerDiameter / 2)
+            .first};
 
     // Random false positive red detection result
     KeyPoint const falsePositiveRed{{{200, 500}, 40}};

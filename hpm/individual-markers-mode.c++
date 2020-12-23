@@ -33,33 +33,39 @@ void filterMarksByDistance(DetectionResult &marks,
                            double const markerDiameter) {
   auto filterSingleColor = [&](std::vector<KeyPoint> &marksOfOneColor,
                                double expectedDistance) {
-    if (marksOfOneColor.size() > 2) {
+    size_t const sz{marksOfOneColor.size()};
+    if (sz > 2) {
+
       std::vector<CameraFramedPosition> allPositions{};
-      for (size_t i{0}; i < marksOfOneColor.size(); ++i) {
-        allPositions.emplace_back(blobToPosition(
-            marksOfOneColor[i], focalLength, imageCenter, markerDiameter));
+      for (auto const &mark : marksOfOneColor) {
+        allPositions.emplace_back(
+            blobToPosition(mark, focalLength, imageCenter, markerDiameter));
       }
+
       std::vector<std::pair<size_t, size_t>> allPairs{};
-      for (size_t i{0}; i < marksOfOneColor.size(); ++i) {
-        for (size_t j{i + 1}; j < marksOfOneColor.size(); ++j) {
+      for (size_t i{0}; i < sz; ++i) {
+        for (size_t j{i + 1}; j < sz; ++j) {
           allPairs.emplace_back(i, j);
         }
       }
+
       std::vector<double> allDistances{};
       for (auto const &pair : allPairs) {
         allDistances.emplace_back(
             cv::norm(allPositions[pair.first] - allPositions[pair.second]));
       }
-      size_t const closestPairIndex{static_cast<size_t>(std::distance(
+
+      auto const winnerPair = allPairs[static_cast<size_t>(std::distance(
           allDistances.begin(),
           std::min_element(
               allDistances.begin(), allDistances.end(),
               [expectedDistance](double distanceLeft, double distanceRight) {
                 return abs(distanceLeft - expectedDistance) <
                        abs(distanceRight - expectedDistance);
-              })))};
-      auto const first{marksOfOneColor[allPairs[closestPairIndex].first]};
-      auto const second{marksOfOneColor[allPairs[closestPairIndex].second]};
+              })))];
+
+      auto const first{marksOfOneColor[winnerPair.first]};
+      auto const second{marksOfOneColor[winnerPair.second]};
       marksOfOneColor.clear();
       marksOfOneColor.push_back(first);
       marksOfOneColor.push_back(second);
