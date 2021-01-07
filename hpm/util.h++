@@ -33,3 +33,8 @@ cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
 std::pair<double, double>
 sphereToEllipseWidthHeight(hpm::CameraFramedPosition const &sphereCenter,
                            double focalLength, double sphereRadius);
+
+// An alternative, geometric derivation
+std::pair<double, double>
+sphereToEllipseWidthHeight2(hpm::CameraFramedPosition const &sphereCenter,
+                            double focalLength, double sphereRadius);

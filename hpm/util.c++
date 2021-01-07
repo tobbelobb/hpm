@@ -71,11 +71,11 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
                                 double const focalLength,
                                 double const sphereRadius)
     -> std::pair<double, double> {
-  double const x{sphereCenter.x};
-  double const y{sphereCenter.y};
-  double const z{sphereCenter.z};
-  double const r{sphereRadius};
-  double const f{focalLength};
+  long double const x{sphereCenter.x};
+  long double const y{sphereCenter.y};
+  long double const z{sphereCenter.z};
+  long double const r{sphereRadius};
+  long double const f{focalLength};
 
   // Implicit equation for the searched after ellipse is
   // ax^2 + 2b''xy + a'y^2 + 2b'x + 2by + a'' = 0
@@ -83,12 +83,12 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
   // https://math.stackexchange.com/questions/1367710/perspective-projection-of-a-sphere-on-a-plane
   // leads to the following values for
   // a, b'', a', b', b, and a''
-  double const a{(-sq(y) - sq(z) + sq(r))};
-  double const bpp{x * y};
-  double const ap{(-sq(x) - sq(z) + sq(r))};
-  double const bp{x * f * z};
-  double const b{y * f * z};
-  double const app{sq(f) * (-sq(x) - sq(y) + sq(r))};
+  long double const a{(-sq(y) - sq(z) + sq(r))};
+  long double const bpp{x * y};
+  long double const ap{(-sq(x) - sq(z) + sq(r))};
+  long double const bp{x * f * z};
+  long double const b{y * f * z};
+  long double const app{sq(f) * (-sq(x) - sq(y) + sq(r))};
 
   // We then do a translation of the implicit equation, to get the
   // translation equation, which is of the form
@@ -96,27 +96,63 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
   // We remove the linear terms in the implicit equation,
   // in exchange for having to compute the amount of translation (xt, yt),
   // which lets us compute a'''.
-  double const yt{(-b + bpp * bp / a) / (ap - sq(bpp) / a)};
-  double const xt{(-bp - bpp * yt) / a};
-  double const appp{(a * sq(xt) + 2 * bpp * xt * yt + ap * sq(yt) +
-                     2 * bp * xt + 2 * b * yt) +
-                    app};
+  long double const yt{(-b + bpp * bp / a) / (ap - sq(bpp) / a)};
+  long double const xt{(-bp - bpp * yt) / a};
+  long double const appp{(a * sq(xt) + 2 * bpp * xt * yt + ap * sq(yt) +
+                          2 * bp * xt + 2 * b * yt) +
+                         app};
 
   // After translation, we do a rotation which brings the equation into the form
   // r0*x^2 + r1*y^2 + a''' = 0,
   // where r0 and r1 are eigenvalues of the matrix
   // | a   b''|
   // | b'' a' |
-  double const delta{a * ap - sq(bpp)};
-  double const discrepand{sqrt(sq((a + ap) / 2) - delta)};
-  double const r0{(a + ap) / 2.0 + discrepand};
-  double const r1{(a + ap) / 2.0 - discrepand};
+  long double const delta{a * ap - sq(bpp)};
+  long double const discrepand{sqrtl(sq((a + ap) / 2) - delta)};
+  long double const r0{(a + ap) / 2.0 + discrepand};
+  long double const r1{(a + ap) / 2.0 - discrepand};
 
   // From this form, it's quite straightforward to rewrite into the canonical
   // form (x/w)^2 + (y/h)^2 = 1, where w is the half width of the ellipse, and h
   // is the half height of the ellipse
-  double const width{2.0 * sqrt(abs(appp / r0))};
-  double const height{2.0 * sqrt(abs(appp / r1))};
+  long double const width{2.0 * sqrtl(abs(appp / r0))};
+  long double const height{2.0 * sqrtl(abs(appp / r1))};
 
-  return {width, height};
+  // return {width, height};
+  return {static_cast<double>(width), static_cast<double>(height)};
+}
+
+// An alternative, geometric derivation
+auto sphereToEllipseWidthHeight2(CameraFramedPosition const &sphereCenter,
+                                 double const focalLength,
+                                 double const sphereRadius)
+    -> std::pair<double, double> {
+  long double const x{sphereCenter.x};
+  long double const y{sphereCenter.y};
+  long double const z{sphereCenter.z};
+  long double const dist{cv::norm(sphereCenter)};
+  long double const r{sphereRadius};
+  long double const f{focalLength};
+
+  // The height only depends on z,
+  // not on x or y
+  long double const gammaC{asinl(r / z)};
+  long double const closerRC{r * cosl(gammaC)};
+  long double const closerZC{z - r * sinl(gammaC)};
+  long double const height{f * 2 * closerRC / closerZC};
+
+  // The angle between the focal line and the
+  // line between the pinhole and the sphere center
+  long double const midAng{atanl(sqrtl(sq(x) + sq(y)) / z)};
+
+  // The sphere will project like a disc through the pinhole.
+  // The disc is slightly closer to the pinhole than the
+  // sphere center is.
+  // The disc also has a slightly smaller radius.
+  long double const gamma{asinl(r / dist)};
+  long double const smallestAng{midAng - gamma};
+  long double const largestAng{midAng + gamma};
+
+  long double const width{f * (tanl(largestAng) - tanl(smallestAng))};
+  return {static_cast<double>(width), static_cast<double>(height)};
 }

@@ -9,12 +9,12 @@ auto main() -> int {
   double const focalLength{3000.0};
   double const sphereRadius{10.0};
   double const zDist{1000.0};
-  double const gamma{atan(sphereRadius / zDist)};
+  double const gamma{asin(sphereRadius / zDist)};
   double const closerZ{zDist - sphereRadius * sin(gamma)};
   double const closerR{sphereRadius * cos(gamma)};
   double const moreExactHeight{focalLength * 2 * closerR / closerZ};
 
-  auto constexpr EPS{0.000000001_d}; // 1e-9 precision
+  auto constexpr EPS{0.000000000001_d}; // 1e-12 precision
 
   "sphere to sphere width and height"_test = [&] {
     CameraFramedPosition const center{0.0, 0.0, zDist};
@@ -50,6 +50,26 @@ auto main() -> int {
           std::cout << "len=" << len << " ang=" << ang << '\n';
         }
         expect((abs(width - firstWidth) < EPS) >> fatal);
+      }
+    }
+  };
+
+  "sphere to ellipse width and height2"_test = [&] {
+    double constexpr angStep{5};
+    for (double len{1.0}; len < 3001; len += 100) {
+      for (double ang{0.0}; ang < 360; ang += angStep) {
+        CameraFramedPosition const pos{len * cos(ang * CV_PI / 180),
+                                       len * sin(ang * CV_PI / 180), zDist};
+        auto const [width, height] =
+            sphereToEllipseWidthHeight(pos, focalLength, sphereRadius);
+        auto const [width2, height2] =
+            sphereToEllipseWidthHeight2(pos, focalLength, sphereRadius);
+        if (abs(width - width2) >= EPS) {
+          std::cout << "Error at len: " << len << " ang: " << ang
+                    << " error is: " << width - width2 << '\n';
+        }
+        expect((abs(width - width2) < EPS));
+        expect((abs(height - height2) < EPS));
       }
     }
   };
