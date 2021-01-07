@@ -21,45 +21,6 @@
 
 using namespace hpm;
 
-static auto getSingleChannelCopy(cv::InputArray image, int channel) -> cv::Mat {
-  cv::Mat singleColorImage{};
-  cv::extractChannel(image, singleColorImage, channel);
-  return singleColorImage;
-}
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-static auto getRedCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 2);
-}
-
-static auto getGreenCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 1);
-}
-
-static auto getBlueCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 0);
-}
-
-static auto getValueChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 2);
-}
-
-static auto getSaturationChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 1);
-}
-
-static auto getHueChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 0);
-}
-
-static auto invert(cv::InputArray image) -> cv::Mat {
-  cv::Mat inverted;
-  cv::bitwise_not(image, inverted);
-  return inverted;
-}
-#pragma GCC diagnostic pop
-
 static auto getBlobDetector() {
   cv::SimpleBlobDetector::Params params = []() {
     cv::SimpleBlobDetector::Params params_;

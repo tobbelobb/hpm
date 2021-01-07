@@ -28,6 +28,22 @@ cv::Mat imageWithDetectionResult(cv::InputArray image,
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
 
+cv::Mat getSingleChannelCopy(cv::InputArray image, int channel);
+
+cv::Mat getRedCopy(cv::InputArray image);
+
+cv::Mat getGreenCopy(cv::InputArray image);
+
+cv::Mat getBlueCopy(cv::InputArray image);
+
+cv::Mat getValueChannelCopy(cv::InputArray image);
+
+cv::Mat getSaturationChannelCopy(cv::InputArray image);
+
+cv::Mat getHueChannelCopy(cv::InputArray image);
+
+cv::Mat invertedCopy(cv::InputArray image);
+
 // Units of sphereCenter and sphereRadius must be the same.
 // Returned values will have the same units as focalLength has.
 std::pair<double, double>
