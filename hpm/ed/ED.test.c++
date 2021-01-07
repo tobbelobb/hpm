@@ -1,32 +1,33 @@
-#include "EDLib.h"
 #include <iostream>
+
+#include <hpm/ed/EDLib.h++>
 
 using namespace cv;
 using namespace std;
 
 int main()
-{	
+{
 	//***************************** ED Edge Segment Detection *****************************
-	//Detection of edge segments from an input image	
-	Mat testImg = imread("billiard.jpg", 0);	
+	//Detection of edge segments from an input image
+	Mat testImg = imread("billiard.jpg", 0);
 	imshow("Source Image", testImg);
 
 	//Call ED constructor
 	ED testED = ED(testImg, SOBEL_OPERATOR, 36, 8, 1, 10, 1.0, true); // apply ED algorithm
-	
+
 	//Show resulting edge image
 	Mat edgeImg = testED.getEdgeImage();
 	imshow("Edge Image - PRESS ANY KEY TO CONTINUE", edgeImg);
 	waitKey();
-		
+
 	//Output number of segments
 	int noSegments = testED.getSegmentNo();
 	std::cout << "Number of edge segments: " << noSegments << std::endl;
-		
-	//Get edges in segment form (getSortedSegments() gives segments sorted w.r.t. legnths) 
+
+	//Get edges in segment form (getSortedSegments() gives segments sorted w.r.t. legnths)
 	std::vector< std::vector<Point> > segments = testED.getSegments();
-	
-	
+
+
 	//***************************** EDLINES Line Segment Detection *****************************
 	//Detection of line segments from the same image
 	EDLines testEDLines = EDLines(testImg);
@@ -64,7 +65,7 @@ int main()
 
 	//Detection of circles from already available EDPF or ED image
 	testEDCircles = EDCircles(testEDPF);
-	
+
 	//Get circle information as [cx, cy, r]
 	vector<mCircle> circles = testEDCircles.getCircles();
 
@@ -78,16 +79,16 @@ int main()
 	int noCircles = testEDCircles.getCirclesNo();
 	std::cout << "Number of circles: " << noCircles << std::endl;
 	waitKey();
-	
+
 	//*********************** EDCOLOR Edge Segment Detection from Color Images **********************
-		
-	Mat colorImg = imread("billiard.jpg");	
+
+	Mat colorImg = imread("billiard.jpg");
 	//Mat colorImg = imread("billiardNoise.jpg");
 	EDColor testEDColor = EDColor(colorImg, 36, 4, 1.5, true); //last parameter for validation
 	imshow("Color Edge Image - PRESS ANY KEY TO QUIT", testEDColor.getEdgeImage());
-	cout << "Number of edge segments detected by EDColor: " << testEDColor.getSegmentNo() << endl;	
-	waitKey();	
-	
+	cout << "Number of edge segments detected by EDColor: " << testEDColor.getSegmentNo() << endl;
+	waitKey();
+
 	// get lines from color image
 	EDLines colorLine = EDLines(testEDColor);
 	imshow("Color Line", colorLine.getLineImage());

@@ -54,7 +54,7 @@ public:
 	cv::Mat getEdgeImage();
 	std::vector<std::vector<cv::Point>> getSegments();
 	int getSegmentNo();
-	
+
 	int getWidth();
 	int getHeight();
 
@@ -70,14 +70,14 @@ private:
 
 	uchar *dirImg;
 	short *gradImg;
-	
+
 	cv::Mat edgeImage;
 	uchar *edgeImg;
 
 	const uchar *blueImg;
 	const uchar *greenImg;
 	const uchar *redImg;
-	
+
 	int width;
 	int height;
 

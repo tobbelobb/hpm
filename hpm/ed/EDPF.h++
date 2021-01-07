@@ -3,7 +3,7 @@
 * Copyright (C) Cuneyt Akinlar & Cihan Topal
 * E-mails of the authors: cuneytakinlar@gmail.com, cihantopal@gmail.com
 *
-* Please cite the following papers if you use EDPF library: 
+* Please cite the following papers if you use EDPF library:
 *
 * [1] C. Topal and C. Akinlar, “Edge Drawing: A Combined Real-Time Edge and Segment Detector,”
 *     Journal of Visual Communication and Image Representation, 23(6), 862-872, DOI: 10.1016/j.jvcir.2012.05.004 (2012).
@@ -15,7 +15,7 @@
 #ifndef  _EDPF_
 #define _EDPF_
 
-#include "ED.h"
+#include <hpm/ed/ED.h++>
 
 #define MAX_GRAD_VALUE 128*256
 #define EPSILON 1.0
@@ -35,7 +35,7 @@ private:
 	short *ComputePrewitt3x3(); // differs from base class's prewit function (calculates H)
 	void TestSegment(int i, int index1, int index2);
 	void ExtractNewSegments();
-	double NFA(double prob, int len);		  
+	double NFA(double prob, int len);
 };
 
 #endif // ! _EDPF_

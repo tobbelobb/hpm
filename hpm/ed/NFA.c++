@@ -1,6 +1,7 @@
-#include "NFA.h"
 #include <math.h>
 #include <float.h>
+
+#include <hpm/ed/NFA.h++>
 
 NFALUT::NFALUT(int size, double _prob, double _logNT)
 {

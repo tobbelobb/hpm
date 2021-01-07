@@ -1,12 +1,13 @@
-#include "ED.h"
-#include "EDColor.h"
 #include <fstream>
+
+#include <hpm/ed/ED.h++>
+#include <hpm/ed/EDColor.h++>
 
 using namespace cv;
 using namespace std;
 
 ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,int _scanInterval, int _minPathLen ,double _sigma, bool _sumFlag)
-{	
+{
 	// Check parameters for sanity
 	if (_gradThresh < 1) _gradThresh = 1;
 	if (_anchorThresh < 0) _anchorThresh = 0;
@@ -16,7 +17,7 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,i
 
 	height = srcImage.rows;
 	width = srcImage.cols;
-	
+
 	op = _op;
 	gradThresh = _gradThresh;
 	anchorThresh = _anchorThresh;
@@ -30,12 +31,12 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,i
 
 	edgeImage = Mat(height, width, CV_8UC1, Scalar(0)); // initialize edge Image
 	smoothImage = Mat(height, width, CV_8UC1);
-	gradImage = Mat(height, width, CV_16SC1); // gradImage contains short values 
+	gradImage = Mat(height, width, CV_16SC1); // gradImage contains short values
 
 	srcImg = srcImage.data;
 
 	//// Detect Edges By Edge Drawing Algorithm  ////
-	
+
 	/*------------ SMOOTH THE IMAGE BY A GAUSSIAN KERNEL -------------------*/
 	if (sigma == 1.0)
 		GaussianBlur(srcImage, smoothImage, Size(5, 5), sigma);
@@ -57,7 +58,7 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,i
 
 	/*------------ JOIN ANCHORS -------------------*/
 	JoinAnchorPointsUsingSortedAnchors();
-	
+
 	delete[] dirImg;
 }
 
@@ -69,7 +70,7 @@ ED::ED(const ED & cpyObj)
 	width = cpyObj.width;
 
 	srcImage = cpyObj.srcImage.clone();
-	
+
 	op = cpyObj.op;
 	gradThresh = cpyObj.gradThresh;
 	anchorThresh = cpyObj.anchorThresh;
@@ -114,7 +115,7 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
 	if (selectStableAnchors) {
 
 		// Compute anchors with the user supplied parameters
-		anchorThresh = 0; // anchorThresh used as zero while computing anchor points if selectStableAnchors set. 
+		anchorThresh = 0; // anchorThresh used as zero while computing anchor points if selectStableAnchors set.
 						  // Finding higher number of anchors is OK, because we have following validation steps in selectStableAnchors.
 		ComputeAnchorPoints();
 		anchorThresh = _anchorThresh; // set it to its initial argument value for further anchor validation.
@@ -161,16 +162,16 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
 			} //end-for
 		} //end-for
 
-		for (int i = 0; i<width*height; i++) 
-			if (edgeImg[i] == ANCHOR_PIXEL) 
-				edgeImg[i] = 0; 
+		for (int i = 0; i<width*height; i++)
+			if (edgeImg[i] == ANCHOR_PIXEL)
+				edgeImg[i] = 0;
 			else if (edgeImg[i] == 255) {
 				edgeImg[i] = ANCHOR_PIXEL;
 				int y = i / width;
 				int x = i % width;
 				anchorPoints.push_back(Point(x, y)); // push validated anchor point to vector
 			}
-			
+
 		anchorNos = anchorPoints.size(); // get # of anchor pixels
 	}
 
@@ -185,7 +186,7 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height, int _gradThresh
 	JoinAnchorPointsUsingSortedAnchors();
 }
 
-ED::ED(EDColor &obj) 
+ED::ED(EDColor &obj)
 {
 	width = obj.getWidth();
 	height = obj.getHeight();
@@ -222,10 +223,10 @@ Mat ED::getSmoothImage()
 }
 
 Mat ED::getGradImage()
-{	
+{
 	Mat result8UC1;
 	convertScaleAbs(gradImage, result8UC1);
-	
+
 	return result8UC1;
 }
 
@@ -267,14 +268,14 @@ Mat ED::drawParticularSegments(std::vector<int> list)
 	for (itInt = list.begin(); itInt != list.end(); itInt++)
 		for (it = segmentPoints[*itInt].begin(); it != segmentPoints[*itInt].end(); it++)
 			segmentsImage.at<uchar>(*it) = 255;
-	
+
 	return segmentsImage;
 }
 
 
 void ED::ComputeGradient()
-{	
-	// Initialize gradient image for row = 0, row = height-1, column=0, column=width-1 
+{
+	// Initialize gradient image for row = 0, row = height-1, column=0, column=width-1
 	for (int j = 0; j<width; j++) { gradImg[j] = gradImg[(height - 1)*width + j] = gradThresh - 1; }
 	for (int i = 1; i<height - 1; i++) { gradImg[i*width] = gradImg[(i + 1)*width - 1] = gradThresh - 1; }
 
@@ -287,14 +288,14 @@ void ED::ComputeGradient()
 			// gx = (C-A) + (E-D) + (H-F)
 			// gy = (F-A) + (G-B) + (H-C)
 			//
-			// To make this faster: 
+			// To make this faster:
 			// com1 = (H-A)
 			// com2 = (C-F)
-			// 
+			//
 			// For Prewitt
 			// Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
 			//       gy = com1 - com2 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-			// 
+			//
 			// For Sobel
 			// Then: gx = com1 + com2 + 2*(E-D) = (H-A) + (C-F) + 2*(E-D) = (C-A) + 2*(E-D) + (H-F)
 			//       gy = com1 - com2 + 2*(G-B) = (H-A) - (C-F) + 2*(G-B) = (F-A) + 2*(G-B) + (H-C)
@@ -309,7 +310,7 @@ void ED::ComputeGradient()
 			// gx = (B-A) + (D-C)
 			// gy = (C-A) + (D-B)
 			//
-			// To make this faster: 
+			// To make this faster:
 			// com1 = (D-A)
 			// com2 = (B-C)
 			// Then: gx = com1 + com2 = (D-A) + (B-C) = (B-A) + (D-C)
@@ -320,7 +321,7 @@ void ED::ComputeGradient()
 
 			int gx;
 			int gy;
-			
+
 			switch (op)
 			{
 			case PREWITT_OPERATOR:
@@ -342,7 +343,7 @@ void ED::ComputeGradient()
 				gx = abs(com1 + com2);
 				gy = abs(com1 - com2);
 			}
-			
+
 			int sum;
 
 			if(sumFlag)
@@ -378,7 +379,7 @@ void ED::ComputeAnchorPoints()
 				int diff2 = gradImg[i*width + j] - gradImg[i*width + j + 1];
 				if (diff1 >= anchorThresh && diff2 >= anchorThresh) {
 					edgeImg[i*width + j] = ANCHOR_PIXEL;
-					anchorPoints.push_back(Point(j, i)); 
+					anchorPoints.push_back(Point(j, i));
 				}
 
 			}
@@ -388,7 +389,7 @@ void ED::ComputeAnchorPoints()
 				int diff2 = gradImg[i*width + j] - gradImg[(i + 1)*width + j];
 				if (diff1 >= anchorThresh && diff2 >= anchorThresh) {
 					edgeImg[i*width + j] = ANCHOR_PIXEL;
-					anchorPoints.push_back(Point(j, i)); 
+					anchorPoints.push_back(Point(j, i));
 				}
 			} // end-else
 		} //end-for-inner
@@ -432,7 +433,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 		int noChains = 1;
 		int len = 0;
 		int duplicatePixelCount = 0;
-		int top = -1;  // top of the stack 
+		int top = -1;  // top of the stack
 
 		if (dirImg[i*width + j] == EDGE_VERTICAL) {
 			stack[++top].r = i;
@@ -490,8 +491,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 					// The edge is horizontal. Look LEFT
 					//
 					//   A
-					//   B x 
-					//   C 
+					//   B x
+					//   C
 					//
 					// cleanup up & down pixels
 					if (edgeImg[(r - 1)*width + c] == ANCHOR_PIXEL) edgeImg[(r - 1)*width + c] = 0;
@@ -902,7 +903,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 					for (int k = 0; k<count; k++) {
 						int chainNo = chainNos[k];
 
-#if 1					
+#if 1
 						/* See if we can erase some pixels from the last chain. This is for cleanup */
 						int fr = chains[chainNo].pixels[0].y;
 						int fc = chains[chainNo].pixels[0].x;
@@ -943,7 +944,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors()
 					} //end-for
 					segmentPoints.push_back(vector<Point>()); // create empty vector of points for segments
 					segmentNos++;
-				} //end-if          
+				} //end-if
 			} //end-for
 
 		} //end-else
@@ -968,7 +969,7 @@ void ED::sortAnchorsByGradValue()
 	{
 		return gradImg[a.y * width + a.x] > gradImg[b.y * width + b.x];
 	};
-	
+
 	std::sort(anchorPoints.begin(), anchorPoints.end(), sortFunc);
 
 	/*
@@ -980,9 +981,9 @@ void ED::sortAnchorsByGradValue()
 
 		myFile << i << ". value: " << gradImg[y*width + x] << "  Cord: (" << x << "," << y << ")" << endl;
 	}
-	myFile.close(); 
-	
-	
+	myFile.close();
+
+
 	vector<Point> temp(anchorNos);
 
 	int x, y, i = 0;
@@ -991,9 +992,9 @@ void ED::sortAnchorsByGradValue()
 	while (infile >> x >> c >> y && c == ',') {
 		temp[i] = Point(x, y);
 		i++;
-	} 
+	}
 
-	anchorPoints = temp; 
+	anchorPoints = temp;
 	*/
 }
 
@@ -1011,7 +1012,7 @@ int * ED::sortAnchorsByGradValue1()
 			int grad = gradImg[i*width + j];
 			C[grad]++;
 		} //end-for
-	} //end-for 
+	} //end-for
 
 	// Compute indices
 	for (int i = 1; i<SIZE; i++) C[i] += C[i - 1];
@@ -1027,9 +1028,9 @@ int * ED::sortAnchorsByGradValue1()
 
 			int grad = gradImg[i*width + j];
 			int index = --C[grad];
-			A[index] = i*width + j;    // anchor's offset 
+			A[index] = i*width + j;    // anchor's offset
 		} //end-for
-	} //end-for  
+	} //end-for
 
 	delete[] C;
 

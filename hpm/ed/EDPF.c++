@@ -1,4 +1,4 @@
-#include "EDPF.h"
+#include <hpm/ed/EDPF.h++>
 
 using namespace cv;
 using namespace std;
@@ -9,7 +9,7 @@ EDPF::EDPF(Mat srcImage)
 	// Validate Edge Segments
 	sigma /= 2.5;
 	GaussianBlur(srcImage, smoothImage, Size(), sigma); // calculate kernel from sigma
-	
+
 	validateEdgeSegments();
 }
 
@@ -32,7 +32,7 @@ void EDPF::validateEdgeSegments()
 {
 	divForTestSegment = 2.25; // Some magic number :-)
 	memset(edgeImg, 0, width*height); // clear edge image
-	
+
 	H = new double[MAX_GRAD_VALUE];
 	memset(H, 0, sizeof(double)*MAX_GRAD_VALUE);
 
@@ -65,7 +65,7 @@ void EDPF::validateEdgeSegments()
 
 	ExtractNewSegments();
 
-	// clean space		  
+	// clean space
 	delete[] H;
 	delete[] gradImg;
 }
@@ -87,12 +87,12 @@ short * EDPF::ComputePrewitt3x3()
 			// gx = (C-A) + (E-D) + (H-F)
 			// gy = (F-A) + (G-B) + (H-C)
 			//
-			// To make this faster: 
+			// To make this faster:
 			// com1 = (H-A)
 			// com2 = (C-F)
 			// Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
 			//       gy = com1 - com2 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-			// 
+			//
 			int com1 = srcImg[(i + 1)*width + j + 1] - srcImg[(i - 1)*width + j - 1];
 			int com2 = srcImg[(i - 1)*width + j + 1] - srcImg[(i + 1)*width + j - 1];
 
@@ -108,10 +108,10 @@ short * EDPF::ComputePrewitt3x3()
 
 	 // Compute probability function H
 	int size = (width - 2)*(height - 2);
-	
+
 	for (int i = MAX_GRAD_VALUE - 1; i>0; i--)
 		grads[i - 1] += grads[i];
-	
+
 	for (int i = 0; i < MAX_GRAD_VALUE; i++)
 		H[i] = (double)grads[i] / ((double)size);
 
@@ -127,10 +127,10 @@ void EDPF::TestSegment(int i, int index1, int index2)
 {
 
 	int chainLen = index2 - index1 + 1;
-	if (chainLen < minPathLen) 
+	if (chainLen < minPathLen)
 		return;
 
-	// Test from index1 to index2. If OK, then we are done. Otherwise, split into two and 
+	// Test from index1 to index2. If OK, then we are done. Otherwise, split into two and
 	// recursively test the left & right halves
 
 	// First find the min. gradient along the segment
@@ -154,7 +154,7 @@ void EDPF::TestSegment(int i, int index1, int index2)
 		} //end-for
 
 		return;
-	} //end-if  
+	} //end-if
 
 	// Split into two halves. We divide at the point where the gradient is the minimum
 	int end = minGradIndex - 1;
@@ -182,7 +182,7 @@ void EDPF::TestSegment(int i, int index1, int index2)
 //----------------------------------------------------------------------------------------------
 // After the validation of the edge segments, extracts the valid ones
 // In other words, updates the valid segments' pixel arrays and their lengths
-// 
+//
 void EDPF::ExtractNewSegments()
 {
 	//vector<Point> *segments = &segmentPoints[segmentNos];
@@ -237,7 +237,7 @@ void EDPF::ExtractNewSegments()
 double EDPF::NFA(double prob, int len)
 {
 	double nfa = np;
-	for (int i = 0; i<len && nfa > EPSILON; i++) 
+	for (int i = 0; i<len && nfa > EPSILON; i++)
 		nfa *= prob;
 
 	return nfa;

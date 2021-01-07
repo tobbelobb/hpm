@@ -16,7 +16,8 @@
 #define _ED_
 
 #include <opencv2/opencv.hpp>
-#include "EDColor.h"
+
+#include <hpm/ed/EDColor.h++>
 
 /// Special defines
 #define EDGE_VERTICAL   1

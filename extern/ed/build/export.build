@@ -1,6 +1,0 @@
-$out_root/
-{
-  include ed/
-}
-
-export $out_root/ed/$import.target

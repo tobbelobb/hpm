@@ -1,12 +1,13 @@
-#include "EDColor.h"
-#include "ED.h"
+
+#include <hpm/ed/EDColor.h++>
+#include <hpm/ed/ED.h++>
 
 using namespace cv;
 using namespace std;
 
-EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma, bool validateSegments)		   
-{   
-	inputImage = srcImage.clone(); 
+EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma, bool validateSegments)
+{
+	inputImage = srcImage.clone();
 
 	// check parameters for sanity
 	if (sigma < 1) sigma = 1;
@@ -39,7 +40,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma,
 	// Allocate space for smooth channels
 	smooth_L = new uchar[width*height];
 	smooth_a = new uchar[width*height];
-	smooth_b = new uchar[width*height]; 
+	smooth_b = new uchar[width*height];
 
 	// Smooth Channels
 	smoothChannel(L_Img, smooth_L, sigma);
@@ -52,11 +53,11 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma,
 
 	// Compute Gradient & Edge Direction Maps
 	ComputeGradientMapByDiZenzo();
-	
-	
+
+
 	// Validate edge segments if the flag is set
 	if (validateSegments) {
-		// Get Edge Image using ED 
+		// Get Edge Image using ED
 		ED edgeObj = ED(gradImg, dirImg, width, height, gradThresh, anchor_thresh, 1, 10, false);
 		segments = edgeObj.getSegments();
 		edgeImage = edgeObj.getEdgeImage();
@@ -73,14 +74,14 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma,
 		// Extract the new edge segments after validation
 		extractNewSegments();
 	}
-	
+
 	else {
 		ED edgeObj = ED(gradImg, dirImg, width, height, gradThresh, anchor_thresh);
 		segments = edgeObj.getSegments();
 		edgeImage = edgeObj.getEdgeImage();
 		segmentNo = edgeObj.getSegmentNo();
 	}
-	
+
 	// Fix 1 pixel errors in the edge map
 	fixEdgeSegments(segments, 1);
 
@@ -92,7 +93,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh , double sigma,
 	delete[] smooth_L;
 	delete[] smooth_a;
 	delete[] smooth_b;
-	
+
 	delete[] gradImg;
 	delete[] dirImg;
 }
@@ -126,7 +127,7 @@ int EDColor::getHeight()
 void EDColor::MyRGB2LabFast()
 {
 	// Inialize LUTs if necessary
-	if (!LUT_Initialized) 
+	if (!LUT_Initialized)
 		InitColorEDLib();
 
 	// First RGB 2 XYZ
@@ -173,7 +174,7 @@ void EDColor::MyRGB2LabFast()
 		a[i] = 500 * (x / y);
 		b[i] = 200 * (y - z);
 	} //end-for
-	
+
 	// Scale L to [0-255]
 	double min = 1e10;
 	double max = -1e10;
@@ -207,7 +208,7 @@ void EDColor::MyRGB2LabFast()
 	scale = 255.0 / (max - min);
 	for (int i = 0; i<width*height; i++) { b_Img[i] = (unsigned char)((b[i] - min)*scale); }
 
-									   
+
 	// clean space
 	delete[] L;
 	delete[] a;
@@ -282,7 +283,7 @@ void EDColor::ComputeGradientMapByDiZenzo()
 			int grad = (int)(sqrt(gxx*cosTheta*cosTheta + 2 * gxy*sinTheta*cosTheta + gyy*sinTheta*sinTheta) + 0.5); // Gradient Magnitude
 #endif
 
-			// Gradient is perpendicular to the edge passing through the pixel	
+			// Gradient is perpendicular to the edge passing through the pixel
 			if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4)
 				dirImg[i*width + j] = EDGE_VERTICAL;
 			else
@@ -324,7 +325,7 @@ void EDColor::validateEdgeSegments()
 	memset(H, 0, sizeof(double)*maxGradValue);
 
 	memset(edgeImg, 0, width*height); // clear edge image
-	
+
 	// Compute the gradient
 	memset(gradImg, 0, sizeof(short)*width*height); // reset gradient Image pixels to zero
 
@@ -371,11 +372,11 @@ void EDColor::validateEdgeSegments()
 	// Compute probability function H
 	int size = (width - 2)*(height - 2);
 	//  size -= grads[0];
-	
-	for (int i = maxGradValue - 1; i>0; i--) 
+
+	for (int i = maxGradValue - 1; i>0; i--)
 		grads[i - 1] += grads[i];
-	
-	for (int i = 0; i<maxGradValue; i++) 
+
+	for (int i = 0; i<maxGradValue; i++)
 		H[i] = (double)grads[i] / ((double)size);
 
 	// Compute np: # of segment pieces
@@ -407,7 +408,7 @@ void EDColor::testSegment(int i, int index1, int index2)
 	if (chainLen < MIN_PATH_LEN)
 		return;
 
-	// Test from index1 to index2. If OK, then we are done. Otherwise, split into two and 
+	// Test from index1 to index2. If OK, then we are done. Otherwise, split into two and
 	// recursively test the left & right halves
 
 	// First find the min. gradient along the segment
@@ -431,7 +432,7 @@ void EDColor::testSegment(int i, int index1, int index2)
 		} //end-for
 
 		return;
-	} //end-if  
+	} //end-if
 
 	// Split into two halves. We divide at the point where the gradient is the minimum
 	int end = minGradIndex - 1;
@@ -459,7 +460,7 @@ void EDColor::testSegment(int i, int index1, int index2)
 //----------------------------------------------------------------------------------------------
 // After the validation of the edge segments, extracts the valid ones
 // In other words, updates the valid segments' pixel arrays and their lengths
-// 
+//
 void EDColor::extractNewSegments()
 {
 	vector< vector<Point> > validSegments;
@@ -597,7 +598,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map, int noPix
 
 void EDColor::InitColorEDLib()
 {
-	if (LUT_Initialized) 
+	if (LUT_Initialized)
 		return;
 
 	double inc = 1.0 / LUT_SIZE;
