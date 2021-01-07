@@ -1,5 +1,437 @@
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/EDLines.h++>
+#include <hpm/ed/NFA.h++>
+
+using namespace cv;
+using namespace std;
+
+EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
+                 double _max_distance_between_two_lines, double _max_error)
+    : ED(srcImage, SOBEL_OPERATOR, 36, 8) {
+  min_line_len = _min_line_len;
+  line_error = _line_error;
+  max_distance_between_two_lines = _max_distance_between_two_lines;
+  max_error = _max_error;
+
+  if (min_line_len == -1) // If no initial value given, compute it
+    min_line_len = ComputeMinLineLength();
+
+  if (min_line_len <
+      9) // avoids small line segments in the result. Might be deleted!
+    min_line_len = 9;
+
+  // Temporary buffers used during line fitting
+  double *x = new double[(width + height) * 8];
+  double *y = new double[(width + height) * 8];
+
+  linesNo = 0;
+
+  // Use the whole segment
+  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+       segmentNumber++) {
+    int k = 0;
+    std::vector<Point> segment = segmentPoints[segmentNumber];
+    for (int k = 0; k < segment.size(); k++) {
+      x[k] = segment[k].x;
+      y[k] = segment[k].y;
+    }
+    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+  }
+
+  /*----------- JOIN COLLINEAR LINES ----------------*/
+  JoinCollinearLines();
+
+  /*----------- VALIDATE LINES ----------------*/
+#define PRECISON_ANGLE 22.5
+  prec = (PRECISON_ANGLE / 180) * M_PI;
+  double prob = 0.125;
+#undef PRECISON_ANGLE
+
+  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+
+  int lutSize = (width + height) / 8;
+  nfa = new NFALUT(lutSize, prob, logNT); // create look up table
+
+  ValidateLineSegments();
+
+  // Delete redundant space from lines
+  // Pop them back
+  int size = lines.size();
+  for (int i = 1; i <= size - linesNo; i++)
+    lines.pop_back();
+
+  for (int i = 0; i < linesNo; i++) {
+    Point2d start(lines[i].sx, lines[i].sy);
+    Point2d end(lines[i].ex, lines[i].ey);
+
+    linePoints.push_back(LS(start, end));
+  } // end-for
+
+  delete[] x;
+  delete[] y;
+  delete nfa;
+}
+
+EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
+                 double _max_distance_between_two_lines, double _max_error)
+    : ED(obj) {
+  min_line_len = _min_line_len;
+  line_error = _line_error;
+  max_distance_between_two_lines = _max_distance_between_two_lines;
+  max_error = _max_error;
+
+  if (min_line_len == -1) // If no initial value given, compute it
+    min_line_len = ComputeMinLineLength();
+
+  if (min_line_len <
+      9) // avoids small line segments in the result. Might be deleted!
+    min_line_len = 9;
+
+  // Temporary buffers used during line fitting
+  double *x = new double[(width + height) * 8];
+  double *y = new double[(width + height) * 8];
+
+  linesNo = 0;
+
+  // Use the whole segment
+  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+       segmentNumber++) {
+    int k = 0;
+    std::vector<Point> segment = segmentPoints[segmentNumber];
+    for (int k = 0; k < segment.size(); k++) {
+      x[k] = segment[k].x;
+      y[k] = segment[k].y;
+    }
+    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+  }
+
+  /*----------- JOIN COLLINEAR LINES ----------------*/
+  JoinCollinearLines();
+
+  /*----------- VALIDATE LINES ----------------*/
+#define PRECISON_ANGLE 22.5
+  prec = (PRECISON_ANGLE / 180) * M_PI;
+  double prob = 0.125;
+#undef PRECISON_ANGLE
+
+  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+
+  int lutSize = (width + height) / 8;
+  nfa = new NFALUT(lutSize, prob, logNT); // create look up table
+
+  ValidateLineSegments();
+
+  // Delete redundant space from lines
+  // Pop them back
+  int size = lines.size();
+  for (int i = 1; i <= size - linesNo; i++)
+    lines.pop_back();
+
+  for (int i = 0; i < linesNo; i++) {
+    Point2d start(lines[i].sx, lines[i].sy);
+    Point2d end(lines[i].ex, lines[i].ey);
+
+    linePoints.push_back(LS(start, end));
+  } // end-for
+
+  delete[] x;
+  delete[] y;
+  delete nfa;
+}
+
+EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
+                 double _max_distance_between_two_lines, double _max_error)
+    : ED(obj) {
+  min_line_len = _min_line_len;
+  line_error = _line_error;
+  max_distance_between_two_lines = _max_distance_between_two_lines;
+  max_error = _max_error;
+
+  if (min_line_len == -1) // If no initial value given, compute it
+    min_line_len = ComputeMinLineLength();
+
+  if (min_line_len <
+      9) // avoids small line segments in the result. Might be deleted!
+    min_line_len = 9;
+
+  // Temporary buffers used during line fitting
+  double *x = new double[(width + height) * 8];
+  double *y = new double[(width + height) * 8];
+
+  linesNo = 0;
+
+  // Use the whole segment
+  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+       segmentNumber++) {
+    int k = 0;
+    std::vector<Point> segment = segmentPoints[segmentNumber];
+    for (int k = 0; k < segment.size(); k++) {
+      x[k] = segment[k].x;
+      y[k] = segment[k].y;
+    }
+    SplitSegment2Lines(x, y, segment.size(), segmentNumber);
+  }
+
+  /*----------- JOIN COLLINEAR LINES ----------------*/
+  JoinCollinearLines();
+
+  /*----------- VALIDATE LINES ----------------*/
+#define PRECISON_ANGLE 22.5
+  prec = (PRECISON_ANGLE / 180) * M_PI;
+  double prob = 0.125;
+#undef PRECISON_ANGLE
+
+  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+
+  int lutSize = (width + height) / 8;
+  nfa = new NFALUT(lutSize, prob, logNT); // create look up table
+
+  // Since edge segments are validated in ed color,
+  // Validation is not performed again in line segment detection
+  // TODO :: further validation might be applied.
+  // ValidateLineSegments();
+
+  // Delete redundant space from lines
+  // Pop them back
+  int size = lines.size();
+  for (int i = 1; i <= size - linesNo; i++)
+    lines.pop_back();
+
+  for (int i = 0; i < linesNo; i++) {
+    Point2d start(lines[i].sx, lines[i].sy);
+    Point2d end(lines[i].ex, lines[i].ey);
+
+    linePoints.push_back(LS(start, end));
+  } // end-for
+
+  delete[] x;
+  delete[] y;
+  delete nfa;
+}
+
+EDLines::EDLines() {
+  //
+}
+
+vector<LS> EDLines::getLines() { return linePoints; }
+
+int EDLines::getLinesNo() { return linesNo; }
+
+Mat EDLines::getLineImage() {
+  Mat lineImage = Mat(height, width, CV_8UC1, Scalar(255));
+  for (int i = 0; i < linesNo; i++) {
+    line(lineImage, linePoints[i].start, linePoints[i].end, Scalar(0), 1,
+         LINE_AA, 0);
+  }
+
+  return lineImage;
+}
+
+Mat EDLines::drawOnImage() {
+  Mat colorImage = Mat(height, width, CV_8UC1, srcImg);
+  cvtColor(colorImage, colorImage, COLOR_GRAY2BGR);
+  for (int i = 0; i < linesNo; i++) {
+    line(colorImage, linePoints[i].start, linePoints[i].end, Scalar(0, 255, 0),
+         1, LINE_AA, 0); // draw lines as green on image
+  }
+
+  return colorImage;
+}
+
+//-----------------------------------------------------------------------------------------
+// Computes the minimum line length using the NFA formula given width & height
+// values
+int EDLines::ComputeMinLineLength() {
+  // The reason we are dividing the theoretical minimum line length by 2 is
+  // because we now test short line segments by a line support region rectangle
+  // having width=2. This means that within a line support region rectangle for
+  // a line segment of length "l" there are "2*l" many pixels. Thus, a line
+  // segment of length "l" has a chance of getting validated by NFA.
+
+  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+  return (int)round((-logNT / log10(0.125)) * 0.5);
+} // end-ComputeMinLineLength
+
+//-----------------------------------------------------------------
+// Given a full segment of pixels, splits the chain to lines
+// This code is used when we use the whole segment of pixels
+//
+void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
+                                 int segmentNo) {
+
+  // First pixel of the line segment within the segment of points
+  int firstPixelIndex = 0;
+
+  while (noPixels >= min_line_len) {
+    // Start by fitting a line to MIN_LINE_LEN pixels
+    bool valid = false;
+    double lastA, lastB, error;
+    int lastInvert;
+
+    while (noPixels >= min_line_len) {
+      LineFit(x, y, min_line_len, lastA, lastB, error, lastInvert);
+      if (error <= 0.5) {
+        valid = true;
+        break;
+      }
+
+#if 1
+      noPixels -= 1; // Go slowly
+      x += 1;
+      y += 1;
+      firstPixelIndex += 1;
+#else
+      noPixels -= 2; // Go faster (for speed)
+      x += 2;
+      y += 2;
+      firstPixelIndex += 2;
+#endif
+    } // end-while
+
+    if (valid == false)
+      return;
+
+    // Now try to extend this line
+    int index = min_line_len;
+    int len = min_line_len;
+
+    while (index < noPixels) {
+      int startIndex = index;
+      int lastGoodIndex = index - 1;
+      int goodPixelCount = 0;
+      int badPixelCount = 0;
+      while (index < noPixels) {
+        double d =
+            ComputeMinDistance(x[index], y[index], lastA, lastB, lastInvert);
+
+        if (d <= line_error) {
+          lastGoodIndex = index;
+          goodPixelCount++;
+          badPixelCount = 0;
+
+        } else {
+          badPixelCount++;
+          if (badPixelCount >= 5)
+            break;
+        } // end-if
+
+        index++;
+      } // end-while
+
+      if (goodPixelCount >= 2) {
+        len += lastGoodIndex - startIndex + 1;
+        LineFit(x, y, len, lastA, lastB, lastInvert); // faster LineFit
+        index = lastGoodIndex + 1;
+      } // end-if
+
+      if (goodPixelCount < 2 || index >= noPixels) {
+        // End of a line segment. Compute the end points
+        double sx, sy, ex, ey;
+
+        int index = 0;
+        while (ComputeMinDistance(x[index], y[index], lastA, lastB,
+                                  lastInvert) > line_error)
+          index++;
+        ComputeClosestPoint(x[index], y[index], lastA, lastB, lastInvert, sx,
+                            sy);
+        int noSkippedPixels = index;
+
+        index = lastGoodIndex;
+        while (ComputeMinDistance(x[index], y[index], lastA, lastB,
+                                  lastInvert) > line_error)
+          index--;
+        ComputeClosestPoint(x[index], y[index], lastA, lastB, lastInvert, ex,
+                            ey);
+
+        // Add the line segment to lines
+        lines.push_back(LineSegment(
+            lastA, lastB, lastInvert, sx, sy, ex, ey, segmentNo,
+            firstPixelIndex + noSkippedPixels, index - noSkippedPixels + 1));
+        linesNo++;
+        len = index + 1;
+        break;
+      } // end-else
+    }   // end-while
+
+    noPixels -= len;
+    x += len;
+    y += len;
+    firstPixelIndex += len;
+  } // end-while
+}
+
+//------------------------------------------------------------------
+// Goes over the original line segments and combines collinear lines that belong
+// to the same segment
+//
+void EDLines::JoinCollinearLines() {
+  int lastLineIndex = -1; // Index of the last line in the joined lines
+  int i = 0;
+  while (i < linesNo) {
+    int segmentNo = lines[i].segmentNo;
+
+    lastLineIndex++;
+    if (lastLineIndex != i)
+      lines[lastLineIndex] = lines[i];
+
+    int firstLineIndex =
+        lastLineIndex; // Index of the first line in this segment
+
+    int count = 1;
+    for (int j = i + 1; j < linesNo; j++) {
+      if (lines[j].segmentNo != segmentNo)
+        break;
+
+      // Try to combine this line with the previous line in this segment
+      if (TryToJoinTwoLineSegments(&lines[lastLineIndex], &lines[j],
+                                   lastLineIndex) == false) {
+        lastLineIndex++;
+        if (lastLineIndex != j)
+          lines[lastLineIndex] = lines[j];
+
+      } // end-if
+
+      count++;
+    } // end-for
+
+    // Try to join the first & last line of this segment
+    if (firstLineIndex != lastLineIndex) {
+      if (TryToJoinTwoLineSegments(&lines[firstLineIndex],
+                                   &lines[lastLineIndex], firstLineIndex)) {
+        lastLineIndex--;
+      } // end-if
+    }   // end-if
+
+    i += count;
+  } // end-while
+
+  linesNo = lastLineIndex + 1;
+}
+
+void EDLines::ValidateLineSegments() {
+
+  int *x = new int[(width + height) * 4];
+  int *y = new int[(width + height) * 4];
+
+  int noValidLines = 0;
+  int eraseOffset = 0;
+  for (int i = 0; i < linesNo; i++) {
+    LineSegment *ls = &lines[i];
+
+    // Compute Line's angle
+    double lineAngle;
+
+    if (ls->invert == 0) {
+      // y = a + bx
+      lineAngle = atan(ls->b);
+
+    } else {
+      // x = a + by
+      lineAngle = atan(1.0 / ls->b);
+    } // end-else
+
+    if (lineAngle < 0)
+      lineAngle += M_PI;
 
     Point *pixels = &(segmentPoints[ls->segmentNo][0]);
     int noPixels = ls->len;
@@ -63,7 +495,7 @@
         double pixelAngle = nfa->myAtan2((double)gx, (double)-gy);
         double diff = fabs(lineAngle - pixelAngle);
 
-        if (diff <= prec || diff >= CV_PI - prec)
+        if (diff <= prec || diff >= M_PI - prec)
           aligned++;
       } // end-for
 
@@ -103,7 +535,7 @@ bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {
   } // end-else
 
   if (lineAngle < 0)
-    lineAngle += CV_PI;
+    lineAngle += M_PI;
 
   int noPoints = 0;
 
@@ -152,7 +584,7 @@ bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {
 
     double diff = fabs(lineAngle - pixelAngle);
 
-    if (diff <= prec || diff >= CV_PI - prec)
+    if (diff <= prec || diff >= M_PI - prec)
       aligned++;
   } // end-for
 
@@ -385,22 +817,22 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
   }
 
 #if 0
-	// Use 5 points to check for collinearity
+  // Use 5 points to check for collinearity
 #define POINT_COUNT 5
-	double decr = 1.0 / (POINT_COUNT - 1);
-	double alpha = 1.0;
-	dist = 0.0;
+  double decr = 1.0 / (POINT_COUNT - 1);
+  double alpha = 1.0;
+  dist = 0.0;
 
-	while (alpha >= 0.0) {
-		double px = alpha*shorter->sx + (1.0 - alpha)*shorter->ex;
-		double py = alpha*shorter->sy + (1.0 - alpha)*shorter->ey;
+  while (alpha >= 0.0) {
+    double px = alpha*shorter->sx + (1.0 - alpha)*shorter->ex;
+    double py = alpha*shorter->sy + (1.0 - alpha)*shorter->ey;
 
-		dist += ComputeMinDistance(px, py, longer->a, longer->b, longer->invert);
+    dist += ComputeMinDistance(px, py, longer->a, longer->b, longer->invert);
 
-		alpha -= decr;
-	} //end-while
+    alpha -= decr;
+  } //end-while
 
-	dist /= POINT_COUNT;
+  dist /= POINT_COUNT;
 
 #undef POINT_COUNT
 
@@ -421,26 +853,26 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
     return false;
 
 #if 0
-	// Update the end points of ls1
-	if (which == 0) {       // SS
-		ls1->sx = ls2->ex;
-		ls1->sy = ls2->ey;
+  // Update the end points of ls1
+  if (which == 0) {       // SS
+    ls1->sx = ls2->ex;
+    ls1->sy = ls2->ey;
 
-	}
-	else if (which == 1) { // SE
-		ls1->sx = ls2->sx;
-		ls1->sy = ls2->sy;
+  }
+  else if (which == 1) { // SE
+    ls1->sx = ls2->sx;
+    ls1->sy = ls2->sy;
 
-	}
-	else if (which == 2) { // ES
-		ls1->ex = ls2->ex;
-		ls1->ey = ls2->ey;
+  }
+  else if (which == 2) { // ES
+    ls1->ex = ls2->ex;
+    ls1->ey = ls2->ey;
 
-	}
-	else {                // EE
-		ls1->ex = ls2->sx;
-		ls1->ey = ls2->sy;
-	} //end-else
+  }
+  else {                // EE
+    ls1->ex = ls2->sx;
+    ls1->ey = ls2->sy;
+  } //end-else
 
 #else
   /// 4 cases: 1:(s1, s2), 2:(s1, e2), 3:(e1, s2), 4:(e1, e2)
@@ -880,3 +1312,4 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
     firstPixelIndex += len;
   } // end-while
 }
+

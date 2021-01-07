@@ -1,6 +1,6 @@
 #include <array>
+#include <cmath>
 #include <limits>
-#include <math.h>
 
 #include <hpm/ed/NFA.h++>
 
@@ -44,8 +44,8 @@ double NFALUT::myAtan2(double yy, double xx) {
     tableInited = true;
   } // end-if
 
-  double y = fabs(yy);
-  double x = fabs(xx);
+  double y = abs(yy);
+  double x = abs(xx);
 
   bool invert = false;
   if (y > x) {
@@ -177,7 +177,7 @@ double NFALUT::nfa(int n, int k) {
       tolerance * abs(-log10(bin_tail)-logNT) / (1/bin_tail)
       Finally, we truncate the tail if the error is less than:
       tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
-      if (err < tolerance * fabs(-log10(bin_tail) - logNT) * bin_tail)
+      if (err < tolerance * abs(-log10(bin_tail) - logNT) * bin_tail)
         break;
     } // end-if
   }   // end-for
@@ -210,25 +210,18 @@ double NFALUT::log_gamma(double x) {
 }
 
 bool NFALUT::double_equal(double a, double b) {
-  double abs_diff, aa, bb, abs_max;
-
-  /* trivial case */
   if (a == b) {
     return true;
   }
 
-  double const abs_diff = fabs(a - b);
-  double const aa = fabs(a);
-  double const bb = fabs(b);
-  abs_max = aa > bb ? aa : bb;
-  double constexpr MIN{std::numeric_limits<double>::min()};
-  double constexpr EPSILON{std::numeric_limits<double>::epsilon()};
+  double const abs_diff = abs(a - b);
 
-  if (abs_max < MIN) {
-    abs_max = MIN;
-  }
+  double const aa = abs(a);
+  double const bb = abs(b);
+  double constexpr MIN{std::numeric_limits<double>::min()};
+  double const abs_max = std::max(std::max(aa, bb), MIN);
 
   double constexpr RELATIVE_ERROR_FACTOR{100.0};
-  /* equal if relative error <= factor x eps */
+  double constexpr EPSILON{std::numeric_limits<double>::epsilon()};
   return (abs_diff / abs_max) <= (RELATIVE_ERROR_FACTOR * EPSILON);
 }
