@@ -1,12 +1,13 @@
-#ifndef _NFA_
-#define _NFA_
+#pragma once
 
-#define TABSIZE 100000
+#include <vector>
+
+// NFA: non-deterministic finite automata
+// LUT: look up table
 
 //----------------------------------------------
 // Fast arctan2 using a lookup table
 //
-#define MAX_LUT_SIZE 1024
 
 #ifndef TRUE
 #define TRUE 1
@@ -17,35 +18,26 @@
 #define M_LN10 2.30258509299404568402
 #endif /* !M_LN10 */
 
-/** PI */
-#ifndef M_PI
-#define M_PI   3.14159265358979323846
-#endif /* !M_PI */
-
-#define RELATIVE_ERROR_FACTOR 100.0
-
 // Lookup table (LUT) for NFA computation
 class NFALUT {
 public:
+  NFALUT(int size, double _prob, double _logNT);
 
-	NFALUT(int size, double _prob, double _logNT);
-	~NFALUT();
+  std::vector<int> LUT{}; // look up table
 
-	int *LUT; // look up table
-	int LUTSize;
+  double prob;
+  double logNT;
 
-	double prob;
-	double logNT;
-
-	bool checkValidationByNFA(int n, int k);
-	static double myAtan2(double yy, double xx);
+  bool checkValidationByNFA(int n, int k);
+  static double myAtan2(double yy, double xx);
 
 private:
-	double nfa(int n, int k);
-	static double log_gamma_lanczos(double x);
-	static double log_gamma_windschitl(double x);
-	static double log_gamma(double x);
-	static int double_equal(double a, double b);
-};
+  double nfa(int n, int k);
+  static double log_gamma_lanczos(double x);
+  static double log_gamma_windschitl(double x);
+  static double log_gamma(double x);
+  static bool double_equal(double a, double b);
 
-#endif
+  static constexpr size_t TABSIZE{1000};
+  static constexpr size_t MAX_LUT_SIZE{1024};
+};
