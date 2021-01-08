@@ -10,16 +10,12 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   inputImage = srcImage.clone();
 
   // check parameters for sanity
-  if (sigma < 1)
-    sigma = 1;
-  if (gradThresh < 1)
-    gradThresh = 1;
-  if (anchor_thresh < 0)
-    anchor_thresh = 0;
+  sigma = std::max(sigma, 1.0);
+  gradThresh = std::max(gradThresh, 1);
+  anchor_thresh = std::max(anchor_thresh, 0);
 
-  if (validateSegments) { // setup for validation
+  if (validateSegments) {
     anchor_thresh = 0;
-    divForTestSegment = 2.25;
   }
 
   // split channels (OpenCV uses BGR)
@@ -29,16 +25,12 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   greenImg = bgr[1].data;
   redImg = bgr[2].data;
 
-  height = srcImage.rows;
-  width = srcImage.cols;
-
-  // Allocate space for L*a*b color space
-  L_Img = new uchar[width * height];
-  a_Img = new uchar[width * height];
-  b_Img = new uchar[width * height];
+  height = static_cast<size_t>(srcImage.rows);
+  width = static_cast<size_t>(srcImage.cols);
+  size_t const size{width * height};
 
   // Convert RGB2Lab
-  MyRGB2LabFast();
+  auto [L_Img, a_Img, b_Img] = MyRGB2LabFast();
 
   // Allocate space for smooth channels
   smooth_L = new uchar[width * height];
@@ -89,10 +81,6 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   fixEdgeSegments(segments, 1);
 
   // clean space
-  delete[] L_Img;
-  delete[] a_Img;
-  delete[] b_Img;
-
   delete[] smooth_L;
   delete[] smooth_a;
   delete[] smooth_b;
@@ -105,111 +93,96 @@ cv::Mat EDColor::getEdgeImage() { return edgeImage; }
 
 std::vector<std::vector<cv::Point>> EDColor::getSegments() { return segments; }
 
-int EDColor::getSegmentNo() { return segmentNo; }
+size_t EDColor::getSegmentNo() const { return segmentNo; }
+size_t EDColor::getWidth() const { return width; }
+size_t EDColor::getHeight() const { return height; }
 
-int EDColor::getWidth() { return width; }
+std::array<double, EDColor::LUT_SIZE + 1> EDColor::getLut(int which) {
+  std::array<double, LUT_SIZE + 1> LUT;
 
-int EDColor::getHeight() { return height; }
+  for (size_t i = 0; i < LUT_SIZE + 1; ++i) {
+    double const d = static_cast<double>(i) / static_cast<double>(LUT_SIZE);
+    if (which == 1) {
+      if (d >= 0.04045) {
+        LUT[i] = pow(((d + 0.055) / 1.055), 2.4);
+      } else {
+        LUT[i] = d / 12.92;
+      }
+    } else {
+      if (d > 0.008856) {
+        LUT[i] = pow(d, 1.0 / 3.0);
+      } else {
+        LUT[i] = (7.787 * d) + (16.0 / 116.0);
+      }
+    }
+  }
 
-void EDColor::MyRGB2LabFast() {
-  // Inialize LUTs if necessary
-  if (!LUT_Initialized)
-    InitColorEDLib();
+  return LUT;
+}
 
-  // First RGB 2 XYZ
-  double red, green, blue;
-  double x, y, z;
+std::array<std::vector<uchar>, 3> EDColor::MyRGB2LabFast() {
+  static auto const &LUT1 = getLut(1);
+  static auto const &LUT2 = getLut(2);
 
-  // Space for temp. allocation
-  double *L = new double[width * height];
-  double *a = new double[width * height];
-  double *b = new double[width * height];
+  auto const size{static_cast<size_t>(width * height)};
 
-  for (int i = 0; i < width * height; i++) {
-    red = redImg[i] / 255.0;
-    green = greenImg[i] / 255.0;
-    blue = blueImg[i] / 255.0;
+  std::vector<double> L(size);
+  std::vector<double> a(size);
+  std::vector<double> b(size);
 
-    red = LUT1[(int)(red * LUT_SIZE + 0.5)];
-    green = LUT1[(int)(green * LUT_SIZE + 0.5)];
-    blue = LUT1[(int)(blue * LUT_SIZE + 0.5)];
+  for (size_t i = 0; i < size; i++) {
+    double red = redImg[i] / 255.0;
+    double green = greenImg[i] / 255.0;
+    double blue = blueImg[i] / 255.0;
+
+    red = LUT1[static_cast<size_t>(red * LUT_SIZE + 0.5)];
+    green = LUT1[static_cast<size_t>(green * LUT_SIZE + 0.5)];
+    blue = LUT1[static_cast<size_t>(blue * LUT_SIZE + 0.5)];
 
     red = red * 100;
     green = green * 100;
     blue = blue * 100;
 
-    // Observer. = 2°, Illuminant = D65
-    x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
-    y = red * 0.2126729 + green * 0.7151522 + blue * 0.0721750;
-    z = red * 0.0193339 + green * 0.1191920 + blue * 0.9503041;
+    // Observer. = 2deg, Illuminant = D65
+    double x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
+    double y = red * 0.2126729 + green * 0.7151522 + blue * 0.0721750;
+    double z = red * 0.0193339 + green * 0.1191920 + blue * 0.9503041;
 
     // Now xyz 2 Lab
-    double refX = 95.047;
-    double refY = 100.000;
-    double refZ = 108.883;
+    double const refX = 95.047;
+    double const refY = 100.000;
+    double const refZ = 108.883;
 
-    x = x / refX; // ref_X =  95.047   Observer= 2°, Illuminant= D65
+    x = x / refX; // ref_X =  95.047   Observer= 2deg, Illuminant= D65
     y = y / refY; // ref_Y = 100.000
     z = z / refZ; // ref_Z = 108.883
 
-    x = LUT2[(int)(x * LUT_SIZE + 0.5)];
-    y = LUT2[(int)(y * LUT_SIZE + 0.5)];
-    z = LUT2[(int)(z * LUT_SIZE + 0.5)];
+    x = LUT2[static_cast<size_t>(x * LUT_SIZE + 0.5)];
+    y = LUT2[static_cast<size_t>(y * LUT_SIZE + 0.5)];
+    z = LUT2[static_cast<size_t>(z * LUT_SIZE + 0.5)];
 
-    L[i] = (116.0 * y) - 16;
-    a[i] = 500 * (x / y);
-    b[i] = 200 * (y - z);
-  } // end-for
-
-  // Scale L to [0-255]
-  double min = 1e10;
-  double max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (L[i] < min)
-      min = L[i];
-    else if (L[i] > max)
-      max = L[i];
-  } // end-for
-
-  double scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    L_Img[i] = (unsigned char)((L[i] - min) * scale);
+    L.push_back((116.0 * y) - 16);
+    a.push_back(500 * (x / y));
+    b.push_back(200 * (y - z));
   }
 
-  // Scale a to [0-255]
-  min = 1e10;
-  max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (a[i] < min)
-      min = a[i];
-    else if (a[i] > max)
-      max = a[i];
-  } // end-for
+  std::vector<uchar> L_Img(size);
+  std::vector<uchar> a_Img(size);
+  std::vector<uchar> b_Img(size);
 
-  scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    a_Img[i] = (unsigned char)((a[i] - min) * scale);
-  }
+  auto scale255 = [size](std::vector<double> const &Lab,
+                         std::vector<uchar> &Lab_Img) {
+    auto const [min, max] = std::minmax_element(Lab.begin(), Lab.end());
+    double const scale = 255.0 / (*max - *min);
+    for (size_t i = 0; i < size; i++) {
+      Lab_Img.push_back(static_cast<unsigned char>((Lab[i] - *min) * scale));
+    }
+  };
+  scale255(L, L_Img);
+  scale255(a, a_Img);
+  scale255(b, b_Img);
 
-  // Scale b to [0-255]
-  min = 1e10;
-  max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (b[i] < min)
-      min = b[i];
-    else if (b[i] > max)
-      max = b[i];
-  } // end-for
-
-  scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    b_Img[i] = (unsigned char)((b[i] - min) * scale);
-  }
-
-  // clean space
-  delete[] L;
-  delete[] a;
-  delete[] b;
+  return {L_Img, a_Img, b_Img};
 }
 
 void EDColor::ComputeGradientMapByDiZenzo() {
@@ -219,7 +192,6 @@ void EDColor::ComputeGradientMapByDiZenzo() {
 
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
-#if 1
       // Prewitt for channel1
       int com1 =
           smooth_L[(i + 1) * width + j + 1] - smooth_L[(i - 1) * width + j - 1];
@@ -255,51 +227,10 @@ void EDColor::ComputeGradientMapByDiZenzo() {
       int gyCh3 =
           com1 - com2 +
           (smooth_b[(i + 1) * width + j] - smooth_b[(i - 1) * width + j]);
-#else
-      // Sobel for channel1
-      int com1 =
-          smooth_L[(i + 1) * width + j + 1] - smooth_L[(i - 1) * width + j - 1];
-      int com2 =
-          smooth_L[(i - 1) * width + j + 1] - smooth_L[(i + 1) * width + j - 1];
-
-      int gxCh1 =
-          com1 + com2 +
-          2 * (smooth_L[i * width + j + 1] - smooth_L[i * width + j - 1]);
-      int gyCh1 =
-          com1 - com2 +
-          2 * (smooth_L[(i + 1) * width + j] - smooth_L[(i - 1) * width + j]);
-
-      // Sobel for channel2
-      com1 =
-          smooth_a[(i + 1) * width + j + 1] - smooth_a[(i - 1) * width + j - 1];
-      com2 =
-          smooth_a[(i - 1) * width + j + 1] - smooth_a[(i + 1) * width + j - 1];
-
-      int gxCh2 =
-          com1 + com2 +
-          2 * (smooth_a[i * width + j + 1] - smooth_a[i * width + j - 1]);
-      int gyCh2 =
-          com1 - com2 +
-          2 * (smooth_a[(i + 1) * width + j] - smooth_a[(i - 1) * width + j]);
-
-      // Sobel for channel3
-      com1 =
-          smooth_b[(i + 1) * width + j + 1] - smooth_b[(i - 1) * width + j - 1];
-      com2 =
-          smooth_b[(i - 1) * width + j + 1] - smooth_b[(i + 1) * width + j - 1];
-
-      int gxCh3 =
-          com1 + com2 +
-          2 * (smooth_b[i * width + j + 1] - smooth_b[i * width + j - 1]);
-      int gyCh3 =
-          com1 - com2 +
-          2 * (smooth_b[(i + 1) * width + j] - smooth_b[(i - 1) * width + j]);
-#endif
       int gxx = gxCh1 * gxCh1 + gxCh2 * gxCh2 + gxCh3 * gxCh3;
       int gyy = gyCh1 * gyCh1 + gyCh2 * gyCh2 + gyCh3 * gyCh3;
       int gxy = gxCh1 * gyCh1 + gxCh2 * gyCh2 + gxCh3 * gyCh3;
 
-#if 1
       // Di Zenzo's formulas from Gonzales & Woods - Page 337
       double theta =
           atan2(2.0 * gxy, (double)(gxx - gyy)) / 2; // Gradient Direction
@@ -307,30 +238,20 @@ void EDColor::ComputeGradientMapByDiZenzo() {
                              2 * gxy * sin(2 * theta)) /
                             2.0) +
                        0.5); // Gradient Magnitude
-#else
-      // Koschan & Abidi - 2005 - Signal Processing Magazine
-      double theta =
-          atan2(2.0 * gxy, (double)(gxx - gyy)) / 2; // Gradient Direction
-
-      double cosTheta = cos(theta);
-      double sinTheta = sin(theta);
-      int grad =
-          (int)(sqrt(gxx * cosTheta * cosTheta + 2 * gxy * sinTheta * cosTheta +
-                     gyy * sinTheta * sinTheta) +
-                0.5); // Gradient Magnitude
-#endif
 
       // Gradient is perpendicular to the edge passing through the pixel
-      if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4)
+      if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4) {
         dirImg[i * width + j] = EDGE_VERTICAL;
-      else
+      } else {
         dirImg[i * width + j] = EDGE_HORIZONTAL;
+      }
 
       gradImg[i * width + j] = grad;
-      if (grad > max)
+      if (grad > max) {
         max = grad;
+      }
     }
-  } // end outer for
+  }
 
   // Scale the gradient values to 0-255
   double scale = 255.0 / max;
@@ -338,16 +259,20 @@ void EDColor::ComputeGradientMapByDiZenzo() {
     gradImg[i] = (short)(gradImg[i] * scale);
 }
 
-void EDColor::smoothChannel(uchar *src, uchar *smooth, double sigma) {
-  Mat srcImage = Mat(height, width, CV_8UC1, src);
-  Mat smoothImage = Mat(height, width, CV_8UC1, smooth);
+void EDColor::smoothChannel(std::vector<uchar> &src, uchar *smooth,
+                            double sigma) {
+  Mat srcImage = Mat(static_cast<int>(height), static_cast<int>(width), CV_8UC1,
+                     src.data());
+  Mat smoothImage =
+      Mat(static_cast<int>(height), static_cast<int>(width), CV_8UC1, smooth);
 
-  if (sigma == 1.0)
+  if (sigma == 1.0) {
     GaussianBlur(srcImage, smoothImage, Size(5, 5), 1);
-  else if (sigma == 1.5)
+  } else if (sigma == 1.5) {
     GaussianBlur(srcImage, smoothImage, Size(7, 7), 1.5); // seems to be better?
-  else
+  } else {
     GaussianBlur(srcImage, smoothImage, Size(), sigma);
+  }
 }
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -417,8 +342,8 @@ void EDColor::validateEdgeSegments() {
 
       gradImg[i * width + j] = grad;
       grads[grad]++;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   Mat gradImage = Mat(height, width, CV_16SC1, gradImg);
   imwrite("newGrad.pgm", gradImage);
@@ -438,12 +363,12 @@ void EDColor::validateEdgeSegments() {
   for (int i = 0; i < segments.size(); i++) {
     int len = segments[i].size();
     np += (len * (len - 1)) / 2;
-  } // end-for
+  }
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
     testSegment(i, 0, segments[i].size() - 1);
-  } // end-for
+  }
 
   // clear space
   delete[] H;
@@ -457,8 +382,9 @@ void EDColor::validateEdgeSegments() {
 void EDColor::testSegment(int i, int index1, int index2) {
 
   int chainLen = index2 - index1 + 1;
-  if (chainLen < MIN_PATH_LEN)
+  if (chainLen < MIN_PATH_LEN) {
     return;
+  }
 
   // Test from index1 to index2. If OK, then we are done. Otherwise, split into
   // two and recursively test the left & right halves
@@ -473,10 +399,12 @@ void EDColor::testSegment(int i, int index1, int index2) {
       minGrad = gradImg[r * width + c];
       minGradIndex = k;
     }
-  } // end-for
+  }
 
   // Compute nfa
-  double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
+  double constexpr DIV_FOR_TEST_SEGMENT{2.25};
+  double nfa =
+      NFA(H[minGrad], static_cast<int>(chainLen / DIV_FOR_TEST_SEGMENT));
 
   if (nfa <= EPSILON) {
     for (int k = index1; k <= index2; k++) {
@@ -484,10 +412,10 @@ void EDColor::testSegment(int i, int index1, int index2) {
       int c = segments[i][k].x;
 
       edgeImg[r * width + c] = 255;
-    } // end-for
+    }
 
     return;
-  } // end-if
+  }
 
   // Split into two halves. We divide at the point where the gradient is the
   // minimum
@@ -500,7 +428,7 @@ void EDColor::testSegment(int i, int index1, int index2) {
       end--;
     else
       break;
-  } // end-while
+  }
 
   int start = minGradIndex + 1;
   while (start < index2) {
@@ -511,7 +439,7 @@ void EDColor::testSegment(int i, int index1, int index2) {
       start++;
     else
       break;
-  } // end-while
+  }
 
   testSegment(i, index1, end);
   testSegment(i, start, index2);
@@ -536,7 +464,7 @@ void EDColor::extractNewSegments() {
         if (edgeImg[r * width + c])
           break;
         start++;
-      } // end-while
+      }
 
       int end = start + 1;
       while (end < segments[i].size()) {
@@ -546,7 +474,7 @@ void EDColor::extractNewSegments() {
         if (edgeImg[r * width + c] == 0)
           break;
         end++;
-      } // end-while
+      }
 
       int len = end - start;
       if (len >= 10) {
@@ -557,11 +485,11 @@ void EDColor::extractNewSegments() {
         vector<Point> subVec(&segments[i][start], &segments[i][end - 1]);
         validSegments[noSegments] = subVec;
         noSegments++;
-      } // end-else
+      }
 
       start = end + 1;
-    } // end-while
-  }   // end-for
+    }
+  }
 
   // Update
   segments = validSegments;
@@ -612,7 +540,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       if (r2 == r - 2 && c2 == c) {
         if (c1 != c) {
           map[i][n1].x = c;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -620,7 +548,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r + 2 && c2 == c) {
         if (c1 != c) {
           map[i][n1].x = c;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -628,7 +556,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r && c2 == c - 2) {
         if (r1 != r) {
           map[i][n1].y = r;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -636,7 +564,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r && c2 == c + 2) {
         if (r1 != r) {
           map[i][n1].y = r;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -644,38 +572,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else {
         cp++;
         n2++;
-      } // end-else
-    }   // end-while
-  }     // end-for
+      }
+    }
+  }
 }
-
-void EDColor::InitColorEDLib() {
-  if (LUT_Initialized)
-    return;
-
-  double inc = 1.0 / LUT_SIZE;
-  for (int i = 0; i <= LUT_SIZE; i++) {
-    double d = i * inc;
-
-    if (d >= 0.04045)
-      LUT1[i] = pow(((d + 0.055) / 1.055), 2.4);
-    else
-      LUT1[i] = d / 12.92;
-  } // end-for
-
-  inc = 1.0 / LUT_SIZE;
-  for (int i = 0; i <= LUT_SIZE; i++) {
-    double d = i * inc;
-
-    if (d > 0.008856)
-      LUT2[i] = pow(d, 1.0 / 3.0);
-    else
-      LUT2[i] = (7.787 * d) + (16.0 / 116.0);
-  } // end-for
-
-  LUT_Initialized = true;
-}
-
-bool EDColor::LUT_Initialized = false;
-double EDColor::LUT1[LUT_SIZE + 1] = {0};
-double EDColor::LUT2[LUT_SIZE + 1] = {0};

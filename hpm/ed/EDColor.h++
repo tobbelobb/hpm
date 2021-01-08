@@ -4,14 +4,14 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #if defined(__clang__)
 #pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
 #endif
 #include <opencv2/opencv.hpp>
 #pragma GCC diagnostic pop
-
-// Look up table size for fast color space conversion
-#define LUT_SIZE (1024 * 4096)
 
 // Special defines
 #define EDGE_VERTICAL 1
@@ -29,18 +29,14 @@ public:
           double sigma = 1.5, bool validateSegments = false);
   cv::Mat getEdgeImage();
   std::vector<std::vector<cv::Point>> getSegments();
-  int getSegmentNo();
 
-  int getWidth();
-  int getHeight();
+  size_t getSegmentNo() const;
+  size_t getWidth() const;
+  size_t getHeight() const;
 
   cv::Mat inputImage;
 
 private:
-  uchar *L_Img;
-  uchar *a_Img;
-  uchar *b_Img;
-
   uchar *smooth_L;
   uchar *smooth_a;
   uchar *smooth_b;
@@ -55,23 +51,21 @@ private:
   const uchar *greenImg;
   const uchar *redImg;
 
-  int width;
-  int height;
+  size_t width;
+  size_t height;
 
-  double divForTestSegment;
   double *H;
   int np;
   int segmentNo;
 
   std::vector<std::vector<cv::Point>> segments;
 
-  static double LUT1[LUT_SIZE + 1];
-  static double LUT2[LUT_SIZE + 1];
-  static bool LUT_Initialized;
+  static size_t constexpr LUT_SIZE{1024 * 4096};
 
-  void MyRGB2LabFast();
+  std::array<double, LUT_SIZE + 1> getLut(int which);
+  std::array<std::vector<uchar>, 3> MyRGB2LabFast();
   void ComputeGradientMapByDiZenzo();
-  void smoothChannel(uchar *src, uchar *smooth, double sigma);
+  void smoothChannel(std::vector<uchar> &src, uchar *smooth, double sigma);
   void validateEdgeSegments();
   void testSegment(int i, int index1, int index2);
   void extractNewSegments();
@@ -79,6 +73,4 @@ private:
 
   static void fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
                               int noPixels);
-
-  static void InitColorEDLib();
 };

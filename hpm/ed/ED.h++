@@ -1,24 +1,17 @@
-/**************************************************************************************************************
- * Edge Drawing (ED) and Edge Drawing Parameter Free (EDPF) source codes.
- * Copyright (C) Cihan Topal & Cuneyt Akinlar
- * E-mails of the authors:  cihantopal@gmail.com, cuneytakinlar@gmail.com
- *
- * Please cite the following papers if you use Edge Drawing library:
- *
- * [1] C. Topal and C. Akinlar, “Edge Drawing: A Combined Real-Time Edge and
- *Segment Detector,” Journal of Visual Communication and Image Representation,
- *23(6), 862-872, DOI: 10.1016/j.jvcir.2012.05.004 (2012).
- *
- * [2] C. Akinlar and C. Topal, “EDPF: A Real-time Parameter-free Edge Segment
- *Detector with a False Detection Control,” International Journal of Pattern
- *Recognition and Artificial Intelligence, 26(1), DOI: 10.1142/S0218001412550026
- *(2012).
- **************************************************************************************************************/
+#pragma once
 
-#ifndef _ED_
-#define _ED_
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#endif
 #include <opencv2/opencv.hpp>
+#pragma GCC diagnostic pop
 
 #include <hpm/ed/EDColor.h++>
 
@@ -69,6 +62,7 @@ public:
      bool selectStableAnchors = true);
   ED(EDColor &cpyObj);
   ED();
+  ED &operator=(ED const &) = default;
 
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();
@@ -85,15 +79,15 @@ public:
   cv::Mat drawParticularSegments(std::vector<int> list);
 
 protected:
-  int width;  // width of source image
-  int height; // height of source image
+  size_t width;  // width of source image
+  size_t height; // height of source image
   uchar *srcImg;
   std::vector<std::vector<cv::Point>> segmentPoints;
   double sigma; // Gaussian sigma
   cv::Mat smoothImage;
   uchar *edgeImg;   // pointer to edge image data
   uchar *smoothImg; // pointer to smoothed image data
-  int segmentNos;
+  size_t segmentNos;
   int minPathLen;
   cv::Mat srcImage;
 
@@ -123,5 +117,3 @@ private:
   int scanInterval;
   bool sumFlag;
 };
-
-#endif

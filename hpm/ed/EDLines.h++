@@ -82,8 +82,9 @@ public:
   cv::Mat drawOnImage();
 
   // EDCircle uses this one
-  static void SplitSegment2Lines(double *x, double *y, int noPixels,
-                                 int segmentNo, std::vector<LineSegment> &lines,
+  static void SplitSegment2Lines(double *x, double *y, size_t noPixels,
+                                 size_t segmentNo,
+                                 std::vector<LineSegment> &lines,
                                  int min_line_len = 6, double line_error = 1.0);
 
 private:
@@ -99,7 +100,8 @@ private:
   NFALUT *nfa;
 
   int ComputeMinLineLength();
-  void SplitSegment2Lines(double *x, double *y, int noPixels, int segmentNo);
+  void SplitSegment2Lines(double *x, double *y, size_t noPixels,
+                          size_t segmentNo);
   void JoinCollinearLines();
 
   void ValidateLineSegments();

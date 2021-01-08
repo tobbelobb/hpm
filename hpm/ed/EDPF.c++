@@ -24,7 +24,7 @@ EDPF::EDPF(ED obj) : ED(obj) {
 EDPF::EDPF(EDColor obj) : ED(obj) {}
 
 void EDPF::validateEdgeSegments() {
-  divForTestSegment = 2.25;           // Some magic number :-)
+
   memset(edgeImg, 0, width * height); // clear edge image
 
   H = new double[MAX_GRAD_VALUE];
@@ -33,29 +33,18 @@ void EDPF::validateEdgeSegments() {
   gradImg = ComputePrewitt3x3();
 
   // Compute np: # of segment pieces
-#if 1
   // Does this underestimate the number of pieces of edge segments?
   // What's the correct value?
   np = 0;
-  for (int i = 0; i < segmentNos; i++) {
-    int len = segmentPoints[i].size();
+  for (size_t i = 0; i < segmentNos; ++i) {
+    size_t const len = segmentPoints[i].size();
     np += (len * (len - 1)) / 2;
-  } // end-for
-
-  //  np *= 32;
-#elif 0
-  // This definitely overestimates the number of pieces of edge segments
-  int np = 0;
-  for (int i = 0; i < segmentNos; i++) {
-    np += segmentPoints[i].size();
-  } // end-for
-  np = (np * (np - 1)) / 2;
-#endif
+  }
 
   // Validate segments
-  for (int i = 0; i < segmentNos; i++) {
+  for (size_t i = 0; i < segmentNos; i++) {
     TestSegment(i, 0, segmentPoints[i].size() - 1);
-  } // end-for
+  }
 
   ExtractNewSegments();
 
@@ -71,8 +60,8 @@ short *EDPF::ComputePrewitt3x3() {
   int *grads = new int[MAX_GRAD_VALUE];
   memset(grads, 0, sizeof(int) * MAX_GRAD_VALUE);
 
-  for (int i = 1; i < height - 1; i++) {
-    for (int j = 1; j < width - 1; j++) {
+  for (size_t i = 1; i < height - 1; i++) {
+    for (size_t j = 1; j < width - 1; j++) {
       // Prewitt Operator in horizontal and vertical direction
       // A B C
       // D x E
@@ -100,10 +89,10 @@ short *EDPF::ComputePrewitt3x3() {
 
       int g = gx + gy;
 
-      gradImg[i * width + j] = g;
+      gradImg[i * width + j] = static_cast<short>(g);
       grads[g]++;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // Compute probability function H
   int size = (width - 2) * (height - 2);
@@ -122,7 +111,7 @@ short *EDPF::ComputePrewitt3x3() {
 // Resursive validation using half of the pixels as suggested by DMM algorithm
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
-void EDPF::TestSegment(int i, int index1, int index2) {
+void EDPF::TestSegment(size_t i, size_t index1, size_t index2) {
 
   int chainLen = index2 - index1 + 1;
   if (chainLen < minPathLen)
@@ -135,16 +124,17 @@ void EDPF::TestSegment(int i, int index1, int index2) {
   int minGrad = 1 << 30;
   int minGradIndex;
   for (int k = index1; k <= index2; k++) {
-    int r = segmentPoints[i][k].y;
-    int c = segmentPoints[i][k].x;
+    size_t r = segmentPoints[i][k].y;
+    size_t c = segmentPoints[i][k].x;
     if (gradImg[r * width + c] < minGrad) {
       minGrad = gradImg[r * width + c];
       minGradIndex = k;
     }
-  } // end-for
+  }
 
   // Compute nfa
-  double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
+  double constexpr DIV_FOR_TEST_SEGMENT{2.25};
+  double nfa = NFA(H[minGrad], (int)(chainLen / DIV_FOR_TEST_SEGMENT));
 
   if (nfa <= EPSILON) {
     for (int k = index1; k <= index2; k++) {
@@ -152,34 +142,36 @@ void EDPF::TestSegment(int i, int index1, int index2) {
       int c = segmentPoints[i][k].x;
 
       edgeImg[r * width + c] = 255;
-    } // end-for
+    }
 
     return;
-  } // end-if
+  }
 
   // Split into two halves. We divide at the point where the gradient is the
   // minimum
-  int end = minGradIndex - 1;
+  size_t end = minGradIndex - 1;
   while (end > index1) {
     int r = segmentPoints[i][end].y;
     int c = segmentPoints[i][end].x;
 
-    if (gradImg[r * width + c] <= minGrad)
+    if (gradImg[r * width + c] <= minGrad) {
       end--;
-    else
+    } else {
       break;
-  } // end-while
+    }
+  }
 
-  int start = minGradIndex + 1;
+  size_t start = minGradIndex + 1;
   while (start < index2) {
-    int r = segmentPoints[i][start].y;
-    int c = segmentPoints[i][start].x;
+    size_t r = segmentPoints[i][start].y;
+    size_t c = segmentPoints[i][start].x;
 
-    if (gradImg[r * width + c] <= minGrad)
+    if (gradImg[r * width + c] <= minGrad) {
       start++;
-    else
+    } else {
       break;
-  } // end-while
+    }
+  }
 
   TestSegment(i, index1, end);
   TestSegment(i, start, index2);
@@ -190,11 +182,10 @@ void EDPF::TestSegment(int i, int index1, int index2) {
 // In other words, updates the valid segments' pixel arrays and their lengths
 //
 void EDPF::ExtractNewSegments() {
-  // vector<Point> *segments = &segmentPoints[segmentNos];
   vector<vector<Point>> validSegments;
   int noSegments = 0;
 
-  for (int i = 0; i < segmentNos; i++) {
+  for (size_t i = 0; i < segmentNos; i++) {
     int start = 0;
     while (start < segmentPoints[i].size()) {
 
@@ -205,7 +196,7 @@ void EDPF::ExtractNewSegments() {
         if (edgeImg[r * width + c])
           break;
         start++;
-      } // end-while
+      }
 
       int end = start + 1;
       while (end < segmentPoints[i].size()) {
@@ -215,7 +206,7 @@ void EDPF::ExtractNewSegments() {
         if (edgeImg[r * width + c] == 0)
           break;
         end++;
-      } // end-while
+      }
 
       int len = end - start;
       if (len >= 10) {
@@ -227,11 +218,11 @@ void EDPF::ExtractNewSegments() {
                              &segmentPoints[i][end - 1]);
         validSegments[noSegments] = subVec;
         noSegments++;
-      } // end-else
+      }
 
       start = end + 1;
-    } // end-while
-  }   // end-for
+    }
+  }
 
   // Copy to ed
   segmentPoints = validSegments;
@@ -244,8 +235,9 @@ void EDPF::ExtractNewSegments() {
 //
 double EDPF::NFA(double prob, int len) {
   double nfa = np;
-  for (int i = 0; i < len && nfa > EPSILON; i++)
+  for (int i = 0; i < len && nfa > EPSILON; i++) {
     nfa *= prob;
+  }
 
   return nfa;
 }

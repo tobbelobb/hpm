@@ -18,8 +18,8 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
 
   srcImage = _srcImage;
 
-  height = srcImage.rows;
-  width = srcImage.cols;
+  height = static_cast<size_t>(srcImage.rows);
+  width = static_cast<size_t>(srcImage.cols);
 
   op = _op;
   gradThresh = _gradThresh;
