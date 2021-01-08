@@ -11,8 +11,8 @@
 #include <hpm/ed/EDLib.h++>
 #pragma GCC diagnostic pop
 
-#include <hpm/ellipse-detector.h++>
 #include <hpm/detection-result.h++>
+#include <hpm/ellipse-detector.h++>
 #include <hpm/util.h++>
 
 using namespace hpm;
