@@ -114,8 +114,9 @@ short *EDPF::ComputePrewitt3x3() {
 void EDPF::TestSegment(size_t i, size_t index1, size_t index2) {
 
   int chainLen = index2 - index1 + 1;
-  if (chainLen < minPathLen)
+  if (chainLen < minPathLen) {
     return;
+  }
 
   // Test from index1 to index2. If OK, then we are done. Otherwise, split into
   // two and recursively test the left & right halves
@@ -123,7 +124,7 @@ void EDPF::TestSegment(size_t i, size_t index1, size_t index2) {
   // First find the min. gradient along the segment
   int minGrad = 1 << 30;
   int minGradIndex;
-  for (int k = index1; k <= index2; k++) {
+  for (size_t k = index1; k <= index2; k++) {
     size_t r = segmentPoints[i][k].y;
     size_t c = segmentPoints[i][k].x;
     if (gradImg[r * width + c] < minGrad) {
@@ -137,9 +138,9 @@ void EDPF::TestSegment(size_t i, size_t index1, size_t index2) {
   double nfa = NFA(H[minGrad], (int)(chainLen / DIV_FOR_TEST_SEGMENT));
 
   if (nfa <= EPSILON) {
-    for (int k = index1; k <= index2; k++) {
-      int r = segmentPoints[i][k].y;
-      int c = segmentPoints[i][k].x;
+    for (size_t k = index1; k <= index2; k++) {
+      size_t r = segmentPoints[i][k].y;
+      size_t c = segmentPoints[i][k].x;
 
       edgeImg[r * width + c] = 255;
     }
@@ -154,6 +155,7 @@ void EDPF::TestSegment(size_t i, size_t index1, size_t index2) {
     int r = segmentPoints[i][end].y;
     int c = segmentPoints[i][end].x;
 
+    // segfaults
     if (gradImg[r * width + c] <= minGrad) {
       end--;
     } else {

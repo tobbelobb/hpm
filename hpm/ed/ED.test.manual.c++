@@ -5,10 +5,13 @@
 using namespace cv;
 using namespace std;
 
-int main() {
+int main(int argc, char **argv) {
   //***************************** ED Edge Segment Detection
   //***************************** Detection of edge segments from an input image
-  Mat testImg = imread("billiard.jpg", 0);
+  if (argc < 2) {
+    return 0;
+  }
+  Mat testImg = imread(argv[1], 0);
   imshow("Source Image", testImg);
 
   // Call ED constructor
