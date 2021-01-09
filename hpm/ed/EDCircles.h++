@@ -15,8 +15,8 @@
 #ifndef  _EDCIRCLES_
 #define _EDCIRCLES_
 
-#include "EDPF.h"
-#include "EDLines.h"
+#include <hpm/ed/EDLines.h++>
+#include <hpm/ed/EDPF.h++>
 
 #define PI      3.141592653589793238462
 #define TWOPI  (2*PI)
@@ -108,11 +108,11 @@ struct MyArc {
 	int ex, ey;                 // End (x, y) coordinate of the arc
 
 	double *x, *y;              // Pointer to buffer containing the pixels making up this arc
-	int noPixels;               // # of pixels making up the arc    
+	int noPixels;               // # of pixels making up the arc
 
-	bool isEllipse;             // Did we fit an ellipse to this arc? 
+	bool isEllipse;             // Did we fit an ellipse to this arc?
 	EllipseEquation eq;         // If an ellipse, then the ellipse's equation
-	double ellipseFitError;     // Error during ellipse fit  
+	double ellipseFitError;     // Error during ellipse fit
 };
 
 // =============================== AngleSet ==================================
@@ -184,7 +184,7 @@ struct BufferManager {
 	~BufferManager() {
 		delete x;
 		delete y;
-	} //end-~BufferManager  
+	} //end-~BufferManager
 
 	double *getX() { return &x[index]; }
 	double *getY() { return &y[index]; }
@@ -241,7 +241,7 @@ private:
 	void JoinArcs1();
 	void JoinArcs2();
 	void JoinArcs3();
-	
+
 	// circle utility functions
 	static Circle *addCircle(Circle *circles, int &noCircles,double xc, double yc, double r, double circleFitError, double *x, double *y, int noPixels);
 	static Circle *addCircle(Circle *circles, int &noCircles,double xc, double yc, double r, double circleFitError, EllipseEquation *pEq, double ellipseFitError, double *x, double *y, int noPixels);
@@ -249,7 +249,7 @@ private:
 	static bool CircleFit(double *x, double *y, int N, double *pxc, double *pyc, double *pr, double *pe);
 	static void ComputeCirclePoints(double xc, double yc, double r, double *px, double *py, int *noPoints);
 	static void sortCircle(Circle *circles, int noCircles);
-	
+
 	// ellipse utility functions
 	static bool EllipseFit(double *x, double *y, int noPoints, EllipseEquation *pResult, int mode=FPF);
 	static double **AllocateMatrix(int noRows, int noColumns);

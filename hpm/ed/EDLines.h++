@@ -15,9 +15,9 @@
 #ifndef _EDLines_
 #define _EDLines_
 
-#include "ED.h"
-#include "EDColor.h"
-#include "NFA.h"
+#include <hpm/ed/ED.h++>
+#include <hpm/ed/EDColor.h++>
+#include <hpm/ed/NFA.h++>
 
 #define SS 0
 #define SE 1
@@ -60,7 +60,7 @@ struct LineSegment {
 		firstPixelIndex = _firstPixelIndex;
 		len = _len;
 	}
-}; 
+};
 
 
 class EDLines : public ED {
@@ -75,7 +75,7 @@ public:
 	cv::Mat getLineImage();
 	cv::Mat drawOnImage();
 
-	// EDCircle uses this one 
+	// EDCircle uses this one
 	static void SplitSegment2Lines(double *x, double *y, int noPixels, int segmentNo, std::vector<LineSegment> &lines, int min_line_len = 6, double line_error = 1.0);
 
 private:
@@ -89,16 +89,16 @@ private:
 	double max_error;
 	double prec;
 	NFALUT *nfa;
-	
+
 
 	int ComputeMinLineLength();
 	void SplitSegment2Lines(double *x, double *y, int noPixels, int segmentNo);
 	void JoinCollinearLines();
-	
+
 	void ValidateLineSegments();
 	bool ValidateLineSegmentRect(int *x, int *y, LineSegment *ls);
 	bool TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2, int changeIndex);
-	
+
 	static double ComputeMinDistance(double x1, double y1, double a, double b, int invert);
 	static void ComputeClosestPoint(double x1, double y1, double a, double b, int invert, double &xOut, double &yOut);
 	static void LineFit(double *x, double *y, int count, double &a, double &b, int invert);
@@ -108,7 +108,7 @@ private:
 	static void EnumerateRectPoints(double sx, double sy, double ex, double ey,int ptsx[], int ptsy[], int *pNoPoints);
 
 	// Utility math functions
-	
+
 };
 
-#endif 
+#endif

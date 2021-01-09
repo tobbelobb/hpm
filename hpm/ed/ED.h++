@@ -1,6 +1,6 @@
 /**************************************************************************************************************
 * Edge Drawing (ED) and Edge Drawing Parameter Free (EDPF) source codes.
-* Copyright (C) Cihan Topal & Cuneyt Akinlar 
+* Copyright (C) Cihan Topal & Cuneyt Akinlar
 * E-mails of the authors:  cihantopal@gmail.com, cuneytakinlar@gmail.com
 *
 * Please cite the following papers if you use Edge Drawing library:
@@ -16,7 +16,8 @@
 #define _ED_
 
 #include <opencv2/opencv.hpp>
-#include "EDColor.h"
+
+#include <hpm/ed/EDColor.h++>
 
 /// Special defines
 #define EDGE_VERTICAL   1
@@ -49,10 +50,10 @@ struct Chain {
 };
 
 class ED {
-							
+
 public:
 	ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR, int _gradThresh = 20, int _anchorThresh = 0, int _scanInterval = 1, int _minPathLen = 10, double _sigma = 1.0, bool _sumFlag = true);
-	ED(const ED &cpyObj); 
+	ED(const ED &cpyObj);
 	ED(short* gradImg, uchar *dirImg, int _width, int _height, int _gradThresh, int _anchorThresh, int _scanInterval = 1, int _minPathLen = 10, bool selectStableAnchors = true);
 	ED(EDColor &cpyObj);
 	ED();
@@ -61,20 +62,20 @@ public:
 	cv::Mat getAnchorImage();
 	cv::Mat getSmoothImage();
 	cv::Mat getGradImage();
-	
+
 	int getSegmentNo();
 	int getAnchorNo();
-	
+
 	std::vector<cv::Point> getAnchorPoints();
 	std::vector<std::vector<cv::Point>> getSegments();
 	std::vector<std::vector<cv::Point>> getSortedSegments();
-	
+
 	cv::Mat drawParticularSegments(std::vector<int> list);
 
 protected:
 	int width; // width of source image
 	int height; // height of source image
-	uchar *srcImg; 
+	uchar *srcImg;
 	std::vector<std::vector< cv::Point> > segmentPoints;
 	double sigma; // Gaussian sigma
 	cv::Mat smoothImage;
@@ -87,7 +88,7 @@ protected:
 private:
 	void ComputeGradient();
 	void ComputeAnchorPoints();
-	void JoinAnchorPointsUsingSortedAnchors(); 
+	void JoinAnchorPointsUsingSortedAnchors();
 	void sortAnchorsByGradValue();
 	int* sortAnchorsByGradValue1();
 

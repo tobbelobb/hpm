@@ -1,19 +1,19 @@
-#include "EDLines.h"
-#include "EDColor.h"
-#include "NFA.h"
+#include <hpm/ed/EDColor.h++>
+#include <hpm/ed/EDLines.h++>
+#include <hpm/ed/NFA.h++>
 
 using namespace cv;
 using namespace std;
 
 EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _max_distance_between_two_lines , double _max_error)
-	:ED(srcImage, SOBEL_OPERATOR, 36, 8) 
+	:ED(srcImage, SOBEL_OPERATOR, 36, 8)
 {
 	min_line_len = _min_line_len;
 	line_error = _line_error;
 	max_distance_between_two_lines = _max_distance_between_two_lines;
 	max_error = _max_error;
 
-	if(min_line_len == -1) // If no initial value given, compute it 
+	if(min_line_len == -1) // If no initial value given, compute it
 		min_line_len = ComputeMinLineLength();
 
 	if (min_line_len < 9) // avoids small line segments in the result. Might be deleted!
@@ -26,7 +26,7 @@ EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _
 	double *y = new double[(width+height) * 8];
 
 	linesNo = 0;
-	
+
 	// Use the whole segment
 	for (int segmentNumber = 0; segmentNumber < segmentPoints.size(); segmentNumber++) {
 		int k = 0;
@@ -42,7 +42,7 @@ EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _
 	JoinCollinearLines();
 
 	/*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5 
+#define PRECISON_ANGLE 22.5
 	prec = (PRECISON_ANGLE / 180)*M_PI;
 	double prob = 0.125;
 #undef PRECISON_ANGLE
@@ -51,7 +51,7 @@ EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _
 
 	int lutSize = (width + height) / 8;
 	nfa = new NFALUT(lutSize, prob, logNT); // create look up table
-	
+
 	ValidateLineSegments();
 
 	// Delete redundant space from lines
@@ -59,11 +59,11 @@ EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _
 	int size = lines.size();
 	for (int i = 1; i <= size - linesNo; i++)
 		lines.pop_back();
-	
+
 	for (int i = 0; i<linesNo; i++) {
 		Point2d start(lines[i].sx, lines[i].sy);
 		Point2d end(lines[i].ex, lines[i].ey);
-		
+
 		linePoints.push_back(LS(start, end));
 	} //end-for
 
@@ -74,20 +74,20 @@ EDLines::EDLines(Mat srcImage ,  double _line_error, int _min_line_len, double _
 
 
 EDLines::EDLines(ED obj, double _line_error, int _min_line_len, double _max_distance_between_two_lines, double _max_error)
-	:ED(obj) 
+	:ED(obj)
 {
 	min_line_len = _min_line_len;
 	line_error = _line_error;
 	max_distance_between_two_lines = _max_distance_between_two_lines;
 	max_error = _max_error;
 
-	if (min_line_len == -1) // If no initial value given, compute it 
+	if (min_line_len == -1) // If no initial value given, compute it
 		min_line_len = ComputeMinLineLength();
 
 	if (min_line_len < 9) // avoids small line segments in the result. Might be deleted!
 		min_line_len = 9;
 
-	
+
 
 	// Temporary buffers used during line fitting
 	double *x = new double[(width + height) * 8];
@@ -110,7 +110,7 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len, double _max_dist
 	JoinCollinearLines();
 
 	/*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5 
+#define PRECISON_ANGLE 22.5
 	prec = (PRECISON_ANGLE / 180)*M_PI;
 	double prob = 0.125;
 #undef PRECISON_ANGLE
@@ -149,7 +149,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len, double _max
 	max_distance_between_two_lines = _max_distance_between_two_lines;
 	max_error = _max_error;
 
-	if (min_line_len == -1) // If no initial value given, compute it 
+	if (min_line_len == -1) // If no initial value given, compute it
 		min_line_len = ComputeMinLineLength();
 
 	if (min_line_len < 9) // avoids small line segments in the result. Might be deleted!
@@ -177,7 +177,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len, double _max
 	JoinCollinearLines();
 
 	/*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5 
+#define PRECISON_ANGLE 22.5
 	prec = (PRECISON_ANGLE / 180)*M_PI;
 	double prob = 0.125;
 #undef PRECISON_ANGLE
@@ -187,10 +187,10 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len, double _max
 	int lutSize = (width + height) / 8;
 	nfa = new NFALUT(lutSize, prob, logNT); // create look up table
 
-	// Since edge segments are validated in ed color, 
-	// Validation is not performed again in line segment detection  
+	// Since edge segments are validated in ed color,
+	// Validation is not performed again in line segment detection
 	// TODO :: further validation might be applied.
-	// ValidateLineSegments(); 
+	// ValidateLineSegments();
 
 	// Delete redundant space from lines
 	// Pop them back
@@ -252,7 +252,7 @@ Mat EDLines::drawOnImage()
 int EDLines::ComputeMinLineLength() {
 	// The reason we are dividing the theoretical minimum line length by 2 is because
 	// we now test short line segments by a line support region rectangle having width=2.
-	// This means that within a line support region rectangle for a line segment of length "l" 
+	// This means that within a line support region rectangle for a line segment of length "l"
 	// there are "2*l" many pixels. Thus, a line segment of length "l" has a chance of getting
 	// validated by NFA.
 
@@ -364,9 +364,9 @@ void EDLines::JoinCollinearLines()
 		int segmentNo = lines[i].segmentNo;
 
 		lastLineIndex++;
-		if (lastLineIndex != i) 
+		if (lastLineIndex != i)
 			lines[lastLineIndex] = lines[i];
-		
+
 		int firstLineIndex = lastLineIndex;  // Index of the first line in this segment
 
 		int count = 1;
@@ -377,9 +377,9 @@ void EDLines::JoinCollinearLines()
 			if (TryToJoinTwoLineSegments(&lines[lastLineIndex], &lines[j],
 				lastLineIndex) == false) {
 				lastLineIndex++;
-				if (lastLineIndex != j) 
+				if (lastLineIndex != j)
 					lines[lastLineIndex] = lines[j];
-				
+
 			} //end-if
 
 			count++;
@@ -463,18 +463,18 @@ void EDLines::ValidateLineSegments()
 				// gx = (C-A) + (E-D) + (H-F)
 				// gy = (F-A) + (G-B) + (H-C)
 				//
-				// To make this faster: 
+				// To make this faster:
 				// com1 = (H-A)
 				// com2 = (C-F)
 				// Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
 				//       gy = com2 - com1 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-				// 
+				//
 				int com1 = srcImg[(r + 1)*width + c + 1] - srcImg[(r - 1)*width + c - 1];
 				int com2 = srcImg[(r - 1)*width + c + 1] - srcImg[(r + 1)*width + c - 1];
 
 				int gx = com1 + com2 + srcImg[r*width + c + 1] - srcImg[r*width + c - 1];
 				int gy = com1 - com2 + srcImg[(r + 1)*width + c] - srcImg[(r - 1)*width + c];
-				
+
 				double pixelAngle = nfa->myAtan2((double)gx, (double)-gy);
 				double diff = fabs(lineAngle - pixelAngle);
 
@@ -544,19 +544,19 @@ bool EDLines::ValidateLineSegmentRect(int * x, int * y, LineSegment * ls)
 		// gx = (C-A) + (E-D) + (H-F)
 		// gy = (F-A) + (G-B) + (H-C)
 		//
-		// To make this faster: 
+		// To make this faster:
 		// com1 = (H-A)
 		// com2 = (C-F)
 		// Then: gx = com1 + com2 + (E-D) = (H-A) + (C-F) + (E-D) = (C-A) + (E-D) + (H-F)
 		//       gy = com2 - com1 + (G-B) = (H-A) - (C-F) + (G-B) = (F-A) + (G-B) + (H-C)
-		// 
+		//
 		int com1 = srcImg[(r + 1)*width + c + 1] - srcImg[(r - 1)*width + c - 1];
 		int com2 = srcImg[(r - 1)*width + c + 1] - srcImg[(r + 1)*width + c - 1];
 
 		int gx = com1 + com2 + srcImg[r*width + c + 1] - srcImg[r*width + c - 1];
 		int gy = com1 - com2 + srcImg[(r + 1)*width + c] - srcImg[(r - 1)*width + c];
 		double pixelAngle = nfa->myAtan2((double)gx, (double)-gy);
-		
+
 		double diff = fabs(lineAngle - pixelAngle);
 
 		if (diff <= prec || diff >= M_PI - prec) aligned++;
@@ -726,7 +726,7 @@ void EDLines::LineFit(double * x, double * y, int count, double &a, double &b, d
 	}
 	else {
 		invert = 0;
-	} //end-else  
+	} //end-else
 
 	  // Now compute Sxx & Sxy
 	for (int i = 0; i<count; i++) {
@@ -770,7 +770,7 @@ void EDLines::LineFit(double * x, double * y, int count, double &a, double &b, d
 // Returns true if join is successful, false otherwise
 //
 bool EDLines::TryToJoinTwoLineSegments(LineSegment * ls1, LineSegment * ls2, int changeIndex)
-{	
+{
 	int which;
 	double dist = ComputeMinDistanceBetweenTwoLines(ls1, ls2, &which);
 	if (dist > max_distance_between_two_lines) return false;
@@ -791,7 +791,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment * ls1, LineSegment * ls2, int
 	if (prevLen > nextLen) { shorter = ls2; longer = ls1; }
 
 #if 0
-	// Use 5 points to check for collinearity  
+	// Use 5 points to check for collinearity
 #define POINT_COUNT 5
 	double decr = 1.0 / (POINT_COUNT - 1);
 	double alpha = 1.0;
@@ -811,7 +811,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment * ls1, LineSegment * ls2, int
 #undef POINT_COUNT
 
 #else
-	// Just use 3 points to check for collinearity  
+	// Just use 3 points to check for collinearity
 	dist = ComputeMinDistance(shorter->sx, shorter->sy, longer->a, longer->b, longer->invert);
 	dist += ComputeMinDistance((shorter->sx + shorter->ex) / 2.0, (shorter->sy + shorter->ey) / 2.0, longer->a, longer->b, longer->invert);
 	dist += ComputeMinDistance(shorter->ex, shorter->ey, longer->a, longer->b, longer->invert);
