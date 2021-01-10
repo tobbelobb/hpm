@@ -123,60 +123,67 @@ short * EDPF::ComputePrewitt3x3()
 // Resursive validation using half of the pixels as suggested by DMM algorithm
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
-void EDPF::TestSegment(int i, int index1, int index2)
-{
+void EDPF::TestSegment(int i, int index1, int index2) {
 
-	int chainLen = index2 - index1 + 1;
-	if (chainLen < minPathLen)
-		return;
+  int chainLen = index2 - index1 + 1;
+  if (chainLen < minPathLen)
+    return;
 
-	// Test from index1 to index2. If OK, then we are done. Otherwise, split into two and
-	// recursively test the left & right halves
+  // Test from index1 to index2. If OK, then we are done. Otherwise, split into
+  // two and recursively test the left & right halves
 
-	// First find the min. gradient along the segment
-	int minGrad = 1 << 30;
-	int minGradIndex;
-	for (int k = index1; k <= index2; k++) {
-		int r = segmentPoints[i][k].y;
-		int c = segmentPoints[i][k].x;
-		if (gradImg[r*width + c] < minGrad) { minGrad = gradImg[r*width + c]; minGradIndex = k; }
-	} //end-for
+  // First find the min. gradient along the segment
+  int minGrad = 1 << 30;
+  int minGradIndex = index1;
+  for (int k = index1; k <= index2; k++) {
+    int r = segmentPoints[i][k].y;
+    int c = segmentPoints[i][k].x;
+    if (gradImg[r * width + c] < minGrad) {
+      minGrad = gradImg[r * width + c];
+      minGradIndex = k;
+    }
+  } // end-for
 
-	 // Compute nfa
-	double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
+  // Compute nfa
+  double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
 
-	if (nfa <= EPSILON) {
-		for (int k = index1; k <= index2; k++) {
-			int r = segmentPoints[i][k].y;
-			int c = segmentPoints[i][k].x;
+  if (nfa <= EPSILON) {
+    for (int k = index1; k <= index2; k++) {
+      int r = segmentPoints[i][k].y;
+      int c = segmentPoints[i][k].x;
 
-			edgeImg[r*width + c] = 255;
-		} //end-for
+      edgeImg[r * width + c] = 255;
+    } // end-for
 
-		return;
-	} //end-if
+    return;
+  } // end-if
 
-	// Split into two halves. We divide at the point where the gradient is the minimum
-	int end = minGradIndex - 1;
-	while (end > index1) {
-		int r = segmentPoints[i][end].y;
-		int c = segmentPoints[i][end].x;
+  // Split into two halves. We divide at the point where the gradient is the
+  // minimum
+  int end = std::max(minGradIndex - 1, 0);
+  while (end > index1) {
+    int r = segmentPoints[i][end].y;
+    int c = segmentPoints[i][end].x;
 
-		if (gradImg[r*width + c] <= minGrad) end--;
-		else break;
-	} //end-while
+    if (gradImg[r * width + c] <= minGrad)
+      end--;
+    else
+      break;
+  } // end-while
 
-	int start = minGradIndex + 1;
-	while (start < index2) {
-		int r = segmentPoints[i][start].y;
-		int c = segmentPoints[i][start].x;
+  int start = minGradIndex + 1;
+  while (start < index2) {
+    int r = segmentPoints[i][start].y;
+    int c = segmentPoints[i][start].x;
 
-		if (gradImg[r*width + c] <= minGrad) start++;
-		else break;
-	} //end-while
+    if (gradImg[r * width + c] <= minGrad)
+      start++;
+    else
+      break;
+  } // end-while
 
-	TestSegment(i, index1, end);
-	TestSegment(i, start, index2);
+  TestSegment(i, index1, end);
+  TestSegment(i, start, index2);
 }
 
 //----------------------------------------------------------------------------------------------
