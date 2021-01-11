@@ -15,17 +15,13 @@ class EDColor {
 public:
   EDColor(cv::Mat srcImage, EDColorConfig const &config);
   cv::Mat getEdgeImage();
+
   std::vector<std::vector<cv::Point>> getSegments() const;
   int getSegmentNo() const;
-
   int getWidth() const;
   int getHeight() const;
 
 private:
-  uchar *smooth_L;
-  uchar *smooth_a;
-  uchar *smooth_b;
-
   std::vector<EdgeDir> dirData;
   short *gradImg;
 
@@ -53,9 +49,10 @@ private:
   static size_t constexpr MIN_PATH_LEN{10};
 
   std::array<cv::Mat, 3> MyRGB2LabFast();
-  void ComputeGradientMapByDiZenzo();
-  void smoothChannel(cv::Mat src, uchar *smooth, double sigma);
-  void validateEdgeSegments();
+  std::array<cv::Mat, 3> smoothChannels(std::array<cv::Mat, 3> src,
+                                        double sigma);
+  void ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3>);
+  void validateEdgeSegments(std::array<cv::Mat, 3>);
   void testSegment(int i, int index1, int index2);
   void extractNewSegments();
   double NFA(double prob, int len);

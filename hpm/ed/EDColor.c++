@@ -24,17 +24,8 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   height = srcImage.rows;
   width = srcImage.cols;
 
-  auto [L_Img, a_Img, b_Img] = MyRGB2LabFast();
-
-  // Allocate space for smooth channels
-  smooth_L = new uchar[width * height];
-  smooth_a = new uchar[width * height];
-  smooth_b = new uchar[width * height];
-
-  // Smooth Channels
-  smoothChannel(L_Img, smooth_L, sigma);
-  smoothChannel(a_Img, smooth_a, sigma);
-  smoothChannel(b_Img, smooth_b, sigma);
+  auto LabImgs = MyRGB2LabFast();
+  auto smoothLab = smoothChannels(LabImgs, sigma);
 
   // Allocate space for direction and gradient images
   dirData.resize(width * height);
@@ -42,7 +33,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   gradImg = new short[width * height];
 
   // Compute Gradient & Edge Direction Maps
-  ComputeGradientMapByDiZenzo();
+  ComputeGradientMapByDiZenzo(smoothLab);
 
   // Validate edge segments if the flag is set
   if (config.validateSegments) {
@@ -53,19 +44,15 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     edgeImage = edgeObj.getEdgeImage();
 
     sigma /= 2.5;
-    smoothChannel(L_Img, smooth_L, sigma);
-    smoothChannel(a_Img, smooth_a, sigma);
-    smoothChannel(b_Img, smooth_b, sigma);
+    auto smoothLab2 = smoothChannels(LabImgs, sigma);
 
     edgeImg = edgeImage.data; // validation steps uses pointer to edgeImage
 
-    validateEdgeSegments();
+    validateEdgeSegments(smoothLab2);
 
     // Extract the new edge segments after validation
     extractNewSegments();
-  }
-
-  else {
+  } else {
     ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
@@ -76,12 +63,8 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   fixEdgeSegments(segments, 1);
 
   // clean space
-
-  delete[] smooth_L;
-  delete[] smooth_a;
-  delete[] smooth_b;
-
   delete[] gradImg;
+  // Can we do this just in time instead?
   std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 }
 
@@ -168,94 +151,58 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast() {
   return {L_Img, a_Img, b_Img};
 }
 
-void EDColor::ComputeGradientMapByDiZenzo() {
+void EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   memset(gradImg, 0, sizeof(short) * width * height);
+  cv::Mat smoothL = smoothLab[0];
+  cv::Mat smootha = smoothLab[1];
+  cv::Mat smoothb = smoothLab[2];
 
   int max = 0;
 
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
-#if 1
       // Prewitt for channel1
-      int com1 =
-          smooth_L[(i + 1) * width + j + 1] - smooth_L[(i - 1) * width + j - 1];
-      int com2 =
-          smooth_L[(i - 1) * width + j + 1] - smooth_L[(i + 1) * width + j - 1];
-
-      int gxCh1 = com1 + com2 +
-                  (smooth_L[i * width + j + 1] - smooth_L[i * width + j - 1]);
-      int gyCh1 =
-          com1 - com2 +
-          (smooth_L[(i + 1) * width + j] - smooth_L[(i - 1) * width + j]);
-
-      // Prewitt for channel2
-      com1 =
-          smooth_a[(i + 1) * width + j + 1] - smooth_a[(i - 1) * width + j - 1];
-      com2 =
-          smooth_a[(i - 1) * width + j + 1] - smooth_a[(i + 1) * width + j - 1];
-
-      int gxCh2 = com1 + com2 +
-                  (smooth_a[i * width + j + 1] - smooth_a[i * width + j - 1]);
-      int gyCh2 =
-          com1 - com2 +
-          (smooth_a[(i + 1) * width + j] - smooth_a[(i - 1) * width + j]);
-
-      // Prewitt for channel3
-      com1 =
-          smooth_b[(i + 1) * width + j + 1] - smooth_b[(i - 1) * width + j - 1];
-      com2 =
-          smooth_b[(i - 1) * width + j + 1] - smooth_b[(i + 1) * width + j - 1];
-
-      int gxCh3 = com1 + com2 +
-                  (smooth_b[i * width + j + 1] - smooth_b[i * width + j - 1]);
-      int gyCh3 =
-          com1 - com2 +
-          (smooth_b[(i + 1) * width + j] - smooth_b[(i - 1) * width + j]);
-#else
-      // Sobel for channel1
-      int com1 =
-          smooth_L[(i + 1) * width + j + 1] - smooth_L[(i - 1) * width + j - 1];
-      int com2 =
-          smooth_L[(i - 1) * width + j + 1] - smooth_L[(i + 1) * width + j - 1];
+      int com1 = smoothL.data[(i + 1) * width + j + 1] -
+                 smoothL.data[(i - 1) * width + j - 1];
+      int com2 = smoothL.data[(i - 1) * width + j + 1] -
+                 smoothL.data[(i + 1) * width + j - 1];
 
       int gxCh1 =
           com1 + com2 +
-          2 * (smooth_L[i * width + j + 1] - smooth_L[i * width + j - 1]);
-      int gyCh1 =
-          com1 - com2 +
-          2 * (smooth_L[(i + 1) * width + j] - smooth_L[(i - 1) * width + j]);
+          (smoothL.data[i * width + j + 1] - smoothL.data[i * width + j - 1]);
+      int gyCh1 = com1 - com2 +
+                  (smoothL.data[(i + 1) * width + j] -
+                   smoothL.data[(i - 1) * width + j]);
 
-      // Sobel for channel2
-      com1 =
-          smooth_a[(i + 1) * width + j + 1] - smooth_a[(i - 1) * width + j - 1];
-      com2 =
-          smooth_a[(i - 1) * width + j + 1] - smooth_a[(i + 1) * width + j - 1];
+      // Prewitt for channel2
+      com1 = smootha.data[(i + 1) * width + j + 1] -
+             smootha.data[(i - 1) * width + j - 1];
+      com2 = smootha.data[(i - 1) * width + j + 1] -
+             smootha.data[(i + 1) * width + j - 1];
 
       int gxCh2 =
           com1 + com2 +
-          2 * (smooth_a[i * width + j + 1] - smooth_a[i * width + j - 1]);
-      int gyCh2 =
-          com1 - com2 +
-          2 * (smooth_a[(i + 1) * width + j] - smooth_a[(i - 1) * width + j]);
+          (smootha.data[i * width + j + 1] - smootha.data[i * width + j - 1]);
+      int gyCh2 = com1 - com2 +
+                  (smootha.data[(i + 1) * width + j] -
+                   smootha.data[(i - 1) * width + j]);
 
-      // Sobel for channel3
-      com1 =
-          smooth_b[(i + 1) * width + j + 1] - smooth_b[(i - 1) * width + j - 1];
-      com2 =
-          smooth_b[(i - 1) * width + j + 1] - smooth_b[(i + 1) * width + j - 1];
+      // Prewitt for channel3
+      com1 = smoothb.data[(i + 1) * width + j + 1] -
+             smoothb.data[(i - 1) * width + j - 1];
+      com2 = smoothb.data[(i - 1) * width + j + 1] -
+             smoothb.data[(i + 1) * width + j - 1];
 
       int gxCh3 =
           com1 + com2 +
-          2 * (smooth_b[i * width + j + 1] - smooth_b[i * width + j - 1]);
-      int gyCh3 =
-          com1 - com2 +
-          2 * (smooth_b[(i + 1) * width + j] - smooth_b[(i - 1) * width + j]);
-#endif
+          (smoothb.data[i * width + j + 1] - smoothb.data[i * width + j - 1]);
+      int gyCh3 = com1 - com2 +
+                  (smoothb.data[(i + 1) * width + j] -
+                   smoothb.data[(i - 1) * width + j]);
       int gxx = gxCh1 * gxCh1 + gxCh2 * gxCh2 + gxCh3 * gxCh3;
       int gyy = gyCh1 * gyCh1 + gyCh2 * gyCh2 + gyCh3 * gyCh3;
       int gxy = gxCh1 * gyCh1 + gxCh2 * gyCh2 + gxCh3 * gyCh3;
 
-#if 1
       // Di Zenzo's formulas from Gonzales & Woods - Page 337
       double theta =
           atan2(2.0 * gxy, (double)(gxx - gyy)) / 2; // Gradient Direction
@@ -263,18 +210,6 @@ void EDColor::ComputeGradientMapByDiZenzo() {
                              2 * gxy * sin(2 * theta)) /
                             2.0) +
                        0.5); // Gradient Magnitude
-#else
-      // Koschan & Abidi - 2005 - Signal Processing Magazine
-      double theta =
-          atan2(2.0 * gxy, (double)(gxx - gyy)) / 2; // Gradient Direction
-
-      double cosTheta = cos(theta);
-      double sinTheta = sin(theta);
-      int grad =
-          (int)(sqrt(gxx * cosTheta * cosTheta + 2 * gxy * sinTheta * cosTheta +
-                     gyy * sinTheta * sinTheta) +
-                0.5); // Gradient Magnitude
-#endif
 
       // Gradient is perpendicular to the edge passing through the pixel
       if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4)
@@ -294,22 +229,36 @@ void EDColor::ComputeGradientMapByDiZenzo() {
     gradImg[i] = (short)(gradImg[i] * scale);
 }
 
-void EDColor::smoothChannel(cv::Mat src, uchar *smooth, double sigma) {
-  Mat smoothImage = Mat(height, width, CV_8UC1, smooth);
+std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
+                                               double sigma) {
+  Mat smoothL = Mat(height, width, CV_8UC1);
+  Mat smoothA = Mat(height, width, CV_8UC1);
+  Mat smoothB = Mat(height, width, CV_8UC1);
 
-  if (sigma == 1.0)
-    GaussianBlur(src, smoothImage, Size(5, 5), 1);
-  else if (sigma == 1.5)
-    GaussianBlur(src, smoothImage, Size(7, 7), 1.5); // seems to be better?
-  else
-    GaussianBlur(src, smoothImage, Size(), sigma);
+  cv::Size kernelSize = Size();
+  if (sigma == 1.0) {
+    kernelSize = Size(5, 5);
+  }
+  if (sigma == 1.5) {
+    kernelSize = Size(7, 7);
+  }
+
+  GaussianBlur(src[0], smoothL, kernelSize, sigma);
+  GaussianBlur(src[1], smoothA, kernelSize, sigma);
+  GaussianBlur(src[2], smoothB, kernelSize, sigma);
+
+  return {smoothL, smoothA, smoothB};
 }
 
 //--------------------------------------------------------------------------------------------------------------------
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
 //
-void EDColor::validateEdgeSegments() {
+void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
+  cv::Mat smoothL = smoothLab[0];
+  cv::Mat smoothA = smoothLab[1];
+  cv::Mat smoothB = smoothLab[2];
+
   int maxGradValue = MAX_GRAD_VALUE;
   H = new double[maxGradValue];
   memset(H, 0, sizeof(double) * maxGradValue);
@@ -326,45 +275,45 @@ void EDColor::validateEdgeSegments() {
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Gradient for channel1
-      int com1 =
-          smooth_L[(i + 1) * width + j + 1] - smooth_L[(i - 1) * width + j - 1];
-      int com2 =
-          smooth_L[(i - 1) * width + j + 1] - smooth_L[(i + 1) * width + j - 1];
+      int com1 = smoothL.data[(i + 1) * width + j + 1] -
+                 smoothL.data[(i - 1) * width + j - 1];
+      int com2 = smoothL.data[(i - 1) * width + j + 1] -
+                 smoothL.data[(i + 1) * width + j - 1];
 
-      int gxCh1 =
-          abs(com1 + com2 +
-              (smooth_L[i * width + j + 1] - smooth_L[i * width + j - 1]));
-      int gyCh1 =
-          abs(com1 - com2 +
-              (smooth_L[(i + 1) * width + j] - smooth_L[(i - 1) * width + j]));
+      int gxCh1 = abs(
+          com1 + com2 +
+          (smoothL.data[i * width + j + 1] - smoothL.data[i * width + j - 1]));
+      int gyCh1 = abs(com1 - com2 +
+                      (smoothL.data[(i + 1) * width + j] -
+                       smoothL.data[(i - 1) * width + j]));
       int ch1Grad = gxCh1 + gyCh1;
 
       // Gradient for channel2
-      com1 =
-          smooth_a[(i + 1) * width + j + 1] - smooth_a[(i - 1) * width + j - 1];
-      com2 =
-          smooth_a[(i - 1) * width + j + 1] - smooth_a[(i + 1) * width + j - 1];
+      com1 = smoothA.data[(i + 1) * width + j + 1] -
+             smoothA.data[(i - 1) * width + j - 1];
+      com2 = smoothA.data[(i - 1) * width + j + 1] -
+             smoothA.data[(i + 1) * width + j - 1];
 
-      int gxCh2 =
-          abs(com1 + com2 +
-              (smooth_a[i * width + j + 1] - smooth_a[i * width + j - 1]));
-      int gyCh2 =
-          abs(com1 - com2 +
-              (smooth_a[(i + 1) * width + j] - smooth_a[(i - 1) * width + j]));
+      int gxCh2 = abs(
+          com1 + com2 +
+          (smoothA.data[i * width + j + 1] - smoothA.data[i * width + j - 1]));
+      int gyCh2 = abs(com1 - com2 +
+                      (smoothA.data[(i + 1) * width + j] -
+                       smoothA.data[(i - 1) * width + j]));
       int ch2Grad = gxCh2 + gyCh2;
 
       // Gradient for channel3
-      com1 =
-          smooth_b[(i + 1) * width + j + 1] - smooth_b[(i - 1) * width + j - 1];
-      com2 =
-          smooth_b[(i - 1) * width + j + 1] - smooth_b[(i + 1) * width + j - 1];
+      com1 = smoothB.data[(i + 1) * width + j + 1] -
+             smoothB.data[(i - 1) * width + j - 1];
+      com2 = smoothB.data[(i - 1) * width + j + 1] -
+             smoothB.data[(i + 1) * width + j - 1];
 
-      int gxCh3 =
-          abs(com1 + com2 +
-              (smooth_b[i * width + j + 1] - smooth_b[i * width + j - 1]));
-      int gyCh3 =
-          abs(com1 - com2 +
-              (smooth_b[(i + 1) * width + j] - smooth_b[(i - 1) * width + j]));
+      int gxCh3 = abs(
+          com1 + com2 +
+          (smoothB.data[i * width + j + 1] - smoothB.data[i * width + j - 1]));
+      int gyCh3 = abs(com1 - com2 +
+                      (smoothB.data[(i + 1) * width + j] -
+                       smoothB.data[(i - 1) * width + j]));
       int ch3Grad = gxCh3 + gyCh3;
 
       // Take average
