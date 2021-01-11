@@ -50,7 +50,8 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   smoothChannel(b_Img, smooth_b, sigma);
 
   // Allocate space for direction and gradient images
-  dirImg = new uchar[width * height];
+  dirData.resize(width * height);
+  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
   gradImg = new short[width * height];
 
   // Compute Gradient & Edge Direction Maps
@@ -59,7 +60,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   // Validate edge segments if the flag is set
   if (validateSegments) {
     // Get Edge Image using ED
-    ED edgeObj = ED(gradImg, dirImg, width, height, gradThresh, anchor_thresh,
+    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchor_thresh,
                     1, 10, false);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
@@ -78,7 +79,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   }
 
   else {
-    ED edgeObj = ED(gradImg, dirImg, width, height, gradThresh, anchor_thresh);
+    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchor_thresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
     segmentNo = edgeObj.getSegmentNo();
@@ -97,7 +98,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   delete[] smooth_b;
 
   delete[] gradImg;
-  delete[] dirImg;
+  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
@@ -321,9 +322,9 @@ void EDColor::ComputeGradientMapByDiZenzo() {
 
       // Gradient is perpendicular to the edge passing through the pixel
       if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4)
-        dirImg[i * width + j] = EDGE_VERTICAL;
+        dirData[i * width + j] = EdgeDir::VERTICAL;
       else
-        dirImg[i * width + j] = EDGE_HORIZONTAL;
+        dirData[i * width + j] = EdgeDir::HORIZONTAL;
 
       gradImg[i * width + j] = grad;
       if (grad > max)

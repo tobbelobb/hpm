@@ -3729,7 +3729,7 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot) {
       for (iq = ip + 1; iq <= n; iq++) {
         g = 100.0 * fabs(a[ip][iq]);
         //				if (i > 4 && fabs(d[ip]) + g ==
-        //fabs(d[ip])
+        // fabs(d[ip])
         //				&& fabs(d[iq]) + g == fabs(d[iq]))
 
         if (i > 4 && g == 0.0)

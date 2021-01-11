@@ -2,14 +2,8 @@
 
 #include <opencv2/opencv.hpp>
 
-// Look up table size for fast color space conversion
-#define LUT_SIZE (1024 * 4096)
-
 // Special defines
-#define EDGE_VERTICAL 1
-#define EDGE_HORIZONTAL 2
-#define EDGE_45 3
-#define EDGE_135 4
+enum class EdgeDir { VERTICAL, HORIZONTAL, NONE };
 
 #define MAX_GRAD_VALUE 128 * 256
 #define EPSILON 1.0
@@ -37,7 +31,7 @@ private:
   uchar *smooth_a;
   uchar *smooth_b;
 
-  uchar *dirImg;
+  std::vector<EdgeDir> dirData;
   short *gradImg;
 
   cv::Mat edgeImage;
@@ -57,6 +51,7 @@ private:
 
   std::vector<std::vector<cv::Point>> segments;
 
+  static size_t constexpr LUT_SIZE{1024 * 4096};
   static double LUT1[LUT_SIZE + 1];
   static double LUT2[LUT_SIZE + 1];
   static bool LUT_Initialized;

@@ -53,7 +53,8 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
   gradImg = (short *)gradImage.data;
   edgeImg = edgeImage.data;
 
-  dirImg = new unsigned char[width * height];
+  dirData.resize(width * height);
+  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
   ComputeGradient();
@@ -64,7 +65,7 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
   /*------------ JOIN ANCHORS -------------------*/
   JoinAnchorPointsUsingSortedAnchors();
 
-  delete[] dirImg;
+  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 }
 
 // This constructor for use of EDLines and EDCircle with ED given as constructor
@@ -99,7 +100,7 @@ ED::ED(const ED &cpyObj) {
 
 // This constructor for use of EDColor with use of direction and gradient image
 // It finds edge image for given gradient and direction image
-ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height,
+ED::ED(short *_gradImg, std::vector<EdgeDir> _dirData, int _width, int _height,
        int _gradThresh, int _anchorThresh, int _scanInterval, int _minPathLen,
        bool selectStableAnchors) {
   height = _height;
@@ -111,7 +112,7 @@ ED::ED(short *_gradImg, uchar *_dirImg, int _width, int _height,
   minPathLen = _minPathLen;
 
   gradImg = _gradImg;
-  dirImg = _dirImg;
+  dirData = _dirData;
 
   edgeImage = Mat(height, width, CV_8UC1, Scalar(0)); // initialize edge Image
 
@@ -376,9 +377,9 @@ void ED::ComputeGradient() {
 
       if (sum >= gradThresh) {
         if (gx >= gy)
-          dirImg[index] = EDGE_VERTICAL;
+          dirData[index] = EdgeDir::VERTICAL;
         else
-          dirImg[index] = EDGE_HORIZONTAL;
+          dirData[index] = EdgeDir::HORIZONTAL;
       } // end-if
     }   // end-for
   }     // end-for
@@ -398,7 +399,7 @@ void ED::ComputeAnchorPoints() {
       if (gradImg[i * width + j] < gradThresh)
         continue;
 
-      if (dirImg[i * width + j] == EDGE_VERTICAL) {
+      if (dirData[i * width + j] == EdgeDir::VERTICAL) {
         // vertical edge
         int diff1 = gradImg[i * width + j] - gradImg[i * width + j - 1];
         int diff2 = gradImg[i * width + j] - gradImg[i * width + j + 1];
@@ -459,7 +460,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
     int duplicatePixelCount = 0;
     int top = -1; // top of the stack
 
-    if (dirImg[i * width + j] == EDGE_VERTICAL) {
+    if (dirData[i * width + j] == EdgeDir::VERTICAL) {
       stack[++top].r = i;
       stack[top].c = j;
       stack[top].dir = DOWN;
@@ -508,7 +509,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
       chainLen++;
 
       if (dir == LEFT) {
-        while (dirImg[r * width + c] == EDGE_HORIZONTAL) {
+        while (dirData[r * width + c] == EdgeDir::HORIZONTAL) {
           edgeImg[r * width + c] = EDGE_PIXEL;
 
           // The edge is horizontal. Look LEFT
@@ -582,7 +583,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
         noChains++;
 
       } else if (dir == RIGHT) {
-        while (dirImg[r * width + c] == EDGE_HORIZONTAL) {
+        while (dirData[r * width + c] == EdgeDir::HORIZONTAL) {
           edgeImg[r * width + c] = EDGE_PIXEL;
 
           // The edge is horizontal. Look RIGHT
@@ -656,7 +657,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
         noChains++;
 
       } else if (dir == UP) {
-        while (dirImg[r * width + c] == EDGE_VERTICAL) {
+        while (dirData[r * width + c] == EdgeDir::VERTICAL) {
           edgeImg[r * width + c] = EDGE_PIXEL;
 
           // The edge is vertical. Look UP
@@ -730,7 +731,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
         noChains++;
 
       } else { // dir == DOWN
-        while (dirImg[r * width + c] == EDGE_VERTICAL) {
+        while (dirData[r * width + c] == EdgeDir::VERTICAL) {
           edgeImg[r * width + c] = EDGE_PIXEL;
 
           // The edge is vertical

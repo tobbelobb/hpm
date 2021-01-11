@@ -46,9 +46,9 @@ public:
      int _gradThresh = 20, int _anchorThresh = 0, int _scanInterval = 1,
      int _minPathLen = 10, double _sigma = 1.0, bool _sumFlag = true);
   ED(const ED &cpyObj);
-  ED(short *gradImg, uchar *dirImg, int _width, int _height, int _gradThresh,
-     int _anchorThresh, int _scanInterval = 1, int _minPathLen = 10,
-     bool selectStableAnchors = true);
+  ED(short *gradImg, std::vector<EdgeDir> dirData, int _width, int _height,
+     int _gradThresh, int _anchorThresh, int _scanInterval = 1,
+     int _minPathLen = 10, bool selectStableAnchors = true);
   ED(EDColor &cpyObj);
   ED();
 
@@ -96,8 +96,8 @@ private:
   cv::Mat edgeImage;
   cv::Mat gradImage;
 
-  uchar *dirImg;  // pointer to direction image data
-  short *gradImg; // pointer to gradient image data
+  std::vector<EdgeDir> dirData; // pointer to direction image data
+  short *gradImg;               // pointer to gradient image data
 
   GradientOperator op; // operation used in gradient calculation
   int gradThresh;      // gradient threshold
