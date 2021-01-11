@@ -15,11 +15,11 @@ class EDColor {
 public:
   EDColor(cv::Mat srcImage, EDColorConfig const &config);
   cv::Mat getEdgeImage();
-  std::vector<std::vector<cv::Point>> getSegments();
-  int getSegmentNo();
+  std::vector<std::vector<cv::Point>> getSegments() const;
+  int getSegmentNo() const;
 
-  int getWidth();
-  int getHeight();
+  int getWidth() const;
+  int getHeight() const;
 
   cv::Mat inputImage;
 

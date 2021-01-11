@@ -89,13 +89,15 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
 
-std::vector<std::vector<cv::Point>> EDColor::getSegments() { return segments; }
+std::vector<std::vector<cv::Point>> EDColor::getSegments() const {
+  return segments;
+}
 
-int EDColor::getSegmentNo() { return segmentNo; }
+int EDColor::getSegmentNo() const { return segmentNo; }
 
-int EDColor::getWidth() { return width; }
+int EDColor::getWidth() const { return width; }
 
-int EDColor::getHeight() { return height; }
+int EDColor::getHeight() const { return height; }
 
 std::array<cv::Mat, 3> EDColor::MyRGB2LabFast() {
   // Inialize LUTs if necessary
