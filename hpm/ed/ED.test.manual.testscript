@@ -1,0 +1,18 @@
+: No-arguments-given
+: Checks error printout if no arguments given
+$* >>"EOE"
+Usage:
+$0 <image> [--verbose [--show]]
+EOE
+
+: End-as-expected
+: Checks what gets printed when run was successful
+$* "$src_base/ed/billiard.jpg" "--verbose" &newGrad.pgm >>"END"
+Number of edge segments: 415
+Number of line segments: 518
+Number of edge segments found by EDPF: 276
+Number of circles: 17
+Number of edge segments detected by EDColor: 212
+Number of line segments: 585
+Number of circles: 49
+END

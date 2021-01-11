@@ -30,7 +30,7 @@ exe{*.test}:
 
 exe{*.test.manual}:
 {
-  test = false
+  test = true
   install = false
 }
 
