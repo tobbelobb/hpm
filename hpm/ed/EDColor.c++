@@ -20,16 +20,12 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto LabImgs = MyRGB2LabFast(srcImage);
   auto smoothLab = smoothChannels(LabImgs, sigma);
 
-  gradImg = new short[width * height];
-
-  // Compute Gradient & Edge Direction Maps
-  std::vector<EdgeDir> const dirData = ComputeGradientMapByDiZenzo(smoothLab);
+  auto const [dirData, gradImage] = ComputeGradientMapByDiZenzo(smoothLab);
 
   // Validate edge segments if the flag is set
   if (config.validateSegments) {
     // Get Edge Image using ED
-    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchorThresh,
-                    1, 10, false);
+    ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, 10, false);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
 
@@ -38,12 +34,13 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
     edgeImg = edgeImage.data; // validation steps uses pointer to edgeImage
 
-    validateEdgeSegments(smoothLab2);
+    validateEdgeSegments(smoothLab2, gradImage);
 
     // Extract the new edge segments after validation
     extractNewSegments();
   } else {
-    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchorThresh);
+    ED edgeObj =
+        ED(gradImage, dirData, width, height, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
     segmentNo = edgeObj.getSegmentNo();
@@ -51,9 +48,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
   // Fix 1 pixel errors in the edge map
   fixEdgeSegments(segments, 1);
-
-  // clean space
-  delete[] gradImg;
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
@@ -141,18 +135,19 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   return {L_Img, a_Img, b_Img};
 }
 
-std::vector<EdgeDir>
+std::pair<std::vector<EdgeDir>, cv::Mat>
 EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
-  memset(gradImg, 0, sizeof(short) * width * height);
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smootha = smoothLab[1];
   cv::Mat smoothb = smoothLab[2];
   std::vector<EdgeDir> dirData{};
   dirData.resize(height * width);
   std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
+  cv::Mat gradImage(height, width, CV_16SC1, cv::Scalar(0));
 
   int max = 0;
 
+  short *gradImg = gradImage.ptr<short>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Prewitt for channel1
@@ -222,7 +217,7 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   for (int i = 0; i < width * height; i++)
     gradImg[i] = (short)(gradImg[i] * scale);
 
-  return dirData;
+  return {dirData, gradImage};
 }
 
 std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
@@ -250,7 +245,8 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
 //
-void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
+void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
+                                   cv::Mat_<short> gradImage) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -261,13 +257,12 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
 
   memset(edgeImg, 0, width * height); // clear edge image
 
-  // Compute the gradient
-  memset(gradImg, 0,
-         sizeof(short) * width * height); // reset gradient Image pixels to zero
+  gradImage.setTo(0);
 
   int *grads = new int[maxGradValue];
   memset(grads, 0, sizeof(int) * maxGradValue);
 
+  short *gradImg = gradImage.ptr<short>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Gradient for channel1
@@ -320,8 +315,6 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
     } // end-for
   }   // end-for
 
-  Mat gradImage = Mat(height, width, CV_16SC1, gradImg);
-
   // Compute probability function H
   int size = (width - 2) * (height - 2);
   //  size -= grads[0];
@@ -341,7 +334,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
-    testSegment(i, 0, segments[i].size() - 1);
+    testSegment(i, 0, segments[i].size() - 1, gradImage);
   } // end-for
 
   // clear space
@@ -353,11 +346,14 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
 // Resursive validation using half of the pixels as suggested by DMM algorithm
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
-void EDColor::testSegment(int i, int index1, int index2) {
+void EDColor::testSegment(int i, int index1, int index2,
+                          cv::Mat_<short> gradImage) {
 
   int chainLen = index2 - index1 + 1;
   if (chainLen < MIN_PATH_LEN)
     return;
+
+  short *gradImg = gradImage.ptr<short>(0);
 
   // Test from index1 to index2. If OK, then we are done. Otherwise, split into
   // two and recursively test the left & right halves
@@ -412,8 +408,8 @@ void EDColor::testSegment(int i, int index1, int index2) {
       break;
   } // end-while
 
-  testSegment(i, index1, end);
-  testSegment(i, start, index2);
+  testSegment(i, index1, end, gradImage);
+  testSegment(i, start, index2, gradImage);
 }
 
 //----------------------------------------------------------------------------------------------

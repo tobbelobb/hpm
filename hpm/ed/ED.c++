@@ -34,8 +34,8 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
       vector<Point>()); // create empty vector of points for segments
 
   edgeImage = Mat(height, width, CV_8UC1, Scalar(0)); // initialize edge Image
-  smoothImage = Mat(height, width, CV_8UC1);
-  gradImage = Mat(height, width, CV_16SC1); // gradImage contains short values
+  smoothImage = Mat(height, width, CV_8UC1, Scalar(0));
+  gradImage = Mat(height, width, CV_16SC1, Scalar(0));
 
   srcImg = srcImage.data;
 
@@ -50,7 +50,6 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
 
   // Assign Pointers from Mat's data
   smoothImg = smoothImage.data;
-  gradImg = (short *)gradImage.data;
   edgeImg = edgeImage.data;
 
   dirData.resize(width * height);
@@ -91,7 +90,6 @@ ED::ED(const ED &cpyObj) {
   srcImg = srcImage.data;
 
   smoothImg = smoothImage.data;
-  gradImg = (short *)gradImage.data;
   edgeImg = edgeImage.data;
 
   segmentPoints = cpyObj.segmentPoints;
@@ -100,18 +98,18 @@ ED::ED(const ED &cpyObj) {
 
 // This constructor for use of EDColor with use of direction and gradient image
 // It finds edge image for given gradient and direction image
-ED::ED(short *_gradImg, std::vector<EdgeDir> _dirData, int _width, int _height,
-       int _gradThresh, int _anchorThresh, int _scanInterval, int _minPathLen,
+ED::ED(cv::Mat _gradImage, std::vector<EdgeDir> _dirData, int _gradThresh,
+       int _anchorThresh, int _scanInterval, int _minPathLen,
        bool selectStableAnchors) {
-  height = _height;
-  width = _width;
+  height = _gradImage.rows;
+  width = _gradImage.cols;
 
   gradThresh = _gradThresh;
   anchorThresh = _anchorThresh;
   scanInterval = _scanInterval;
   minPathLen = _minPathLen;
 
-  gradImg = _gradImg;
+  gradImage = _gradImage;
   dirData = _dirData;
 
   edgeImage = Mat(height, width, CV_8UC1, Scalar(0)); // initialize edge Image
@@ -131,6 +129,7 @@ ED::ED(short *_gradImg, std::vector<EdgeDir> _dirData, int _width, int _height,
     anchorPoints.clear(); // considering validation step below, it should
                           // constructed again.
 
+    short *gradImg = gradImage.ptr<short>(0);
     for (int i = 1; i < height - 1; i++) {
       for (int j = 1; j < width - 1; j++) {
         if (edgeImg[i * width + j] != ANCHOR_PIXEL)
@@ -274,6 +273,8 @@ Mat ED::drawParticularSegments(std::vector<int> list) {
 void ED::ComputeGradient() {
   // Initialize gradient image for row = 0, row = height-1, column=0,
   // column=width-1
+
+  short *gradImg = gradImage.ptr<short>(0);
   for (int j = 0; j < width; j++) {
     gradImg[j] = gradImg[(height - 1) * width + j] = gradThresh - 1;
   }
@@ -373,6 +374,7 @@ void ED::ComputeGradient() {
         sum = (int)sqrt((double)gx * gx + gy * gy);
 
       int index = i * width + j;
+      short *gradImg = gradImage.ptr<short>(0);
       gradImg[index] = sum;
 
       if (sum >= gradThresh) {
@@ -387,6 +389,7 @@ void ED::ComputeGradient() {
 
 void ED::ComputeAnchorPoints() {
   // memset(edgeImg, 0, width*height);
+  short *gradImg = gradImage.ptr<short>(0);
   for (int i = 2; i < height - 2; i++) {
     int start = 2;
     int inc = 1;
@@ -437,6 +440,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
   // value
   int totalPixels = 0;
 
+  short *gradImg = gradImage.ptr<short>(0);
   for (int k = anchorNos - 1; k >= 0; k--) {
     int pixelOffset = A[k];
 
@@ -1032,36 +1036,11 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
 void ED::sortAnchorsByGradValue() {
   auto sortFunc = [&](const Point &a, const Point &b) {
+    short *gradImg = gradImage.ptr<short>(0);
     return gradImg[a.y * width + a.x] > gradImg[b.y * width + b.x];
   };
 
   std::sort(anchorPoints.begin(), anchorPoints.end(), sortFunc);
-
-  /*
-  ofstream myFile;
-  myFile.open("anchorsNew.txt");
-  for (int i = 0; i < anchorPoints.size(); i++) {
-          int x = anchorPoints[i].x;
-          int y = anchorPoints[i].y;
-
-          myFile << i << ". value: " << gradImg[y*width + x] << "  Cord: (" << x
-  << "," << y << ")" << endl;
-  }
-  myFile.close();
-
-
-  vector<Point> temp(anchorNos);
-
-  int x, y, i = 0;
-  char c;
-  std::ifstream infile("cords.txt");
-  while (infile >> x >> c >> y && c == ',') {
-          temp[i] = Point(x, y);
-          i++;
-  }
-
-  anchorPoints = temp;
-  */
 }
 
 int *ED::sortAnchorsByGradValue1() {
@@ -1069,6 +1048,7 @@ int *ED::sortAnchorsByGradValue1() {
   int *C = new int[SIZE];
   memset(C, 0, sizeof(int) * SIZE);
 
+  short *gradImg = gradImage.ptr<short>(0);
   // Count the number of grad values
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {

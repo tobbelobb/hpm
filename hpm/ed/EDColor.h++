@@ -22,8 +22,6 @@ public:
   int getHeight() const;
 
 private:
-  short *gradImg;
-
   cv::Mat edgeImage;
   uchar *edgeImg;
 
@@ -45,9 +43,10 @@ private:
   std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
   std::array<cv::Mat, 3> smoothChannels(std::array<cv::Mat, 3> src,
                                         double sigma);
-  std::vector<EdgeDir> ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3>);
-  void validateEdgeSegments(std::array<cv::Mat, 3>);
-  void testSegment(int i, int index1, int index2);
+  std::pair<std::vector<EdgeDir>, cv::Mat>
+      ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3>);
+  void validateEdgeSegments(std::array<cv::Mat, 3>, cv::Mat_<short> gradImage);
+  void testSegment(int i, int index1, int index2, cv::Mat_<short> gradImage);
   void extractNewSegments();
   double NFA(double prob, int len);
 
