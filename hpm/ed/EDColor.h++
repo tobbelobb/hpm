@@ -2,8 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 
-// Special defines
-enum class EdgeDir { VERTICAL, HORIZONTAL, NONE };
+#include <hpm/ed/EDTypes.h++>
 
 #define MAX_GRAD_VALUE 128 * 256
 #define EPSILON 1.0

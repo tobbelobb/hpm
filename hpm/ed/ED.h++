@@ -3,10 +3,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <hpm/ed/EDColor.h++>
-
-/// Special defines
-#define EDGE_VERTICAL 1
-#define EDGE_HORIZONTAL 2
+#include <hpm/ed/EDTypes.h++>
 
 #define ANCHOR_PIXEL 254
 #define EDGE_PIXEL 255
