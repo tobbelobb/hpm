@@ -14,17 +14,10 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     divForTestSegment = 2.25;
   }
 
-  // split channels (OpenCV uses BGR)
-  Mat bgr[3];
-  split(srcImage, bgr);
-  blueImg = bgr[0].data;
-  greenImg = bgr[1].data;
-  redImg = bgr[2].data;
-
   height = srcImage.rows;
   width = srcImage.cols;
 
-  auto LabImgs = MyRGB2LabFast();
+  auto LabImgs = MyRGB2LabFast(srcImage);
   auto smoothLab = smoothChannels(LabImgs, sigma);
 
   // Allocate space for direction and gradient images
@@ -80,7 +73,7 @@ int EDColor::getWidth() const { return width; }
 
 int EDColor::getHeight() const { return height; }
 
-std::array<cv::Mat, 3> EDColor::MyRGB2LabFast() {
+std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   // Inialize LUTs if necessary
   if (!LUT_Initialized)
     InitColorEDLib();
@@ -96,10 +89,13 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast() {
   a.reserve(height * width);
   b.reserve(height * width);
 
+  std::array<cv::Mat, 3> bgr;
+  split(srcImage, bgr);
+
   for (int i = 0; i < width * height; i++) {
-    red = redImg[i] / 255.0;
-    green = greenImg[i] / 255.0;
-    blue = blueImg[i] / 255.0;
+    red = bgr[2].data[i] / 255.0;
+    green = bgr[1].data[i] / 255.0;
+    blue = bgr[0].data[i] / 255.0;
 
     red = LUT1[(int)(red * LUT_SIZE + 0.5)];
     green = LUT1[(int)(green * LUT_SIZE + 0.5)];

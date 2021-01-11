@@ -28,10 +28,6 @@ private:
   cv::Mat edgeImage;
   uchar *edgeImg;
 
-  const uchar *blueImg;
-  const uchar *greenImg;
-  const uchar *redImg;
-
   int width;
   int height;
 
@@ -48,7 +44,7 @@ private:
   static bool LUT_Initialized;
   static size_t constexpr MIN_PATH_LEN{10};
 
-  std::array<cv::Mat, 3> MyRGB2LabFast();
+  std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
   std::array<cv::Mat, 3> smoothChannels(std::array<cv::Mat, 3> src,
                                         double sigma);
   void ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3>);
