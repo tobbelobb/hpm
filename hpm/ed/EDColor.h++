@@ -6,8 +6,8 @@
 
 class EDColor {
 public:
-  EDColor(cv::Mat srcImage, int gradThresh = 20, int anchor_thresh = 4,
-          double sigma = 1.5, bool validateSegments = false);
+  EDColor(cv::Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
+          bool validateSegments);
   cv::Mat getEdgeImage();
   std::vector<std::vector<cv::Point>> getSegments();
   int getSegmentNo();
