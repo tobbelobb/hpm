@@ -21,8 +21,6 @@ public:
   int getWidth() const;
   int getHeight() const;
 
-  cv::Mat inputImage;
-
 private:
   uchar *smooth_L;
   uchar *smooth_a;

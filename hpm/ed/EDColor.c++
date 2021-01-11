@@ -5,8 +5,6 @@ using namespace cv;
 using namespace std;
 
 EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
-  inputImage = srcImage.clone();
-
   double sigma = std::max(config.sigma, 1.0);
   double gradThresh = std::max(config.gradThresh, 1);
   double anchorThresh = std::max(config.anchorThresh, 0);
