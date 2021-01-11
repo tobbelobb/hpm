@@ -7,7 +7,7 @@ EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* "$src_base/ed/billiard.jpg" "--verbose" &newGrad.pgm >>"END"
+$* "$src_base/ed/billiard.jpg" "--verbose" >>"END"
 Number of edge segments: 415
 Number of line segments: 518
 Number of edge segments found by EDPF: 276
