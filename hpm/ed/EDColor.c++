@@ -26,13 +26,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   height = srcImage.rows;
   width = srcImage.cols;
 
-  // Allocate space for L*a*b color space
-  L_Img = new uchar[width * height];
-  a_Img = new uchar[width * height];
-  b_Img = new uchar[width * height];
-
-  // Convert RGB2Lab
-  MyRGB2LabFast();
+  auto [L_Img, a_Img, b_Img] = MyRGB2LabFast();
 
   // Allocate space for smooth channels
   smooth_L = new uchar[width * height];
@@ -84,9 +78,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   fixEdgeSegments(segments, 1);
 
   // clean space
-  delete[] L_Img;
-  delete[] a_Img;
-  delete[] b_Img;
 
   delete[] smooth_L;
   delete[] smooth_a;
@@ -106,7 +97,7 @@ int EDColor::getWidth() { return width; }
 
 int EDColor::getHeight() { return height; }
 
-void EDColor::MyRGB2LabFast() {
+std::array<cv::Mat, 3> EDColor::MyRGB2LabFast() {
   // Inialize LUTs if necessary
   if (!LUT_Initialized)
     InitColorEDLib();
@@ -115,10 +106,12 @@ void EDColor::MyRGB2LabFast() {
   double red, green, blue;
   double x, y, z;
 
-  // Space for temp. allocation
-  double *L = new double[width * height];
-  double *a = new double[width * height];
-  double *b = new double[width * height];
+  std::vector<double> L{};
+  std::vector<double> a{};
+  std::vector<double> b{};
+  L.reserve(height * width);
+  a.reserve(height * width);
+  b.reserve(height * width);
 
   for (int i = 0; i < width * height; i++) {
     red = redImg[i] / 255.0;
@@ -151,60 +144,28 @@ void EDColor::MyRGB2LabFast() {
     y = LUT2[(int)(y * LUT_SIZE + 0.5)];
     z = LUT2[(int)(z * LUT_SIZE + 0.5)];
 
-    L[i] = (116.0 * y) - 16;
-    a[i] = 500 * (x / y);
-    b[i] = 200 * (y - z);
+    L.push_back((116.0 * y) - 16);
+    a.push_back(500 * (x / y));
+    b.push_back(200 * (y - z));
   } // end-for
 
-  // Scale L to [0-255]
-  double min = 1e10;
-  double max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (L[i] < min)
-      min = L[i];
-    else if (L[i] > max)
-      max = L[i];
-  } // end-for
+  cv::Mat L_Img(height, width, CV_8UC1);
+  cv::Mat a_Img(height, width, CV_8UC1);
+  cv::Mat b_Img(height, width, CV_8UC1);
 
-  double scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    L_Img[i] = (unsigned char)((L[i] - min) * scale);
-  }
+  auto const size{static_cast<size_t>(width * height)};
+  auto scale255 = [size](std::vector<double> const &Lab, cv::Mat &Lab_Img) {
+    auto const [min, max] = std::minmax_element(Lab.begin(), Lab.end());
+    double const scale = 255.0 / (*max - *min);
+    for (size_t i = 0; i < size; i++) {
+      Lab_Img.data[i] = static_cast<unsigned char>((Lab[i] - *min) * scale);
+    }
+  };
+  scale255(L, L_Img);
+  scale255(a, a_Img);
+  scale255(b, b_Img);
 
-  // Scale a to [0-255]
-  min = 1e10;
-  max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (a[i] < min)
-      min = a[i];
-    else if (a[i] > max)
-      max = a[i];
-  } // end-for
-
-  scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    a_Img[i] = (unsigned char)((a[i] - min) * scale);
-  }
-
-  // Scale b to [0-255]
-  min = 1e10;
-  max = -1e10;
-  for (int i = 0; i < width * height; i++) {
-    if (b[i] < min)
-      min = b[i];
-    else if (b[i] > max)
-      max = b[i];
-  } // end-for
-
-  scale = 255.0 / (max - min);
-  for (int i = 0; i < width * height; i++) {
-    b_Img[i] = (unsigned char)((b[i] - min) * scale);
-  }
-
-  // clean space
-  delete[] L;
-  delete[] a;
-  delete[] b;
+  return {L_Img, a_Img, b_Img};
 }
 
 void EDColor::ComputeGradientMapByDiZenzo() {
@@ -333,16 +294,15 @@ void EDColor::ComputeGradientMapByDiZenzo() {
     gradImg[i] = (short)(gradImg[i] * scale);
 }
 
-void EDColor::smoothChannel(uchar *src, uchar *smooth, double sigma) {
-  Mat srcImage = Mat(height, width, CV_8UC1, src);
+void EDColor::smoothChannel(cv::Mat src, uchar *smooth, double sigma) {
   Mat smoothImage = Mat(height, width, CV_8UC1, smooth);
 
   if (sigma == 1.0)
-    GaussianBlur(srcImage, smoothImage, Size(5, 5), 1);
+    GaussianBlur(src, smoothImage, Size(5, 5), 1);
   else if (sigma == 1.5)
-    GaussianBlur(srcImage, smoothImage, Size(7, 7), 1.5); // seems to be better?
+    GaussianBlur(src, smoothImage, Size(7, 7), 1.5); // seems to be better?
   else
-    GaussianBlur(srcImage, smoothImage, Size(), sigma);
+    GaussianBlur(src, smoothImage, Size(), sigma);
 }
 
 //--------------------------------------------------------------------------------------------------------------------

@@ -24,10 +24,6 @@ public:
   cv::Mat inputImage;
 
 private:
-  uchar *L_Img;
-  uchar *a_Img;
-  uchar *b_Img;
-
   uchar *smooth_L;
   uchar *smooth_a;
   uchar *smooth_b;
@@ -58,9 +54,9 @@ private:
   static bool LUT_Initialized;
   static size_t constexpr MIN_PATH_LEN{10};
 
-  void MyRGB2LabFast();
+  std::array<cv::Mat, 3> MyRGB2LabFast();
   void ComputeGradientMapByDiZenzo();
-  void smoothChannel(uchar *src, uchar *smooth, double sigma);
+  void smoothChannel(cv::Mat src, uchar *smooth, double sigma);
   void validateEdgeSegments();
   void testSegment(int i, int index1, int index2);
   void extractNewSegments();
