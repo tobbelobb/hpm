@@ -20,13 +20,10 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto LabImgs = MyRGB2LabFast(srcImage);
   auto smoothLab = smoothChannels(LabImgs, sigma);
 
-  // Allocate space for direction and gradient images
-  dirData.resize(width * height);
-  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
   gradImg = new short[width * height];
 
   // Compute Gradient & Edge Direction Maps
-  ComputeGradientMapByDiZenzo(smoothLab);
+  std::vector<EdgeDir> const dirData = ComputeGradientMapByDiZenzo(smoothLab);
 
   // Validate edge segments if the flag is set
   if (config.validateSegments) {
@@ -57,8 +54,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
   // clean space
   delete[] gradImg;
-  // Can we do this just in time instead?
-  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
@@ -146,11 +141,15 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   return {L_Img, a_Img, b_Img};
 }
 
-void EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
+std::vector<EdgeDir>
+EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   memset(gradImg, 0, sizeof(short) * width * height);
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smootha = smoothLab[1];
   cv::Mat smoothb = smoothLab[2];
+  std::vector<EdgeDir> dirData{};
+  dirData.resize(height * width);
+  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 
   int max = 0;
 
@@ -222,6 +221,8 @@ void EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   double scale = 255.0 / max;
   for (int i = 0; i < width * height; i++)
     gradImg[i] = (short)(gradImg[i] * scale);
+
+  return dirData;
 }
 
 std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
