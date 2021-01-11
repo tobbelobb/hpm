@@ -1,9 +1,7 @@
 #pragma once
 
 #include <hpm/ed/ED.h++>
-
-#define MAX_GRAD_VALUE 128 * 256
-#define EPSILON 1.0
+#include <hpm/ed/EDTypes.h++>
 
 class EDPF : public ED {
 public:

@@ -4,10 +4,6 @@
 
 #include <hpm/ed/EDTypes.h++>
 
-#define MAX_GRAD_VALUE 128 * 256
-#define EPSILON 1.0
-#define MIN_PATH_LEN 10
-
 class EDColor {
 public:
   EDColor(cv::Mat srcImage, int gradThresh = 20, int anchor_thresh = 4,
@@ -54,6 +50,7 @@ private:
   static double LUT1[LUT_SIZE + 1];
   static double LUT2[LUT_SIZE + 1];
   static bool LUT_Initialized;
+  static size_t constexpr MIN_PATH_LEN{10};
 
   void MyRGB2LabFast();
   void ComputeGradientMapByDiZenzo();
