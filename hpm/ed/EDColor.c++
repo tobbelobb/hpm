@@ -4,20 +4,15 @@
 using namespace cv;
 using namespace std;
 
-EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
-                 bool validateSegments) {
+EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   inputImage = srcImage.clone();
 
-  // check parameters for sanity
-  if (sigma < 1)
-    sigma = 1;
-  if (gradThresh < 1)
-    gradThresh = 1;
-  if (anchor_thresh < 0)
-    anchor_thresh = 0;
+  double sigma = std::max(config.sigma, 1.0);
+  double gradThresh = std::max(config.gradThresh, 1);
+  double anchorThresh = std::max(config.anchorThresh, 0);
 
-  if (validateSegments) { // setup for validation
-    anchor_thresh = 0;
+  if (config.validateSegments) { // setup for validation
+    anchorThresh = 0;
     divForTestSegment = 2.25;
   }
 
@@ -58,9 +53,9 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   ComputeGradientMapByDiZenzo();
 
   // Validate edge segments if the flag is set
-  if (validateSegments) {
+  if (config.validateSegments) {
     // Get Edge Image using ED
-    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchor_thresh,
+    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchorThresh,
                     1, 10, false);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
@@ -79,7 +74,7 @@ EDColor::EDColor(Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
   }
 
   else {
-    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchor_thresh);
+    ED edgeObj = ED(gradImg, dirData, width, height, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
     segmentNo = edgeObj.getSegmentNo();

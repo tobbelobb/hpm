@@ -15,7 +15,11 @@ auto main() -> int {
 
   "Billiard original"_test = [] {
     Mat colorImg = imread(getPath("billiard.jpg"));
-    EDColor testEDColor{colorImg, 36, 4, 1.5, true};
+    EDColor testEDColor{colorImg,
+                        {.gradThresh = 36,
+                         .anchorThresh = 4,
+                         .sigma = 1.5,
+                         .validateSegments = true}};
     expect(testEDColor.getSegmentNo() == 212_i);
 
     EDLines colorLine = EDLines(testEDColor);

@@ -4,10 +4,16 @@
 
 #include <hpm/ed/EDTypes.h++>
 
+struct EDColorConfig {
+  int const gradThresh = 20;
+  int const anchorThresh = 4;
+  double const sigma = 1.5;
+  bool const validateSegments = false;
+};
+
 class EDColor {
 public:
-  EDColor(cv::Mat srcImage, int gradThresh, int anchor_thresh, double sigma,
-          bool validateSegments);
+  EDColor(cv::Mat srcImage, EDColorConfig const &config);
   cv::Mat getEdgeImage();
   std::vector<std::vector<cv::Point>> getSegments();
   int getSegmentNo();

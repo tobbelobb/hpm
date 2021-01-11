@@ -121,7 +121,11 @@ int main(int argc, char **argv) {
   //**********************
 
   Mat colorImg = imread(fileName);
-  EDColor testEDColor{colorImg, 36, 4, 1.5, true};
+  EDColor testEDColor{colorImg,
+                      {.gradThresh = 36,
+                       .anchorThresh = 4,
+                       .sigma = 1.5,
+                       .validateSegments = true}};
   if (show) {
     imshow("Color Edge Image - PRESS ANY KEY TO QUIT",
            testEDColor.getEdgeImage());
