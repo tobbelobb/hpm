@@ -74,9 +74,8 @@ int EDColor::getWidth() const { return width; }
 int EDColor::getHeight() const { return height; }
 
 std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
-  // Inialize LUTs if necessary
-  if (!LUT_Initialized)
-    InitColorEDLib();
+  static auto const LUT1 = getLut(1);
+  static auto const LUT2 = getLut(2);
 
   // First RGB 2 XYZ
   double red, green, blue;
@@ -548,33 +547,25 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
   }     // end-for
 }
 
-void EDColor::InitColorEDLib() {
-  if (LUT_Initialized)
-    return;
+std::array<double, EDColor::LUT_SIZE + 1> EDColor::getLut(int which) {
+  std::array<double, LUT_SIZE + 1> LUT;
 
-  double inc = 1.0 / LUT_SIZE;
-  for (int i = 0; i <= LUT_SIZE; i++) {
-    double d = i * inc;
+  for (size_t i = 0; i < LUT_SIZE + 1; ++i) {
+    double const d = static_cast<double>(i) / static_cast<double>(LUT_SIZE);
+    if (which == 1) {
+      if (d >= 0.04045) {
+        LUT[i] = pow(((d + 0.055) / 1.055), 2.4);
+      } else {
+        LUT[i] = d / 12.92;
+      }
+    } else {
+      if (d > 0.008856) {
+        LUT[i] = pow(d, 1.0 / 3.0);
+      } else {
+        LUT[i] = (7.787 * d) + (16.0 / 116.0);
+      }
+    }
+  }
 
-    if (d >= 0.04045)
-      LUT1[i] = pow(((d + 0.055) / 1.055), 2.4);
-    else
-      LUT1[i] = d / 12.92;
-  } // end-for
-
-  inc = 1.0 / LUT_SIZE;
-  for (int i = 0; i <= LUT_SIZE; i++) {
-    double d = i * inc;
-
-    if (d > 0.008856)
-      LUT2[i] = pow(d, 1.0 / 3.0);
-    else
-      LUT2[i] = (7.787 * d) + (16.0 / 116.0);
-  } // end-for
-
-  LUT_Initialized = true;
+  return LUT;
 }
-
-bool EDColor::LUT_Initialized = false;
-double EDColor::LUT1[LUT_SIZE + 1] = {0};
-double EDColor::LUT2[LUT_SIZE + 1] = {0};

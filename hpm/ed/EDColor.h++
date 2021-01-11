@@ -39,9 +39,8 @@ private:
   std::vector<std::vector<cv::Point>> segments;
 
   static size_t constexpr LUT_SIZE{1024 * 4096};
-  static double LUT1[LUT_SIZE + 1];
-  static double LUT2[LUT_SIZE + 1];
-  static bool LUT_Initialized;
+  static std::array<double, LUT_SIZE + 1> getLut(int which);
+
   static size_t constexpr MIN_PATH_LEN{10};
 
   std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
@@ -55,6 +54,4 @@ private:
 
   static void fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
                               int noPixels);
-
-  static void InitColorEDLib();
 };
