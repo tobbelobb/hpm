@@ -164,7 +164,7 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
 
   int max = 0;
 
-  short *gradImg = gradImage.ptr<short>(0);
+  gradPix *gradImg = gradImage.ptr<gradPix>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Prewitt for channel1
@@ -230,9 +230,11 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   } // end outer for
 
   // Scale the gradient values to 0-255
-  double scale = 255.0 / max;
-  for (int i = 0; i < width * height; i++)
-    gradImg[i] = (short)(gradImg[i] * scale);
+  double const scale = 255.0 / max;
+
+  gradImage.forEach<gradPix>([scale](gradPix &pixel, const int *pos) {
+    pixel = (gradPix)(pixel * scale);
+  });
 
   return {gradImage, dirData};
 }
@@ -263,7 +265,7 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 // channel1, channel2 and channel3 images
 //
 void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
-                                   cv::Mat_<short> gradImage) {
+                                   cv::Mat_<gradPix> gradImage) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -277,7 +279,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
   int *grads = new int[maxGradValue];
   memset(grads, 0, sizeof(int) * maxGradValue);
 
-  short *gradImg = gradImage.ptr<short>(0);
+  gradPix *gradImg = gradImage.ptr<gradPix>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Gradient for channel1
@@ -361,7 +363,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
 void EDColor::testSegment(int i, int index1, int index2,
-                          cv::Mat_<short> gradImage,
+                          cv::Mat_<gradPix> gradImage,
                           std::vector<double> const &H,
                           int const numberOfSegmentPieces) {
 
@@ -372,7 +374,7 @@ void EDColor::testSegment(int i, int index1, int index2,
     return;
   }
 
-  short *gradImg = gradImage.ptr<short>(0);
+  gradPix *gradImg = gradImage.ptr<gradPix>(0);
 
   // Test from index1 to index2. If OK, then we are done. Otherwise, split into
   // two and recursively test the left & right halves

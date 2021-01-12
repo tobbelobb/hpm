@@ -11,8 +11,9 @@ struct EDColorConfig {
   bool const validateSegments = false;
 };
 
+using gradPix = short;
 struct GradientMapResult {
-  cv::Mat_<short> gradImage;
+  cv::Mat_<gradPix> gradImage;
   std::vector<EdgeDir> dirData;
 };
 
@@ -41,8 +42,9 @@ private:
                                         double sigma);
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
-  void validateEdgeSegments(std::array<cv::Mat, 3>, cv::Mat_<short> gradImage);
-  void testSegment(int i, int index1, int index2, cv::Mat_<short> gradImage,
+  void validateEdgeSegments(std::array<cv::Mat, 3>,
+                            cv::Mat_<gradPix> gradImage);
+  void testSegment(int i, int index1, int index2, cv::Mat_<gradPix> gradImage,
                    std::vector<double> const &H, int numberOfSegmentPieces);
   void extractNewSegments();
   double NFA(double prob, int len, int numberOfSegmentPieces);
