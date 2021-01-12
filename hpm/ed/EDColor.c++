@@ -30,13 +30,12 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     sigma /= 2.5;
     auto smoothLab2 = smoothChannels(LabImgs, sigma);
 
-    validateEdgeSegments(smoothLab2, gradImage);
+    validateEdgeSegments(smoothLab2);
 
     // Extract the new edge segments after validation
     extractNewSegments();
   } else {
-    ED edgeObj =
-        ED(gradImage, dirData, width, height, gradThresh, anchorThresh);
+    ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
     segmentNo = edgeObj.getSegmentNo();
@@ -264,8 +263,7 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
 //
-void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
-                                   cv::Mat_<gradPix> gradImage) {
+void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -274,7 +272,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
   std::vector<double> H(maxGradValue, 0.0);
 
   edgeImage.setTo(0);
-  gradImage.setTo(0);
+  cv::Mat_<gradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
 
   int *grads = new int[maxGradValue];
   memset(grads, 0, sizeof(int) * maxGradValue);

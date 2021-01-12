@@ -29,5 +29,24 @@ auto main() -> int {
     expect(colorCircle.getCirclesNo() == 49_i);
   };
 
+  // These values are different (much better)
+  // than the original program, which shows a lot
+  // of noise in the no validate case.
+  "Billiard no validate segments"_test = [] {
+    Mat colorImg = imread(getPath("billiard.jpg"));
+    EDColor testEDColor{colorImg,
+                        {.gradThresh = 36,
+                         .anchorThresh = 4,
+                         .sigma = 1.5,
+                         .validateSegments = false}};
+    expect(testEDColor.getSegmentNo() == 230_i);
+
+    EDLines colorLine = EDLines(testEDColor);
+    expect(colorLine.getLinesNo() == 571_i);
+
+    EDCircles colorCircle{testEDColor};
+    expect(colorCircle.getCirclesNo() == 48_i);
+  };
+
   return 0;
 }
