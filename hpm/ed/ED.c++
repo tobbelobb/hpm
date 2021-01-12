@@ -286,8 +286,8 @@ void ED::ComputeGradient() {
     gradImgRowI[0] = gradImgRowI[width - 1] = gradThresh - 1;
   }
 
-  for (int i = 1; i < height - 1; i++) {
-    for (int j = 1; j < width - 1; j++) {
+  for (int i = 1; i < height - 2; i++) {
+    for (int j = 1; j < width - 2; j++) {
       // Prewitt Operator in horizontal and vertical direction
       // A B C
       // D x E
@@ -334,50 +334,48 @@ void ED::ComputeGradient() {
       int com2 = smoothImg[(i - 1) * width + j + 1] -
                  smoothImg[(i + 1) * width + j - 1];
 
-      int gx;
-      int gy;
+      auto getGxGy = [&]() -> std::pair<int, int> {
+        switch (op) {
+        case PREWITT_OPERATOR:
+          return {abs(com1 + com2 +
+                      (smoothImg[i * width + j + 1] -
+                       smoothImg[i * width + j - 1])),
+                  abs(com1 - com2 +
+                      (smoothImg[(i + 1) * width + j] -
+                       smoothImg[(i - 1) * width + j]))};
+        case SOBEL_OPERATOR:
+          return {abs(com1 + com2 +
+                      2 * (smoothImg[i * width + j + 1] -
+                           smoothImg[i * width + j - 1])),
+                  abs(com1 - com2 +
+                      2 * (smoothImg[(i + 1) * width + j] -
+                           smoothImg[(i - 1) * width + j]))};
+        case SCHARR_OPERATOR:
+          return {
+              abs(3 * (com1 + com2) + 10 * (smoothImg[i * width + j + 1] -
+                                            smoothImg[i * width + j - 1])),
+              abs(3 * (com1 - com2) + 10 * (smoothImg[(i + 1) * width + j] -
+                                            smoothImg[(i - 1) * width + j]))};
+        case LSD_OPERATOR:
+          // com1 and com2 differs from previous operators, because LSD has 2x2
+          // kernel
+          {
+            int const com1 =
+                smoothImg[(i + 1) * width + j + 1] - smoothImg[i * width + j];
+            int const com2 =
+                smoothImg[i * width + j + 1] - smoothImg[(i + 1) * width + j];
 
-      switch (op) {
-      case PREWITT_OPERATOR:
-        gx = abs(com1 + com2 +
-                 (smoothImg[i * width + j + 1] - smoothImg[i * width + j - 1]));
-        gy = abs(
-            com1 - com2 +
-            (smoothImg[(i + 1) * width + j] - smoothImg[(i - 1) * width + j]));
-        break;
-      case SOBEL_OPERATOR:
-        gx = abs(
-            com1 + com2 +
-            2 * (smoothImg[i * width + j + 1] - smoothImg[i * width + j - 1]));
-        gy = abs(com1 - com2 +
-                 2 * (smoothImg[(i + 1) * width + j] -
-                      smoothImg[(i - 1) * width + j]));
-        break;
-      case SCHARR_OPERATOR:
-        gx = abs(3 * (com1 + com2) + 10 * (smoothImg[i * width + j + 1] -
-                                           smoothImg[i * width + j - 1]));
-        gy = abs(3 * (com1 - com2) + 10 * (smoothImg[(i + 1) * width + j] -
-                                           smoothImg[(i - 1) * width + j]));
-      case LSD_OPERATOR:
-        // com1 and com2 differs from previous operators, because LSD has 2x2
-        // kernel
-        int com1 =
-            smoothImg[(i + 1) * width + j + 1] - smoothImg[i * width + j];
-        int com2 =
-            smoothImg[i * width + j + 1] - smoothImg[(i + 1) * width + j];
+            return {abs(com1 + com2), abs(com1 - com2)};
+          }
+        }
+        return {0, 0};
+      };
 
-        gx = abs(com1 + com2);
-        gy = abs(com1 - com2);
-      }
+      auto const [gx, gy] = getGxGy();
 
-      int sum;
+      int const sum = sumFlag ? gx + gy : (int)sqrt((double)gx * gx + gy * gy);
 
-      if (sumFlag)
-        sum = gx + gy;
-      else
-        sum = (int)sqrt((double)gx * gx + gy * gy);
-
-      int index = i * width + j;
+      int const index = i * width + j;
       short *gradImg = gradImage.ptr<short>(0);
       gradImg[index] = sum;
 
