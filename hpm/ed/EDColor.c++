@@ -340,15 +340,16 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
     H[i] = (double)grads[i] / ((double)size);
 
   // Compute np: # of segment pieces
-  np = 0;
+  int numberOfSegmentPieces = 0;
   for (int i = 0; i < segments.size(); i++) {
     int len = segments[i].size();
-    np += (len * (len - 1)) / 2;
+    numberOfSegmentPieces += (len * (len - 1)) / 2;
   }
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
-    testSegment(i, 0, segments[i].size() - 1, gradImage, H);
+    testSegment(i, 0, segments[i].size() - 1, gradImage, H,
+                numberOfSegmentPieces);
   }
 
   // clear space
@@ -361,11 +362,15 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 //
 void EDColor::testSegment(int i, int index1, int index2,
                           cv::Mat_<short> gradImage,
-                          std::vector<double> const &H) {
+                          std::vector<double> const &H,
+                          int const numberOfSegmentPieces) {
 
-  int chainLen = index2 - index1 + 1;
-  if (chainLen < MIN_PATH_LEN)
+  int const chainLen = index2 - index1 + 1;
+
+  static size_t constexpr MIN_PATH_LEN{10};
+  if (chainLen < MIN_PATH_LEN) {
     return;
+  }
 
   short *gradImg = gradImage.ptr<short>(0);
 
@@ -385,7 +390,7 @@ void EDColor::testSegment(int i, int index1, int index2,
   }
 
   // Compute nfa
-  double nfa = NFA(H[minGrad], (int)(chainLen / 2.25));
+  double nfa = NFA(H[minGrad], (int)(chainLen / 2.25), numberOfSegmentPieces);
 
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
   if (nfa <= EPSILON) {
@@ -423,8 +428,8 @@ void EDColor::testSegment(int i, int index1, int index2,
       break;
   }
 
-  testSegment(i, index1, end, gradImage, H);
-  testSegment(i, start, index2, gradImage, H);
+  testSegment(i, index1, end, gradImage, H, numberOfSegmentPieces);
+  testSegment(i, start, index2, gradImage, H, numberOfSegmentPieces);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -479,11 +484,11 @@ void EDColor::extractNewSegments() {
   segmentNo = noSegments; // = validSegments.size()
 }
 
-double EDColor::NFA(double prob, int len) {
-  double nfa = np;
-  for (int i = 0; i < len && nfa > EPSILON; i++)
+double EDColor::NFA(double prob, int len, int const numberOfSegmentPieces) {
+  double nfa = static_cast<double>(numberOfSegmentPieces);
+  for (int i = 0; i < len && nfa > EPSILON; i++) {
     nfa *= prob;
-
+  }
   return nfa;
 }
 

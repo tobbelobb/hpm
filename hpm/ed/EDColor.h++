@@ -32,12 +32,9 @@ private:
   int width;
   int height;
 
-  int np;
   int segmentNo;
 
   std::vector<std::vector<cv::Point>> segments;
-
-  static size_t constexpr MIN_PATH_LEN{10};
 
   std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
   std::array<cv::Mat, 3> smoothChannels(std::array<cv::Mat, 3> src,
@@ -46,9 +43,9 @@ private:
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
   void validateEdgeSegments(std::array<cv::Mat, 3>, cv::Mat_<short> gradImage);
   void testSegment(int i, int index1, int index2, cv::Mat_<short> gradImage,
-                   std::vector<double> const &H);
+                   std::vector<double> const &H, int numberOfSegmentPieces);
   void extractNewSegments();
-  double NFA(double prob, int len);
+  double NFA(double prob, int len, int numberOfSegmentPieces);
 
   static void fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
                               int noPixels);
