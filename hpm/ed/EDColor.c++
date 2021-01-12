@@ -20,7 +20,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto LabImgs = MyRGB2LabFast(srcImage);
   auto smoothLab = smoothChannels(LabImgs, sigma);
 
-  auto const [dirData, gradImage] = ComputeGradientMapByDiZenzo(smoothLab);
+  auto const [gradImage, dirData] = ComputeGradientMapByDiZenzo(smoothLab);
 
   // Validate edge segments if the flag is set
   if (config.validateSegments) {
@@ -157,7 +157,7 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   return {L_Img, a_Img, b_Img};
 }
 
-std::pair<std::vector<EdgeDir>, cv::Mat>
+GradientMapResult
 EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smootha = smoothLab[1];
@@ -239,7 +239,7 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   for (int i = 0; i < width * height; i++)
     gradImg[i] = (short)(gradImg[i] * scale);
 
-  return {dirData, gradImage};
+  return {gradImage, dirData};
 }
 
 std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
