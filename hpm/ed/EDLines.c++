@@ -65,7 +65,7 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
     Point2d end(lines[i].ex, lines[i].ey);
 
     linePoints.push_back(LS(start, end));
-  } // end-for
+  }
 
   delete[] x;
   delete[] y;
@@ -132,7 +132,7 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
     Point2d end(lines[i].ex, lines[i].ey);
 
     linePoints.push_back(LS(start, end));
-  } // end-for
+  }
 
   delete[] x;
   delete[] y;
@@ -202,7 +202,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
     Point2d end(lines[i].ex, lines[i].ey);
 
     linePoints.push_back(LS(start, end));
-  } // end-for
+  }
 
   delete[] x;
   delete[] y;
@@ -250,7 +250,7 @@ int EDLines::ComputeMinLineLength() {
 
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
   return (int)round((-logNT / log10(0.125)) * 0.5);
-} // end-ComputeMinLineLength
+}
 
 //-----------------------------------------------------------------
 // Given a full segment of pixels, splits the chain to lines
@@ -286,7 +286,7 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
       y += 2;
       firstPixelIndex += 2;
 #endif
-    } // end-while
+    }
 
     if (valid == false)
       return;
@@ -313,16 +313,16 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
           badPixelCount++;
           if (badPixelCount >= 5)
             break;
-        } // end-if
+        }
 
         index++;
-      } // end-while
+      }
 
       if (goodPixelCount >= 2) {
         len += lastGoodIndex - startIndex + 1;
         LineFit(x, y, len, lastA, lastB, lastInvert); // faster LineFit
         index = lastGoodIndex + 1;
-      } // end-if
+      }
 
       if (goodPixelCount < 2 || index >= noPixels) {
         // End of a line segment. Compute the end points
@@ -350,14 +350,14 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
         linesNo++;
         len = index + 1;
         break;
-      } // end-else
-    }   // end-while
+      }
+    }
 
     noPixels -= len;
     x += len;
     y += len;
     firstPixelIndex += len;
-  } // end-while
+  }
 }
 
 //------------------------------------------------------------------
@@ -388,22 +388,21 @@ void EDLines::JoinCollinearLines() {
         lastLineIndex++;
         if (lastLineIndex != j)
           lines[lastLineIndex] = lines[j];
-
-      } // end-if
+      }
 
       count++;
-    } // end-for
+    }
 
     // Try to join the first & last line of this segment
     if (firstLineIndex != lastLineIndex) {
       if (TryToJoinTwoLineSegments(&lines[firstLineIndex],
                                    &lines[lastLineIndex], firstLineIndex)) {
         lastLineIndex--;
-      } // end-if
-    }   // end-if
+      }
+    }
 
     i += count;
-  } // end-while
+  }
 
   linesNo = lastLineIndex + 1;
 }
@@ -428,7 +427,7 @@ void EDLines::ValidateLineSegments() {
     } else {
       // x = a + by
       lineAngle = atan(1.0 / ls->b);
-    } // end-else
+    }
 
     if (lineAngle < 0)
       lineAngle += M_PI;
@@ -497,13 +496,13 @@ void EDLines::ValidateLineSegments() {
 
         if (diff <= prec || diff >= M_PI - prec)
           aligned++;
-      } // end-for
+      }
 
       // Check validation by NFA computation (fast due to LUT)
       valid = nfa->checkValidationByNFA(count, aligned);
       if (valid == false)
         valid = ValidateLineSegmentRect(x, y, ls);
-    } // end-else
+    }
 
     if (valid) {
       if (i != noValidLines)
@@ -511,8 +510,8 @@ void EDLines::ValidateLineSegments() {
       noValidLines++;
     } else {
       invalidLines.push_back(lines[i]);
-    } // end-else
-  }   // end-for
+    }
+  }
 
   linesNo = noValidLines;
 
@@ -532,7 +531,7 @@ bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {
   } else {
     // x = a + by
     lineAngle = atan(1.0 / ls->b);
-  } // end-else
+  }
 
   if (lineAngle < 0)
     lineAngle += M_PI;
@@ -586,7 +585,7 @@ bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {
 
     if (diff <= prec || diff >= M_PI - prec)
       aligned++;
-  } // end-for
+  }
 
   return nfa->checkValidationByNFA(count, aligned);
 }
@@ -608,7 +607,7 @@ double EDLines::ComputeMinDistance(double x1, double y1, double a, double b,
 
       x2 = (a - c) / (d - b);
       y2 = a + b * x2;
-    } // end-else
+    }
 
   } else {
     /// invert = 1
@@ -624,8 +623,8 @@ double EDLines::ComputeMinDistance(double x1, double y1, double a, double b,
 
       y2 = (a - c) / (d - b);
       x2 = a + b * y2;
-    } // end-else
-  }   // end-else
+    }
+  }
 
   return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
@@ -651,7 +650,7 @@ void EDLines::ComputeClosestPoint(double x1, double y1, double a, double b,
 
       x2 = (a - c) / (d - b);
       y2 = a + b * x2;
-    } // end-else
+    }
 
   } else {
     /// invert = 1
@@ -667,8 +666,8 @@ void EDLines::ComputeClosestPoint(double x1, double y1, double a, double b,
 
       y2 = (a - c) / (d - b);
       x2 = a + b * y2;
-    } // end-else
-  }   // end-else
+    }
+  }
 
   xOut = x2;
   yOut = y2;
@@ -687,7 +686,7 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
   for (int i = 0; i < count; i++) {
     Sx += x[i];
     Sy += y[i];
-  } // end-for
+  }
 
   if (invert) {
     // Vertical line. Swap x & y, Sx & Sy
@@ -698,13 +697,13 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
     double d = Sx;
     Sx = Sy;
     Sy = d;
-  } // end-if
+  }
 
   // Now compute Sxx & Sxy
   for (int i = 0; i < count; i++) {
     Sxx += x[i] * x[i];
     Sxy += x[i] * y[i];
-  } // end-for
+  }
 
   double D = S * Sxx - Sx * Sx;
   a = (Sxx * Sy - Sx * Sxy) / D;
@@ -723,7 +722,7 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
   for (int i = 0; i < count; i++) {
     Sx += x[i];
     Sy += y[i];
-  } // end-for
+  }
 
   double mx = Sx / count;
   double my = Sy / count;
@@ -733,7 +732,7 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
   for (int i = 0; i < count; i++) {
     dx += (x[i] - mx) * (x[i] - mx);
     dy += (y[i] - my) * (y[i] - my);
-  } // end-for
+  }
 
   if (dx < dy) {
     // Vertical line. Swap x & y, Sx & Sy
@@ -748,13 +747,13 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
 
   } else {
     invert = 0;
-  } // end-else
+  }
 
   // Now compute Sxx & Sxy
   for (int i = 0; i < count; i++) {
     Sxx += x[i] * x[i];
     Sxy += x[i] * y[i];
-  } // end-for
+  }
 
   double D = S * Sxx - Sx * Sx;
   a = (Sxx * Sy - Sx * Sxy) / D;
@@ -765,7 +764,7 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
     double error = 0.0;
     for (int i = 0; i < count; i++) {
       error += fabs((a)-y[i]);
-    } // end-for
+    }
     e = error / count;
 
   } else {
@@ -780,10 +779,10 @@ void EDLines::LineFit(double *x, double *y, int count, double &a, double &b,
 
       double dist = (x[i] - x2) * (x[i] - x2) + (y[i] - y2) * (y[i] - y2);
       error += dist;
-    } // end-for
+    }
 
     e = sqrt(error / count);
-  } // end-else
+  }
 }
 
 //-----------------------------------------------------------------
@@ -891,7 +890,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
   if (d > max) {
     max = d;
     which = 2;
-  } // end-if
+  }
 
   /// case 3: (e1, s2)
   dx = fabs(ls1->ex - ls2->sx);
@@ -900,7 +899,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
   if (d > max) {
     max = d;
     which = 3;
-  } // end-if
+  }
 
   /// case 4: (e1, e2)
   dx = fabs(ls1->ex - ls2->ex);
@@ -909,7 +908,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
   if (d > max) {
     max = d;
     which = 4;
-  } // end-if
+  }
 
   if (which == 1) {
     // (s1, s2)
@@ -933,7 +932,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
 
     ls1->ex = ls2->ex;
     ls1->ey = ls2->ey;
-  }                  // end-else
+  }
 
 #endif
 
@@ -943,7 +942,7 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
   else if (ls2->len > ls1->len) {
     ls1->firstPixelIndex = ls2->firstPixelIndex;
     ls1->len = ls2->len;
-  } // end-if
+  }
 
   UpdateLineParameters(ls1);
   lines[changeIndex] = *ls1;
@@ -1009,7 +1008,7 @@ void EDLines::UpdateLineParameters(LineSegment *ls) {
     } else {
       ls->b = dy / dx;
       ls->a = ls->sy - (ls->b) * ls->sx;
-    } // end-else
+    }
 
   } else {
     /// Line will be of the form x = a + by
@@ -1020,8 +1019,8 @@ void EDLines::UpdateLineParameters(LineSegment *ls) {
     } else {
       ls->b = dx / dy;
       ls->a = ls->sx - (ls->b) * ls->sy;
-    } // end-else
-  }   // end-else
+    }
+  }
 }
 
 void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
@@ -1074,7 +1073,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
   for (n = 0; n < 4; n++) {
     vx[n] = vxTmp[(offset + n) % 4];
     vy[n] = vyTmp[(offset + n) % 4];
-  } // end-for
+  }
 
   /* Set a initial condition.
 
@@ -1151,7 +1150,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
             ys = vy[3] + (x - vx[3]) * (y2 - vy[3]) / (vx[2] - vx[3]);
         } else
           ys = vy[3] + (x - vx[3]) * (vy[2] - vy[3]) / (vx[2] - vx[3]);
-      } // end-else
+      }
 
       /* update upper y limit (end) for the new 'column'.
 
@@ -1191,11 +1190,11 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
             ye = vy[1] + (x - vx[1]) * (vy[2] - vy[1]) / (vx[2] - vx[1]);
         } else
           ye = vy[1] + (x - vx[1]) * (vy[2] - vy[1]) / (vx[2] - vx[1]);
-      } // end-else
+      }
 
       /* new y */
       y = (int)ceil(ys);
-    } // end-while
+    }
 
     // Are we done?
     if (x > vx[2])
@@ -1204,7 +1203,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
     ptsx[noPoints] = x;
     ptsy[noPoints] = y;
     noPoints++;
-  } // end-while
+  }
 
   *pNoPoints = noPoints;
 }
@@ -1239,7 +1238,7 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
       y += 2;
       firstPixelIndex += 2;
 #endif
-    } // end-while
+    }
 
     if (valid == false)
       return;
@@ -1266,16 +1265,16 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
           badPixelCount++;
           if (badPixelCount >= 5)
             break;
-        } // end-if
+        }
 
         index++;
-      } // end-while
+      }
 
       if (goodPixelCount >= 2) {
         len += lastGoodIndex - startIndex + 1;
         LineFit(x, y, len, lastA, lastB, lastInvert); // faster LineFit
         index = lastGoodIndex + 1;
-      } // end-if
+      }
 
       if (goodPixelCount < 2 || index >= noPixels) {
         // End of a line segment. Compute the end points
@@ -1303,12 +1302,12 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
         // linesNo++;
         len = index + 1;
         break;
-      } // end-else
-    }   // end-while
+      }
+    }
 
     noPixels -= len;
     x += len;
     y += len;
     firstPixelIndex += len;
-  } // end-while
+  }
 }

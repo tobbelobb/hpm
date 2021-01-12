@@ -74,7 +74,7 @@ struct EllipseEquation {
   EllipseEquation() {
     for (int i = 0; i < 7; i++)
       coeff[i] = 0;
-  } // end-EllipseEquation
+  }
 
   double A() { return coeff[1]; }
   double B() { return coeff[2]; }
@@ -139,7 +139,7 @@ inline double ArcLength(double sTheta, double eTheta) {
     return eTheta - sTheta;
   else
     return TWOPI - sTheta + eTheta;
-} // end-ArcLength
+}
 
 // A fast implementation of the AngleSet class. The slow implementation is
 // really bad. About 10 times slower than this!
@@ -156,7 +156,7 @@ struct AngleSet {
   double overlapAmount; // Total overlap of the arcs in angleSet. Computed
                         // during set() function
 
-  AngleSet() { clear(); } // end-AngleSet
+  AngleSet() { clear(); }
   void clear() {
     head = -1;
     next = 0;
@@ -182,9 +182,9 @@ public:
   EDArcs(int size = 10000) {
     arcs = new MyArc[size];
     noArcs = 0;
-  } // end-EDArcs
+  }
 
-  ~EDArcs() { delete arcs; } // end-~EDArcs
+  ~EDArcs() { delete arcs; }
 };
 
 //-----------------------------------------------------------------
@@ -197,12 +197,12 @@ struct BufferManager {
     x = new double[maxSize];
     y = new double[maxSize];
     index = 0;
-  } // end-BufferManager
+  }
 
   ~BufferManager() {
     delete x;
     delete y;
-  } // end-~BufferManager
+  }
 
   double *getX() { return &x[index]; }
   double *getY() { return &y[index]; }

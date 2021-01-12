@@ -21,14 +21,14 @@ NFALUT::NFALUT(int size, double _prob, double _logNT) {
         ret = nfa(i, j);
         if (ret >= 0)
           break;
-      } // end-while
+      }
 
       if (ret < 0)
         continue;
-    } // end-if
+    }
 
     LUT[i] = j;
-  } // end-for
+  }
 }
 
 NFALUT::~NFALUT() { delete[] LUT; }
@@ -46,10 +46,10 @@ double NFALUT::myAtan2(double yy, double xx) {
   if (!tableInited) {
     for (int i = 0; i <= MAX_LUT_SIZE; i++) {
       LUT[i] = atan((double)i / MAX_LUT_SIZE);
-    } // end-for
+    }
 
     tableInited = true;
-  } // end-if
+  }
 
   double y = fabs(yy);
   double x = fabs(xx);
@@ -60,7 +60,7 @@ double NFALUT::myAtan2(double yy, double xx) {
     x = y;
     y = t;
     invert = true;
-  } // end-if
+  }
 
   double ratio;
   if (x == 0) // avoid division error
@@ -82,7 +82,7 @@ double NFALUT::myAtan2(double yy, double xx) {
         angle = M_PI - angle;
       else
         angle = M_PI / 2 + angle;
-    } // end-else
+    }
 
   } else {
     if (yy >= 0) {
@@ -96,8 +96,8 @@ double NFALUT::myAtan2(double yy, double xx) {
       /// III. quadrant
       if (invert)
         angle = M_PI / 2 - angle;
-    } // end-else
-  }   // end-else
+    }
+  }
 
   return angle;
 }
@@ -140,7 +140,7 @@ double NFALUT::nfa(int n, int k) {
       return -log1term / M_LN10 - logNT; /* end: use just the first term  */
     else
       return -logNT; /* begin: the tail is roughly 1  */
-  }                  // end-if
+  }
 
   /* compute more terms if needed */
   bin_tail = term;
@@ -186,8 +186,8 @@ double NFALUT::nfa(int n, int k) {
       tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
       if (err < tolerance * fabs(-log10(bin_tail) - logNT) * bin_tail)
         break;
-    } // end-if
-  }   // end-for
+    }
+  }
 
   return -log10(bin_tail) - logNT;
 }

@@ -40,7 +40,7 @@ void EDPF::validateEdgeSegments() {
   for (int i = 0; i < segmentNos; i++) {
     int len = segmentPoints[i].size();
     np += (len * (len - 1)) / 2;
-  } // end-for
+  }
 
   //  np *= 32;
 #elif 0
@@ -48,14 +48,14 @@ void EDPF::validateEdgeSegments() {
   int np = 0;
   for (int i = 0; i < segmentNos; i++) {
     np += segmentPoints[i].size();
-  } // end-for
+  }
   np = (np * (np - 1)) / 2;
 #endif
 
   // Validate segments
   for (int i = 0; i < segmentNos; i++) {
     TestSegment(i, 0, segmentPoints[i].size() - 1);
-  } // end-for
+  }
 
   ExtractNewSegments();
 
@@ -102,8 +102,8 @@ short *EDPF::ComputePrewitt3x3() {
 
       gradImg[i * width + j] = g;
       grads[g]++;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // Compute probability function H
   int size = (width - 2) * (height - 2);
@@ -141,7 +141,7 @@ void EDPF::TestSegment(int i, int index1, int index2) {
       minGrad = gradImg[r * width + c];
       minGradIndex = k;
     }
-  } // end-for
+  }
 
   // Compute nfa
   double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
@@ -152,10 +152,10 @@ void EDPF::TestSegment(int i, int index1, int index2) {
       int c = segmentPoints[i][k].x;
 
       edgeImg[r * width + c] = 255;
-    } // end-for
+    }
 
     return;
-  } // end-if
+  }
 
   // Split into two halves. We divide at the point where the gradient is the
   // minimum
@@ -168,7 +168,7 @@ void EDPF::TestSegment(int i, int index1, int index2) {
       end--;
     else
       break;
-  } // end-while
+  }
 
   int start = minGradIndex + 1;
   while (start < index2) {
@@ -179,7 +179,7 @@ void EDPF::TestSegment(int i, int index1, int index2) {
       start++;
     else
       break;
-  } // end-while
+  }
 
   TestSegment(i, index1, end);
   TestSegment(i, start, index2);
@@ -205,7 +205,7 @@ void EDPF::ExtractNewSegments() {
         if (edgeImg[r * width + c])
           break;
         start++;
-      } // end-while
+      }
 
       int end = start + 1;
       while (end < segmentPoints[i].size()) {
@@ -215,7 +215,7 @@ void EDPF::ExtractNewSegments() {
         if (edgeImg[r * width + c] == 0)
           break;
         end++;
-      } // end-while
+      }
 
       int len = end - start;
       if (len >= 10) {
@@ -227,11 +227,11 @@ void EDPF::ExtractNewSegments() {
                              &segmentPoints[i][end - 1]);
         validSegments[noSegments] = subVec;
         noSegments++;
-      } // end-else
+      }
 
       start = end + 1;
-    } // end-while
-  }   // end-for
+    }
+  }
 
   // Copy to ed
   segmentPoints = validSegments;

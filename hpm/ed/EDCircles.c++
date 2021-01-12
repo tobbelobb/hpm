@@ -40,7 +40,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
     for (int j = 0; j < noPixels; j++) {
       x[j] = segmentPoints[i][j].x;
       y[j] = segmentPoints[i][j].y;
-    } // end-for
+    }
 
     // If the segment is reasonably long, then see if the segment traverses the
     // boundary of a closed shape
@@ -67,7 +67,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
           // Try fitting an ellipse
           if (EllipseFit(x, y, noPixels, &eq))
             ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-        } // end-if
+        }
 
         if (circleFitError <= LONG_ARC_ERROR) {
           addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
@@ -90,12 +90,12 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
             addCircle(circles1, noCircles1, xc, yc, r, circleFitError, &eq,
                       ellipseFitError, x, y, noPixels);
             bm->move(noPixels);
-          } // end-if
+          }
 
           continue;
-        } // end-else
-      }   // end-if
-    }     // end-if
+        }
+      }
+    }
 
     // Otherwise, split to lines
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
@@ -152,8 +152,8 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
       info[j].sign =
           (v1x * v2y - v2x * v1y) >= 0 ? 1 : -1; // compute cross product
       info[j].taken = false;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
@@ -216,9 +216,8 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
       double yc = circles3[i].yc;
 
       circles.push_back(mCircle(Point2d(xc, yc), r));
-
-    } // end-else
-  }   // end-for
+    }
+  }
 
   // clean up
   delete edarcs1;
@@ -272,7 +271,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
     for (int j = 0; j < noPixels; j++) {
       x[j] = segmentPoints[i][j].x;
       y[j] = segmentPoints[i][j].y;
-    } // end-for
+    }
 
     // If the segment is reasonably long, then see if the segment traverses the
     // boundary of a closed shape
@@ -299,7 +298,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
           // Try fitting an ellipse
           if (EllipseFit(x, y, noPixels, &eq))
             ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-        } // end-if
+        }
 
         if (circleFitError <= LONG_ARC_ERROR) {
           addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
@@ -322,12 +321,12 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
             addCircle(circles1, noCircles1, xc, yc, r, circleFitError, &eq,
                       ellipseFitError, x, y, noPixels);
             bm->move(noPixels);
-          } // end-if
+          }
 
           continue;
-        } // end-else
-      }   // end-if
-    }     // end-if
+        }
+      }
+    }
 
     // Otherwise, split to lines
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
@@ -384,8 +383,8 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
       info[j].sign =
           (v1x * v2y - v2x * v1y) >= 0 ? 1 : -1; // compute cross product
       info[j].taken = false;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
@@ -448,9 +447,8 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
       double yc = circles3[i].yc;
 
       circles.push_back(mCircle(Point2d(xc, yc), r));
-
-    } // end-else
-  }   // end-for
+    }
+  }
 
   // clean up
   delete edarcs1;
@@ -504,7 +502,7 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
     for (int j = 0; j < noPixels; j++) {
       x[j] = segmentPoints[i][j].x;
       y[j] = segmentPoints[i][j].y;
-    } // end-for
+    }
 
     // If the segment is reasonably long, then see if the segment traverses the
     // boundary of a closed shape
@@ -531,7 +529,7 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
           // Try fitting an ellipse
           if (EllipseFit(x, y, noPixels, &eq))
             ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-        } // end-if
+        }
 
         if (circleFitError <= LONG_ARC_ERROR) {
           addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
@@ -554,12 +552,12 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
             addCircle(circles1, noCircles1, xc, yc, r, circleFitError, &eq,
                       ellipseFitError, x, y, noPixels);
             bm->move(noPixels);
-          } // end-if
+          }
 
           continue;
-        } // end-else
-      }   // end-if
-    }     // end-if
+        }
+      }
+    }
 
     // Otherwise, split to lines
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
@@ -616,8 +614,8 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
       info[j].sign =
           (v1x * v2y - v2x * v1y) >= 0 ? 1 : -1; // compute cross product
       info[j].taken = false;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // This is how much space we will allocate for circles buffers
   int maxNoOfCircles = lines.size() / 3 + noCircles1 * 2;
@@ -683,9 +681,8 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
       double yc = circles1[i].yc;
 
       circles.push_back(mCircle(Point2d(xc, yc), r));
-
-    } // end-else
-  }   // end-for
+    }
+  }
 
   // clean up
   delete edarcs1;
@@ -763,8 +760,8 @@ void EDCircles::GenerateCandidateCircles() {
           addCircle(circles1, noCircles1, arcs[i].xc, arcs[i].yc, arcs[i].r,
                     arcs[i].circleFitError, arcs[i].x, arcs[i].y,
                     arcs[i].noPixels);
-        } // end-if
-      }   // end-else
+        }
+      }
 
     } else {
       // If a very short arc, ignore
@@ -785,7 +782,7 @@ void EDCircles::GenerateCandidateCircles() {
                   arcs[i].noPixels);
 
         continue;
-      } // end-if
+      }
 
       if (arcs[i].coverRatio < CANDIDATE_CIRCLE_RATIO2)
         continue;
@@ -800,7 +797,7 @@ void EDCircles::GenerateCandidateCircles() {
         ellipseFitError =
             ComputeEllipseError(&eq, arcs[i].x, arcs[i].y, noPixels);
         coverRatio = noPixels / computeEllipsePerimeter(&eq);
-      } // end-if
+      }
 
       if (arcs[i].coverRatio > coverRatio)
         coverRatio = arcs[i].coverRatio;
@@ -810,9 +807,9 @@ void EDCircles::GenerateCandidateCircles() {
         addCircle(circles1, noCircles1, arcs[i].xc, arcs[i].yc, arcs[i].r,
                   arcs[i].circleFitError, &eq, ellipseFitError, arcs[i].x,
                   arcs[i].y, arcs[i].noPixels);
-      } // end-if
-    }   // end-else
-  }     // end-for
+      }
+    }
+  }
 }
 
 void EDCircles::DetectArcs(vector<LineSegment> lines) {
@@ -874,7 +871,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             break;
 
           lastLine++;
-        } // end-while
+        }
 
         bool specialCase = false;
         int wrapCase = -1; // 1: wrap the first two lines with the last line, 2:
@@ -895,13 +892,13 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
           if (lines[firstLine + 1].len < shorterLen) {
             shorterLen = lines[firstLine + 1].len;
             longerLen = lines[firstLine].len;
-          } // end-if
+          }
 
           if (info[firstLine].angle >= PI / 12 &&
               info[firstLine].angle <= PI / 4 && totalLineLength >= 40 &&
               shorterLen * 2 >= longerLen) {
             specialCase = true;
-          } // end-if
+          }
 
           // If the two lines do not make up for arc generation, then try to
           // wrap the lines to the first OR last line. There are two wrapper
@@ -914,7 +911,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                 info[stopLine - 1].angle <= MAX_ANGLE) {
               wrapCase = 1;
               specialCase = true;
-            } // end-if
+            }
 
             // Case 2: Combine the last two lines with the first line of the
             // segment
@@ -923,15 +920,15 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                      info[lastLine].angle <= MAX_ANGLE) {
               wrapCase = 2;
               specialCase = true;
-            } // end-if
-          }   // end-if
+            }
+          }
 
           // If still not enough for arc generation, then skip
           if (specialCase == false) {
             firstLine = lastLine;
             continue;
-          } // end-else
-        }   // end-if
+          }
+        }
 #endif
 
         // Copy the pixels of this segment to an array
@@ -948,8 +945,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
             y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
             noPixels++;
-          } // end-for
-        }   // end-if
+          }
+        }
 
         for (int m = firstLine; m <= lastLine; m++) {
           int index = lines[m].firstPixelIndex;
@@ -958,8 +955,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
             y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
             noPixels++;
-          } // end-for
-        }   // end-for
+          }
+        }
 
         // wrapCase 2: Combine the last two lines with the first line of the
         // segment
@@ -970,8 +967,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
             y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
             noPixels++;
-          } // end-for
-        }   // end-if
+          }
+        }
 
         // Move buffer pointers
         bm->move(noPixels);
@@ -1003,7 +1000,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
           } else if (wrapCase == 2) {
             noPixels -= lines[segmentStartLines[curSegmentNo]].len;
-          } // end-else
+          }
 
           if ((coverage >= FULL_CIRCLE_RATIO &&
                circleFitError <= LONG_ARC_ERROR)) {
@@ -1019,13 +1016,13 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                    circleFitError, sTheta, eTheta, info[firstLine].sign,
                    curSegmentNo, (int)x[0], (int)y[0], (int)x[noPixels - 1],
                    (int)y[noPixels - 1], x, y, noPixels);
-          } // end-else
+          }
 
           for (int m = firstLine; m < lastLine; m++)
             info[m].taken = true;
           firstLine = lastLine;
           continue;
-        } // end-if
+        }
 
         // Check if this is an almost closed loop (i.e, if 60% of the circle is
         // present). If so, try to fit an ellipse to the entire arc of lines
@@ -1058,7 +1055,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
             } else if (wrapCase == 2) {
               noPixels -= lines[segmentStartLines[curSegmentNo]].len;
-            } // end-else
+            }
 
             if (isAlmostClosedLoop) {
               addCircle(circles1, noCircles1, xc, yc, radius, circleFitError,
@@ -1075,14 +1072,14 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                      curSegmentNo, &eq, ellipseFitError, (int)x[0], (int)y[0],
                      (int)x[noPixels - 1], (int)y[noPixels - 1], x, y,
                      noPixels);
-            } // end-else
+            }
 
             for (int m = firstLine; m < lastLine; m++)
               info[m].taken = true;
             firstLine = lastLine;
             continue;
-          } // end-if
-        }   // end-if
+          }
+        }
 
         if (specialCase) {
           info[firstLine].taken = true;
@@ -1119,7 +1116,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
             firstLine++;
             curLine++;
-          } // end-while
+          }
 
           // If no initial arc found, then we are done with this arc of lines
           if (!found)
@@ -1151,7 +1148,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
             info[curLine].taken = true;
             curLine++;
-          } // end-while
+          }
 
           double coverage = noPixels / (TWOPI * radius);
           if ((coverage >= FULL_CIRCLE_RATIO &&
@@ -1168,19 +1165,19 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                    eTheta, info[firstLine].sign, curSegmentNo, (int)x[0],
                    (int)y[0], (int)x[noPixels - 1], (int)y[noPixels - 1], x, y,
                    noPixels);
-          } // end-else
+          }
 
           x += noPixels;
           y += noPixels;
 
           firstLine = curLine;
           info[curLine].taken = false; // may reuse the last line?
-        }                              // end-while-current-arc-of-lines
+        }
 
         firstLine = lastLine;
-      } // end-while-entire-edge-segment
-    }   // end-for
-  }     // end-for-iter
+      }
+    }
+  }
 }
 
 //-----------------------------------------------------------------
@@ -1238,7 +1235,7 @@ void EDCircles::ValidateCircles() {
 
     } else {
       ComputeCirclePoints(xc, yc, radius, px, py, &noPoints);
-    } // end-else
+    }
 
     int pr = -1; // previous row
     int pc = -1; // previous column
@@ -1272,12 +1269,12 @@ void EDCircles::ValidateCircles() {
         tr = r;
         tc = c;
         tcount++;
-      } // end-if
+      }
 
 #if 1
-        //
-        // See if there is an edge pixel within 1 pixel vicinity
-        //
+      //
+      // See if there is an edge pixel within 1 pixel vicinity
+      //
       if (edgeImg[r * width + c] != 255) {
         //   y-cy=-x-cx    y-cy=x-cx
         //         \       /
@@ -1334,7 +1331,7 @@ void EDCircles::ValidateCircles() {
             if (r < height - 2 && edgeImg[r * width + c] == 255)
               goto out;
 #endif
-          } // end-else
+          }
 
         } else {
           if (diff2 > 0) {
@@ -1371,15 +1368,15 @@ void EDCircles::ValidateCircles() {
             if (c < width - 2 && edgeImg[r * width + c] == 255)
               goto out;
 #endif
-          } // end-else
-        }   // end-else
+          }
+        }
 
         r = pr;
         c = pc;
         continue; // Ignore non-edge pixels.
                   // This produces less false positives, but occationally misses
                   // on some valid circles
-      }           // end-if
+      }
     out:
       if (edgeImg[r * width + c] == 255)
         noEdgePixels++;
@@ -1408,13 +1405,13 @@ void EDCircles::ValidateCircles() {
         // circle
         derivX = c - xc;
         derivY = r - yc;
-      } // end-else
+      }
 
       double idealPixelAngle = nfa->myAtan2(derivX, -derivY);
       double diff = fabs(pixelAngle - idealPixelAngle);
       if (diff <= prec || diff >= PI - prec)
         aligned++;
-    } // end-for
+    }
 
     double circumference;
     if (circle->isEllipse)
@@ -1437,7 +1434,7 @@ void EDCircles::ValidateCircles() {
       if (EllipseFit(circle->x, circle->y, circle->noPixels, &eq)) {
         ellipseFitError =
             ComputeEllipseError(&eq, circle->x, circle->y, circle->noPixels);
-      } // end-if
+      }
 
       if (ellipseFitError <= ELLIPSE_ERROR) {
         circle->isEllipse = true;
@@ -1445,12 +1442,12 @@ void EDCircles::ValidateCircles() {
         circle->eq = eq;
 
         validateAgain = true;
-      } // end-if
-    }   // end-else
+      }
+    }
 
     if (validateAgain == false)
       i++;
-  } // end-for
+  }
 
   noCircles2 = count;
 
@@ -1471,8 +1468,8 @@ void EDCircles::JoinCircles() {
       ComputeEllipseCenterAndAxisLengths(
           &circles[i].eq, &circles[i].xc, &circles[i].yc,
           &circles[i].majorAxisLength, &circles[i].minorAxisLength);
-    } // end-if
-  }   // end-for
+    }
+  }
 
   bool *taken = new bool[noCircles];
   for (int i = 0; i < noCircles; i++)
@@ -1495,7 +1492,7 @@ void EDCircles::JoinCircles() {
     } else {
       majorAxisLength = circles[i].r;
       minorAxisLength = circles[i].r;
-    } // end-else
+    }
 
     // Find other circles to join with
     noCandidateCircles = 0;
@@ -1522,7 +1519,7 @@ void EDCircles::JoinCircles() {
       } else {
         diff1 = fabs(majorAxisLength - circles[j].r);
         diff2 = fabs(minorAxisLength - circles[j].r);
-      } // end-else
+      }
 
       if (diff1 > AXIS_LENGTH_DIFF_THRESHOLD)
         continue;
@@ -1532,7 +1529,7 @@ void EDCircles::JoinCircles() {
       // Add to candidates
       candidateCircles[noCandidateCircles] = j;
       noCandidateCircles++;
-    } // end-for
+    }
 
     // Try to join the current arc with the candidate arc (if there is one)
     double XC = circles[i].xc;
@@ -1579,8 +1576,8 @@ void EDCircles::JoinCircles() {
 
             circleFitOK = true;
             CircleFitValid = true;
-          } // end-if
-        }   // end-if
+          }
+        }
 
         bool ellipseFitOK = false;
         if (circleFitOK == false) {
@@ -1589,7 +1586,7 @@ void EDCircles::JoinCircles() {
           EllipseEquation eq;
           if (EllipseFit(x, y, noPixels, &eq)) {
             error = ComputeEllipseError(&eq, x, y, noPixels);
-          } // end-if
+          }
 
           if (error <= JOINED_SHORT_ARC_ERROR_THRESHOLD) {
             taken[CandidateArcNo] = true;
@@ -1600,14 +1597,14 @@ void EDCircles::JoinCircles() {
             ellipseFitOK = true;
             EllipseFitValid = true;
             CircleFitValid = false;
-          } // end-if
-        }   // end-if
+          }
+        }
 
         if (circleFitOK == false && ellipseFitOK == false) {
           noPixels = noPixelsSave;
-        } // end-if
-      }   // end-for
-    }     // end-if
+        }
+      }
+    }
 
     // Add the new circle/ellipse to circles2
     if (CircleFitValid) {
@@ -1620,8 +1617,8 @@ void EDCircles::JoinCircles() {
     } else {
       circles3[noCircles3] = circles[i];
       noCircles3++;
-    } // end-else
-  }   // end-for
+    }
+  }
 
   delete taken;
   delete candidateCircles;
@@ -1758,7 +1755,7 @@ void EDCircles::JoinArcs1() {
         } else {
           if (Turn == arcs[j].turn)
             continue;
-        } // end-else
+        }
 
         // Add to candidate arcs in sorted order. User insertion sort
         int index = noCandidateArcs - 1;
@@ -1768,7 +1765,7 @@ void EDCircles::JoinArcs1() {
 
           candidateArcs[index + 1] = candidateArcs[index];
           index--;
-        } // end-while
+        }
 
         // Add the new candidate arc to the candidate list
         index++;
@@ -1776,7 +1773,7 @@ void EDCircles::JoinArcs1() {
         candidateArcs[index].which = which;
         candidateArcs[index].dist = d;
         noCandidateArcs++;
-      } // end-for
+      }
 
       // Try to join the current arc with the candidate arc (if there is one)
       if (noCandidateArcs > 0) {
@@ -1849,16 +1846,16 @@ void EDCircles::JoinArcs1() {
               EX = arcs[CandidateArcNo].sx;
               EY = arcs[CandidateArcNo].sy;
               break;
-            } // end-switch
+            }
 
             break; // Do not look at the other candidates
-          }        // end-if
-        }          // end-for
-      }            // end-if
+          }
+        }
+      }
 
       if (extendedArc == false)
         break;
-    } // end-while
+    }
 
     if (CircleEqValid == false) {
       // Add to arcs
@@ -1879,8 +1876,8 @@ void EDCircles::JoinArcs1() {
                NoPixels, angles.overlapRatio());
 
       bm->move(NoPixels);
-    } // end-if
-  }   // end-for
+    }
+  }
 
   delete taken;
   delete candidateArcs;
@@ -2012,7 +2009,7 @@ void EDCircles::JoinArcs2() {
 
           candidateArcs[index + 1] = candidateArcs[index];
           index--;
-        } // end-while
+        }
 
         // Add the new candidate arc to the candidate list
         index++;
@@ -2020,7 +2017,7 @@ void EDCircles::JoinArcs2() {
         candidateArcs[index].which = which;
         candidateArcs[index].dist = d;
         noCandidateArcs++;
-      } // end-for
+      }
 
       // Try to join the current arc with the candidate arc (if there is one)
       if (noCandidateArcs > 0) {
@@ -2096,16 +2093,16 @@ void EDCircles::JoinArcs2() {
               EX = arcs[CandidateArcNo].sx;
               EY = arcs[CandidateArcNo].sy;
               break;
-            } // end-switch
+            }
 
             break; // Do not look at the other candidates
-          }        // end-if
-        }          // end-for
-      }            // end-if
+          }
+        }
+      }
 
       if (extendedArc == false)
         break;
-    } // end-while
+    }
 
     if (EllipseEqValid == false) {
       // Add to arcs
@@ -2130,8 +2127,8 @@ void EDCircles::JoinArcs2() {
 
       // Move buffer pointers
       bm->move(NoPixels);
-    } // end-if
-  }   // end-for
+    }
+  }
 
   delete taken;
   delete candidateArcs;
@@ -2273,7 +2270,7 @@ void EDCircles::JoinArcs3() {
         } else {
           if (Turn == arcs[j].turn)
             continue;
-        } // end-else
+        }
 
         // Add to candidate arcs in sorted order. User insertion sort
         int index = noCandidateArcs - 1;
@@ -2283,7 +2280,7 @@ void EDCircles::JoinArcs3() {
 
           candidateArcs[index + 1] = candidateArcs[index];
           index--;
-        } // end-while
+        }
 
         // Add the new candidate arc to the candidate list
         index++;
@@ -2291,7 +2288,7 @@ void EDCircles::JoinArcs3() {
         candidateArcs[index].which = which;
         candidateArcs[index].dist = d;
         noCandidateArcs++;
-      } // end-for
+      }
 
       // Try to join the current arc with the candidate arc (if there is one)
       if (noCandidateArcs > 0) {
@@ -2367,16 +2364,16 @@ void EDCircles::JoinArcs3() {
               EX = arcs[CandidateArcNo].sx;
               EY = arcs[CandidateArcNo].sy;
               break;
-            } // end-switch
+            }
 
             break; // Do not look at the other candidates
-          }        // end-if
-        }          // end-for
-      }            // end-if
+          }
+        }
+      }
 
       if (extendedArc == false)
         break;
-    } // end-while
+    }
 
     if (EllipseEqValid == false) {
       // Add to arcs
@@ -2400,8 +2397,8 @@ void EDCircles::JoinArcs3() {
                SX, SY, EX, EY, x, y, NoPixels, angles.overlapRatio());
 
       bm->move(NoPixels);
-    } // end-if
-  }   // end-for
+    }
+  }
 
   delete taken;
   delete candidateArcs;
@@ -2456,15 +2453,15 @@ void EDCircles::sortCircles(Circle *circles, int noCircles) {
     for (int j = i + 1; j < noCircles; j++) {
       if (circles[j].r > circles[max].r)
         max = j;
-    } // end-for
+    }
 
     if (max != i) {
       Circle t = circles[i];
       circles[i] = circles[max];
       circles[max] = t;
-    } // end-if
-  }   // end-for
-} // end-sort
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Given an ellipse equation, computes the length of the perimeter of the
@@ -2666,7 +2663,7 @@ double EDCircles::ComputeEllipseError(EllipseEquation *eq, double *px,
         xs = x2;
         ys = y2;
       }
-    } // end-else
+    }
 
     // Refine the search in the vicinity of (xs, ys)
     double delta = 0.5;
@@ -2697,7 +2694,7 @@ double EDCircles::ComputeEllipseError(EllipseEquation *eq, double *px,
         min = d2;
       } else
         break;
-    } // end-while
+    }
 
     x = xs;
     while (1) {
@@ -2726,10 +2723,10 @@ double EDCircles::ComputeEllipseError(EllipseEquation *eq, double *px,
         min = d2;
       } else
         break;
-    } // end-while
+    }
 
     error += min;
-  } // end-for
+  }
 
   error = sqrt(error / noPoints);
 
@@ -3034,7 +3031,7 @@ void EDCircles::joinLastTwoArcs(MyArc *arcs, int &noArcs) {
         ArcLength(arcs[prev].sTheta, arcs[prev].eTheta) / (TWOPI);
 
     noArcs--;
-  } // end-if
+  }
 }
 
 //-----------------------------------------------------------------------
@@ -3144,7 +3141,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
     } else {
       // IV. quadrant
       sTheta = TWOPI - theta1;
-    } // end-else
+    }
   } else {
     if (sy >= yc) {
       // II. quadrant
@@ -3152,8 +3149,8 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
     } else {
       // III. quadrant
       sTheta = TWOPI - theta1;
-    } // end-else
-  }   // end-else
+    }
+  }
 
   d = (ex - xc) / r;
   if (d > 1.0)
@@ -3170,7 +3167,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
     } else {
       // IV. quadrant
       eTheta = TWOPI - theta1;
-    } // end-else
+    }
   } else {
     if (ey >= yc) {
       // II. quadrant
@@ -3178,8 +3175,8 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
     } else {
       // III. quadrant
       eTheta = TWOPI - theta1;
-    } // end-else
-  }   // end-else
+    }
+  }
 
   // Determine whether the arc is clockwise (CW) or counter-clockwise (CCW)
   double circumference = TWOPI * r;
@@ -3195,7 +3192,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
     } else {
       angle1 = sTheta - eTheta;
       angle2 = TWOPI - sTheta + eTheta;
-    } // end-else
+    }
 
     angle1 = angle1 / TWOPI;
     angle2 = angle2 / TWOPI;
@@ -3211,7 +3208,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
         double tmp = sTheta;
         sTheta = eTheta;
         eTheta = tmp;
-      } // end-else
+      }
 
     } else {
       // angle2 is correct
@@ -3222,8 +3219,8 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
 
       } else {
         ;
-      } // end-else
-    }   // end-else
+      }
+    }
 
   } else {
     double v1x = mx - sx;
@@ -3238,14 +3235,14 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
       double tmp = sTheta;
       sTheta = eTheta;
       eTheta = tmp;
-    } // end-if
-  }   // end-else
+    }
+  }
 
   double diff = fabs(sTheta - eTheta);
   if (diff < (TWOPI / 120)) {
     sTheta = 0;
     eTheta = 6.26; // 359 degrees
-  }                // end-if
+  }
 
   // Round the start & etheta to 0 if very close to 6.28 or 0
   if (sTheta >= 6.26)
@@ -3263,14 +3260,14 @@ void EDCircles::sortArc(MyArc *arcs, int noArcs) {
     for (int j = i + 1; j < noArcs; j++) {
       if (arcs[j].coverRatio > arcs[max].coverRatio)
         max = j;
-    } // end-for
+    }
 
     if (max != i) {
       MyArc t = arcs[i];
       arcs[i] = arcs[max];
       arcs[max] = t;
-    } // end-if
-  }   // end-for
+    }
+  }
 }
 
 //---------------------------------------------------------------------
@@ -3290,7 +3287,7 @@ bool EDCircles::CircleFit(double *x, double *y, int N, double *pxc, double *pyc,
   for (int i = 0; i < N; i++) {
     xAvg += x[i];
     yAvg += y[i];
-  } // end-for
+  }
 
   xAvg /= N;
   yAvg /= N;
@@ -3313,7 +3310,7 @@ bool EDCircles::CircleFit(double *x, double *y, int N, double *pxc, double *pyc,
     Suvv += u * v * v;
     Svvv += v * v * v;
     Svuu += v * u * u;
-  } // end-for
+  }
 
   // Now, we solve for the following linear system of equations
   // Av = b, where v = (uc, vc) is the center of the circle
@@ -3345,7 +3342,7 @@ bool EDCircles::CircleFit(double *x, double *y, int N, double *pxc, double *pyc,
     double dy = y[i] - *pyc;
     double d = sqrt(dx * dx + dy * dy) - R;
     error += d * d;
-  } // end-for
+  }
 
   *pr = R;
   *pe = sqrt(error / N);
@@ -3375,7 +3372,7 @@ void EDCircles::ComputeCirclePoints(double xc, double yc, double r, double *px,
     px[count] = x;
     py[count] = y;
     count++;
-  } // end-while
+  }
 
   *noPoints = count;
 }
@@ -3386,14 +3383,14 @@ void EDCircles::sortCircle(Circle *circles, int noCircles) {
     for (int j = i + 1; j < noCircles; j++) {
       if (circles[j].r > circles[max].r)
         max = j;
-    } // end-for
+    }
 
     if (max != i) {
       Circle t = circles[i];
       circles[i] = circles[max];
       circles[max] = t;
-    } // end-if
-  }   // end-for
+    }
+  }
 }
 
 bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
@@ -3426,7 +3423,7 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
     Const[1][1] = 2;
     Const[2][2] = 1;
     Const[3][3] = 2;
-  } // end-switch
+  }
 
   if (noPoints < 6)
     return false;
@@ -3442,7 +3439,7 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
     D[i][4] = tx;
     D[i][5] = ty;
     D[i][6] = 1.0;
-  } // end-for
+  }
 
   // pm(Const,"Constraint");
   // Now compute scatter matrix  S
@@ -3511,8 +3508,8 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
     // Now fetch the right solution
     for (int j = 1; j <= 6; j++) {
       pResult->coeff[j] = sol[j][solind];
-    } // end-for
-  }   // end-if
+    }
+  }
 
   DeallocateMatrix(D, noPoints + 1);
   DeallocateMatrix(S, 7);
@@ -3529,7 +3526,7 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
     int len = (int)computeEllipsePerimeter(pResult);
     if (len <= 0 || len > 50000)
       valid = false;
-  } // end-else
+  }
 
   return valid;
 }
@@ -3540,7 +3537,7 @@ double **EDCircles::AllocateMatrix(int noRows, int noColumns) {
   for (int i = 0; i < noRows; i++) {
     m[i] = new double[noColumns];
     memset(m[i], 0, sizeof(double) * noColumns);
-  } // end-for
+  }
 
   return m;
 }
@@ -3589,8 +3586,8 @@ void EDCircles::choldc(double **a, int n, double **l) {
         l[j][i] = a[j][i];
         l[i][j] = 0.0;
       }
-    } // end-for-inner
-  }   // end-for-outer
+    }
+  }
 
   delete p;
 }
@@ -3649,7 +3646,7 @@ int EDCircles::inverse(double **TB, double **InvB, int N) {
       DeallocateMatrix(C, N + 1);
 
       return (-1);
-    } // end-else
+    }
   }
   /**   Copia il risultato nella matrice InvB  ***/
   for (k = 1, p = 1; k <= N; k++, p++)
@@ -3810,7 +3807,7 @@ void AngleSet::_set(double sTheta, double eTheta) {
     if (current < 0) {
       angles[prev].next = arc;
       break;
-    } // end-if
+    }
 
     if (angles[arc].eTheta <= angles[current].sTheta) {
       // Add before current
@@ -3821,7 +3818,7 @@ void AngleSet::_set(double sTheta, double eTheta) {
       } else {
         angles[arc].next = current;
         angles[prev].next = arc;
-      } // end-else
+      }
 
       break;
 
@@ -3834,7 +3831,7 @@ void AngleSet::_set(double sTheta, double eTheta) {
       if (current < 0) {
         angles[prev].next = arc;
         break;
-      } // end-if
+      }
 
     } else {
       // overlaps with current. Join
@@ -3849,7 +3846,7 @@ void AngleSet::_set(double sTheta, double eTheta) {
         overlapAmount += angles[arc].eTheta - angles[current].sTheta;
       } else {
         overlapAmount += angles[current].eTheta - angles[arc].sTheta;
-      } // end-else
+      }
 
       // Now join current with arc
       if (angles[current].sTheta < angles[arc].sTheta)
@@ -3857,8 +3854,8 @@ void AngleSet::_set(double sTheta, double eTheta) {
       if (angles[current].eTheta > angles[arc].eTheta)
         angles[arc].eTheta = angles[current].eTheta;
       current = angles[current].next;
-    } // end-else
-  }   // end-while
+    }
+  }
 }
 
 void AngleSet::set(double sTheta, double eTheta) {
@@ -3868,7 +3865,7 @@ void AngleSet::set(double sTheta, double eTheta) {
   } else {
     _set(sTheta, TWOPI);
     _set(0, eTheta);
-  } // end-else
+  }
 }
 
 double AngleSet::_overlap(double sTheta, double eTheta) {
@@ -3891,10 +3888,10 @@ double AngleSet::_overlap(double sTheta, double eTheta) {
 
     } else {
       o += angles[current].eTheta - sTheta;
-    } // end-else
+    }
 
     current = angles[current].next;
-  } // end-while
+  }
 
   return o;
 }
@@ -3908,7 +3905,7 @@ double AngleSet::overlap(double sTheta, double eTheta) {
   } else {
     o = _overlap(sTheta, TWOPI);
     o += _overlap(0, eTheta);
-  } // end-else
+  }
 
   return o / ArcLength(sTheta, eTheta);
 }
@@ -3920,7 +3917,7 @@ void AngleSet::computeStartEndTheta(double &sTheta, double &eTheta) {
     eTheta = angles[head].eTheta;
 
     return;
-  } // end-if
+  }
 
   // OK. More than one arc. Find the biggest gap
   int current = head;
@@ -3945,9 +3942,8 @@ void AngleSet::computeStartEndTheta(double &sTheta, double &eTheta) {
       biggestGapSTheta = start;
       biggestGapEtheta = end;
       biggestGapLength = len;
-    } // end-if
-
-  } // end-while
+    }
+  }
 
   // Compute the gap between the last arc & the first arc
   start = angles[current].eTheta;
@@ -3956,7 +3952,7 @@ void AngleSet::computeStartEndTheta(double &sTheta, double &eTheta) {
   if (len > biggestGapLength) {
     biggestGapSTheta = start;
     biggestGapEtheta = end;
-  } // end-if
+  }
 
   sTheta = biggestGapEtheta;
   eTheta = biggestGapSTheta;
@@ -3969,7 +3965,7 @@ double AngleSet::coverRatio() {
   while (current >= 0) {
     total += angles[current].eTheta - angles[current].sTheta;
     current = angles[current].next;
-  } // end-while
+  }
 
   return total / (TWOPI);
 }

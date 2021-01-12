@@ -114,7 +114,7 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
     L.push_back((116.0 * y) - 16);
     a.push_back(500 * (x / y));
     b.push_back(200 * (y - z));
-  } // end-for
+  }
 
   cv::Mat L_Img(height, width, CV_8UC1);
   cv::Mat a_Img(height, width, CV_8UC1);
@@ -312,8 +312,8 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 
       gradImg[i * width + j] = grad;
       grads[grad]++;
-    } // end-for
-  }   // end-for
+    }
+  }
 
   // Compute probability function H
   int size = (width - 2) * (height - 2);
@@ -330,12 +330,12 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
   for (int i = 0; i < segments.size(); i++) {
     int len = segments[i].size();
     np += (len * (len - 1)) / 2;
-  } // end-for
+  }
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
     testSegment(i, 0, segments[i].size() - 1, gradImage);
-  } // end-for
+  }
 
   // clear space
   delete[] H;
@@ -368,7 +368,7 @@ void EDColor::testSegment(int i, int index1, int index2,
       minGrad = gradImg[r * width + c];
       minGradIndex = k;
     }
-  } // end-for
+  }
 
   // Compute nfa
   double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
@@ -379,10 +379,10 @@ void EDColor::testSegment(int i, int index1, int index2,
       int c = segments[i][k].x;
 
       edgeImg[r * width + c] = 255;
-    } // end-for
+    }
 
     return;
-  } // end-if
+  }
 
   // Split into two halves. We divide at the point where the gradient is the
   // minimum
@@ -395,7 +395,7 @@ void EDColor::testSegment(int i, int index1, int index2,
       end--;
     else
       break;
-  } // end-while
+  }
 
   int start = minGradIndex + 1;
   while (start < index2) {
@@ -406,7 +406,7 @@ void EDColor::testSegment(int i, int index1, int index2,
       start++;
     else
       break;
-  } // end-while
+  }
 
   testSegment(i, index1, end, gradImage);
   testSegment(i, start, index2, gradImage);
@@ -431,7 +431,7 @@ void EDColor::extractNewSegments() {
         if (edgeImg[r * width + c])
           break;
         start++;
-      } // end-while
+      }
 
       int end = start + 1;
       while (end < segments[i].size()) {
@@ -441,7 +441,7 @@ void EDColor::extractNewSegments() {
         if (edgeImg[r * width + c] == 0)
           break;
         end++;
-      } // end-while
+      }
 
       int len = end - start;
       if (len >= 10) {
@@ -452,11 +452,11 @@ void EDColor::extractNewSegments() {
         vector<Point> subVec(&segments[i][start], &segments[i][end - 1]);
         validSegments[noSegments] = subVec;
         noSegments++;
-      } // end-else
+      }
 
       start = end + 1;
-    } // end-while
-  }   // end-for
+    }
+  }
 
   // Update
   segments = validSegments;
@@ -507,7 +507,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       if (r2 == r - 2 && c2 == c) {
         if (c1 != c) {
           map[i][n1].x = c;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -515,7 +515,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r + 2 && c2 == c) {
         if (c1 != c) {
           map[i][n1].x = c;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -523,7 +523,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r && c2 == c - 2) {
         if (r1 != r) {
           map[i][n1].y = r;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -531,7 +531,7 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else if (r2 == r && c2 == c + 2) {
         if (r1 != r) {
           map[i][n1].y = r;
-        } // end-if
+        }
 
         cp = n2;
         n2 += 2;
@@ -539,9 +539,9 @@ void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
       } else {
         cp++;
         n2++;
-      } // end-else
-    }   // end-while
-  }     // end-for
+      }
+    }
+  }
 }
 
 std::array<double, EDColor::LUT_SIZE + 1> EDColor::getLut(int which) {
