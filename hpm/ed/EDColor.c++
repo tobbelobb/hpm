@@ -261,7 +261,7 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 //--------------------------------------------------------------------------------------------------------------------
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
-//
+// (and remove the invalid ones?)
 void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
@@ -273,8 +273,7 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   edgeImage.setTo(0);
   cv::Mat_<gradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
 
-  int *grads = new int[maxGradValue];
-  memset(grads, 0, sizeof(int) * maxGradValue);
+  std::vector<int> grads(maxGradValue, 0);
 
   gradPix *gradImg = gradImage.ptr<gradPix>(0);
   for (int i = 1; i < height - 1; i++) {
@@ -338,7 +337,6 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   for (int i = 0; i < maxGradValue; i++)
     H[i] = (double)grads[i] / ((double)size);
 
-  // Compute np: # of segment pieces
   int numberOfSegmentPieces = 0;
   for (int i = 0; i < segments.size(); i++) {
     int len = segments[i].size();
@@ -350,9 +348,6 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
     testSegment(i, 0, segments[i].size() - 1, gradImage, H,
                 numberOfSegmentPieces);
   }
-
-  // clear space
-  delete[] grads;
 }
 
 //----------------------------------------------------------------------------------
