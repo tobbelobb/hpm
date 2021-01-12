@@ -42,7 +42,7 @@ private:
                                         double sigma);
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
-  void validateEdgeSegments(std::array<cv::Mat, 3>);
+  void filterEdgeImage(std::array<cv::Mat, 3> Lab);
   void testSegment(int i, int index1, int index2, cv::Mat_<gradPix> gradImage,
                    std::vector<double> const &H, int numberOfSegmentPieces);
   void extractNewSegments();

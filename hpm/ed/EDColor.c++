@@ -17,9 +17,9 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   width = srcImage.cols;
 
   auto LabImgs = MyRGB2LabFast(srcImage);
-  auto smoothLab = smoothChannels(LabImgs, sigma);
 
-  auto const [gradImage, dirData] = ComputeGradientMapByDiZenzo(smoothLab);
+  auto const [gradImage, dirData] =
+      ComputeGradientMapByDiZenzo(smoothChannels(LabImgs, sigma));
 
   if (config.validateSegments) {
     // Get Edge Image using ED
@@ -28,9 +28,8 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     edgeImage = edgeObj.getEdgeImage();
 
     sigma /= 2.5;
-    auto smoothLab2 = smoothChannels(LabImgs, sigma);
 
-    validateEdgeSegments(smoothLab2);
+    filterEdgeImage(smoothChannels(LabImgs, sigma));
 
     // Extract the new edge segments after validation
     extractNewSegments();
@@ -263,7 +262,7 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
 //
-void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab) {
+void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
