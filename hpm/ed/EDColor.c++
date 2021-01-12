@@ -9,9 +9,8 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   double gradThresh = std::max(config.gradThresh, 1);
   double anchorThresh = std::max(config.anchorThresh, 0);
 
-  if (config.validateSegments) { // setup for validation
+  if (config.validateSegments) {
     anchorThresh = 0;
-    divForTestSegment = 2.25;
   }
 
   height = srcImage.rows;
@@ -22,7 +21,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
   auto const [gradImage, dirData] = ComputeGradientMapByDiZenzo(smoothLab);
 
-  // Validate edge segments if the flag is set
   if (config.validateSegments) {
     // Get Edge Image using ED
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, 10, false);
@@ -88,24 +86,22 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   static auto const LUT1 = getLut<LUT_SIZE>(1);
   static auto const LUT2 = getLut<LUT_SIZE>(2);
 
-  // First RGB 2 XYZ
-  double red, green, blue;
-  double x, y, z;
-
   std::vector<double> L{};
   std::vector<double> a{};
   std::vector<double> b{};
-  L.reserve(height * width);
-  a.reserve(height * width);
-  b.reserve(height * width);
+  auto const size{static_cast<size_t>(width * height)};
+  L.reserve(size);
+  a.reserve(size);
+  b.reserve(size);
 
   std::array<cv::Mat, 3> bgr;
   split(srcImage, bgr);
 
   for (int i = 0; i < width * height; i++) {
-    red = bgr[2].data[i] / 255.0;
-    green = bgr[1].data[i] / 255.0;
-    blue = bgr[0].data[i] / 255.0;
+    // RGB to XYZ
+    double red = bgr[2].data[i] / 255.0;
+    double green = bgr[1].data[i] / 255.0;
+    double blue = bgr[0].data[i] / 255.0;
 
     red = LUT1[(int)(red * LUT_SIZE + 0.5)];
     green = LUT1[(int)(green * LUT_SIZE + 0.5)];
@@ -116,9 +112,9 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
     blue = blue * 100;
 
     // Observer. = 2deg, Illuminant = D65
-    x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
-    y = red * 0.2126729 + green * 0.7151522 + blue * 0.0721750;
-    z = red * 0.0193339 + green * 0.1191920 + blue * 0.9503041;
+    double x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
+    double y = red * 0.2126729 + green * 0.7151522 + blue * 0.0721750;
+    double z = red * 0.0193339 + green * 0.1191920 + blue * 0.9503041;
 
     // Now xyz 2 Lab
     double refX = 95.047;
@@ -142,7 +138,6 @@ std::array<cv::Mat, 3> EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   cv::Mat a_Img(height, width, CV_8UC1);
   cv::Mat b_Img(height, width, CV_8UC1);
 
-  auto const size{static_cast<size_t>(width * height)};
   auto scale255 = [size](std::vector<double> const &Lab, cv::Mat &Lab_Img) {
     auto const [min, max] = std::minmax_element(Lab.begin(), Lab.end());
     double const scale = 255.0 / (*max - *min);
@@ -274,8 +269,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
   cv::Mat smoothB = smoothLab[2];
 
   int maxGradValue = MAX_GRAD_VALUE;
-  H = new double[maxGradValue];
-  memset(H, 0, sizeof(double) * maxGradValue);
+  std::vector<double> H(maxGradValue, 0.0);
 
   edgeImage.setTo(0);
   gradImage.setTo(0);
@@ -338,7 +332,6 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 
   // Compute probability function H
   int size = (width - 2) * (height - 2);
-  //  size -= grads[0];
 
   for (int i = maxGradValue - 1; i > 0; i--)
     grads[i - 1] += grads[i];
@@ -355,11 +348,10 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
-    testSegment(i, 0, segments[i].size() - 1, gradImage);
+    testSegment(i, 0, segments[i].size() - 1, gradImage, H);
   }
 
   // clear space
-  delete[] H;
   delete[] grads;
 }
 
@@ -368,7 +360,8 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
 void EDColor::testSegment(int i, int index1, int index2,
-                          cv::Mat_<short> gradImage) {
+                          cv::Mat_<short> gradImage,
+                          std::vector<double> const &H) {
 
   int chainLen = index2 - index1 + 1;
   if (chainLen < MIN_PATH_LEN)
@@ -392,7 +385,7 @@ void EDColor::testSegment(int i, int index1, int index2,
   }
 
   // Compute nfa
-  double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
+  double nfa = NFA(H[minGrad], (int)(chainLen / 2.25));
 
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
   if (nfa <= EPSILON) {
@@ -430,8 +423,8 @@ void EDColor::testSegment(int i, int index1, int index2,
       break;
   }
 
-  testSegment(i, index1, end, gradImage);
-  testSegment(i, start, index2, gradImage);
+  testSegment(i, index1, end, gradImage, H);
+  testSegment(i, start, index2, gradImage, H);
 }
 
 //----------------------------------------------------------------------------------------------

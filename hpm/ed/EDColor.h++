@@ -32,8 +32,6 @@ private:
   int width;
   int height;
 
-  double divForTestSegment;
-  double *H;
   int np;
   int segmentNo;
 
@@ -47,7 +45,8 @@ private:
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
   void validateEdgeSegments(std::array<cv::Mat, 3>, cv::Mat_<short> gradImage);
-  void testSegment(int i, int index1, int index2, cv::Mat_<short> gradImage);
+  void testSegment(int i, int index1, int index2, cv::Mat_<short> gradImage,
+                   std::vector<double> const &H);
   void extractNewSegments();
   double NFA(double prob, int len);
 
