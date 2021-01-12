@@ -268,7 +268,7 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   cv::Mat smoothB = smoothLab[2];
 
   int maxGradValue = MAX_GRAD_VALUE;
-  std::vector<double> H(maxGradValue, 0.0);
+  std::vector<double> probabilityFunctionH(maxGradValue, 0.0);
 
   edgeImage.setTo(0);
   cv::Mat_<gradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
@@ -335,7 +335,7 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
     grads[i - 1] += grads[i];
 
   for (int i = 0; i < maxGradValue; i++)
-    H[i] = (double)grads[i] / ((double)size);
+    probabilityFunctionH[i] = (double)grads[i] / ((double)size);
 
   int numberOfSegmentPieces = 0;
   for (int i = 0; i < segments.size(); i++) {
@@ -345,7 +345,7 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {
-    testSegment(i, 0, segments[i].size() - 1, gradImage, H,
+    testSegment(i, 0, segments[i].size() - 1, gradImage, probabilityFunctionH,
                 numberOfSegmentPieces);
   }
 }
@@ -356,7 +356,7 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
 //
 void EDColor::testSegment(int i, int index1, int index2,
                           cv::Mat_<gradPix> gradImage,
-                          std::vector<double> const &H,
+                          std::vector<double> const &probabilityFunctionH,
                           int const numberOfSegmentPieces) {
 
   int const chainLen = index2 - index1 + 1;
@@ -383,9 +383,10 @@ void EDColor::testSegment(int i, int index1, int index2,
     }
   }
 
-  // Compute nfa
-  double nfa = NFA(H[minGrad], (int)(chainLen / 2.25), numberOfSegmentPieces);
+  double nfa = NFA(probabilityFunctionH[minGrad], (int)(chainLen / 2.25),
+                   numberOfSegmentPieces);
 
+  // Here the edgeImage is rebuilt
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
   if (nfa <= EPSILON) {
     for (int k = index1; k <= index2; k++) {
@@ -422,8 +423,10 @@ void EDColor::testSegment(int i, int index1, int index2,
       break;
   }
 
-  testSegment(i, index1, end, gradImage, H, numberOfSegmentPieces);
-  testSegment(i, start, index2, gradImage, H, numberOfSegmentPieces);
+  testSegment(i, index1, end, gradImage, probabilityFunctionH,
+              numberOfSegmentPieces);
+  testSegment(i, start, index2, gradImage, probabilityFunctionH,
+              numberOfSegmentPieces);
 }
 
 //----------------------------------------------------------------------------------------------

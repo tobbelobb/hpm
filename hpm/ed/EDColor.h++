@@ -44,7 +44,8 @@ private:
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
   void filterEdgeImage(std::array<cv::Mat, 3> Lab);
   void testSegment(int i, int index1, int index2, cv::Mat_<gradPix> gradImage,
-                   std::vector<double> const &H, int numberOfSegmentPieces);
+                   std::vector<double> const &probabilityFunctionH,
+                   int numberOfSegmentPieces);
   void extractNewSegments();
   double NFA(double prob, int len, int numberOfSegmentPieces);
 
