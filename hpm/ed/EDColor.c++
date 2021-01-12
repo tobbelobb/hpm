@@ -32,8 +32,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     sigma /= 2.5;
     auto smoothLab2 = smoothChannels(LabImgs, sigma);
 
-    edgeImg = edgeImage.data; // validation steps uses pointer to edgeImage
-
     validateEdgeSegments(smoothLab2, gradImage);
 
     // Extract the new edge segments after validation
@@ -255,8 +253,7 @@ void EDColor::validateEdgeSegments(std::array<cv::Mat, 3> smoothLab,
   H = new double[maxGradValue];
   memset(H, 0, sizeof(double) * maxGradValue);
 
-  memset(edgeImg, 0, width * height); // clear edge image
-
+  edgeImage.setTo(0);
   gradImage.setTo(0);
 
   int *grads = new int[maxGradValue];
@@ -373,6 +370,7 @@ void EDColor::testSegment(int i, int index1, int index2,
   // Compute nfa
   double nfa = NFA(H[minGrad], (int)(chainLen / divForTestSegment));
 
+  uchar *edgeImg = edgeImage.ptr<uchar>(0);
   if (nfa <= EPSILON) {
     for (int k = index1; k <= index2; k++) {
       int r = segments[i][k].y;
@@ -420,6 +418,7 @@ void EDColor::extractNewSegments() {
   vector<vector<Point>> validSegments;
   int noSegments = 0;
 
+  uchar *edgeImg = edgeImage.ptr<uchar>(0);
   for (int i = 0; i < segments.size(); i++) {
     int start = 0;
     while (start < segments[i].size()) {

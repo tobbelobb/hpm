@@ -23,7 +23,6 @@ public:
 
 private:
   cv::Mat edgeImage;
-  uchar *edgeImg;
 
   int width;
   int height;
