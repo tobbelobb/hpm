@@ -5,11 +5,11 @@ using namespace cv;
 using namespace std;
 
 EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
-  double sigma = std::max(config.sigma, 1.0);
+  double blurSize = std::max(config.blurSize, 1.0);
   double gradThresh = std::max(config.gradThresh, 1);
   double anchorThresh = std::max(config.anchorThresh, 0);
 
-  if (config.validateSegments) {
+  if (config.filterSegments) {
     anchorThresh = 0;
   }
 
@@ -19,17 +19,17 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto LabImgs = MyRGB2LabFast(srcImage);
 
   auto const [gradImage, dirData] =
-      ComputeGradientMapByDiZenzo(smoothChannels(LabImgs, sigma));
+      ComputeGradientMapByDiZenzo(smoothChannels(LabImgs, blurSize));
 
-  if (config.validateSegments) {
+  if (config.filterSegments) {
     // Get Edge Image using ED
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, 10, false);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
 
-    sigma /= 2.5;
+    blurSize /= 2.5;
 
-    filterEdgeImage(smoothChannels(LabImgs, sigma));
+    filterEdgeImage(smoothChannels(LabImgs, blurSize));
 
     // Extract the new edge segments after validation
     extractNewSegments();
@@ -237,18 +237,22 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
 }
 
 std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
-                                               double sigma) {
+                                               double const blurSize) {
   Mat smoothL = Mat(height, width, CV_8UC1);
   Mat smoothA = Mat(height, width, CV_8UC1);
   Mat smoothB = Mat(height, width, CV_8UC1);
 
-  cv::Size kernelSize = Size();
-  if (sigma == 1.0) {
-    kernelSize = Size(5, 5);
-  }
-  if (sigma == 1.5) {
-    kernelSize = Size(7, 7);
-  }
+  auto getBlurConfig = [](double const blurSize) -> std::pair<Size, double> {
+    if (blurSize >= 1.0 and blurSize < 1.5) {
+      return {Size(5, 5), blurSize};
+    }
+    if (blurSize >= 1.5) {
+      return {Size(7, 7), blurSize};
+    }
+    return {Size(), blurSize};
+  };
+
+  auto const [kernelSize, sigma] = getBlurConfig(blurSize);
 
   GaussianBlur(src[0], smoothL, kernelSize, sigma);
   GaussianBlur(src[1], smoothA, kernelSize, sigma);
@@ -347,6 +351,14 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
     testSegment(i, 0, segments[i].size() - 1, gradImage, probabilityFunctionH,
                 numberOfSegmentPieces);
   }
+}
+
+static double NFA(double prob, int len, int const numberOfSegmentPieces) {
+  double nfa = static_cast<double>(numberOfSegmentPieces);
+  for (int i = 0; i < len && nfa > EPSILON; i++) {
+    nfa *= prob;
+  }
+  return nfa;
 }
 
 //----------------------------------------------------------------------------------
@@ -471,14 +483,6 @@ void EDColor::extractNewSegments() {
 
   // Update
   segments = validSegments;
-}
-
-double EDColor::NFA(double prob, int len, int const numberOfSegmentPieces) {
-  double nfa = static_cast<double>(numberOfSegmentPieces);
-  for (int i = 0; i < len && nfa > EPSILON; i++) {
-    nfa *= prob;
-  }
-  return nfa;
 }
 
 //---------------------------------------------------------

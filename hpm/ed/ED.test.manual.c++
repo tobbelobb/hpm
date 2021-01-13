@@ -124,8 +124,8 @@ int main(int argc, char **argv) {
   EDColor testEDColor{colorImg,
                       {.gradThresh = 36,
                        .anchorThresh = 4,
-                       .sigma = 1.5,
-                       .validateSegments = true}};
+                       .blurSize = 1.5,
+                       .filterSegments = true}};
   if (show) {
     imshow("Color Edge Image - PRESS ANY KEY TO QUIT",
            testEDColor.getEdgeImage());

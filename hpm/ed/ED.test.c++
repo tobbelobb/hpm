@@ -18,8 +18,8 @@ auto main() -> int {
     EDColor testEDColor{colorImg,
                         {.gradThresh = 36,
                          .anchorThresh = 4,
-                         .sigma = 1.5,
-                         .validateSegments = true}};
+                         .blurSize = 1.5,
+                         .filterSegments = true}};
     expect(testEDColor.getNumberOfSegments() == 212_i);
 
     EDLines colorLine = EDLines(testEDColor);
@@ -37,8 +37,8 @@ auto main() -> int {
     EDColor testEDColor{colorImg,
                         {.gradThresh = 36,
                          .anchorThresh = 4,
-                         .sigma = 1.5,
-                         .validateSegments = false}};
+                         .blurSize = 1.5,
+                         .filterSegments = false}};
     expect(testEDColor.getNumberOfSegments() == 230_i);
 
     EDLines colorLine = EDLines(testEDColor);

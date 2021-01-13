@@ -46,7 +46,7 @@ public:
   ED(cv::Mat gradImage, std::vector<EdgeDir> dirData, int _gradThresh,
      int _anchorThresh, int _scanInterval = 1, int _minPathLen = 10,
      bool selectStableAnchors = true);
-  ED(EDColor &cpyObj);
+  ED(EDColor const &cpyObj);
 
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();

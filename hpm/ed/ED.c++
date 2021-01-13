@@ -205,7 +205,7 @@ ED::ED(cv::Mat _gradImage, std::vector<EdgeDir> _dirData, int _gradThresh,
   JoinAnchorPointsUsingSortedAnchors();
 }
 
-ED::ED(EDColor &obj) {
+ED::ED(EDColor const &obj) {
   width = obj.getWidth();
   height = obj.getHeight();
   segments = obj.getSegments();

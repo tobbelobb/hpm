@@ -4,14 +4,15 @@
 
 #include <hpm/ed/EDTypes.h++>
 
+using gradPix = short;
+
 struct EDColorConfig {
   int const gradThresh = 20;
   int const anchorThresh = 4;
-  double const sigma = 1.5;
-  bool const validateSegments = false;
+  double const blurSize = 1.5;
+  bool const filterSegments = false;
 };
 
-using gradPix = short;
 struct GradientMapResult {
   cv::Mat_<gradPix> gradImage;
   std::vector<EdgeDir> dirData;
@@ -20,7 +21,7 @@ struct GradientMapResult {
 class EDColor {
 public:
   EDColor(cv::Mat srcImage, EDColorConfig const &config);
-  cv::Mat getEdgeImage();
+  cv::Mat getEdgeImage(); // for testing
 
   std::vector<std::vector<cv::Point>> getSegments() const;
   int getNumberOfSegments() const;
@@ -40,12 +41,12 @@ private:
                                         double sigma);
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
+
   void filterEdgeImage(std::array<cv::Mat, 3> Lab);
   void testSegment(int i, int index1, int index2, cv::Mat_<gradPix> gradImage,
                    std::vector<double> const &probabilityFunctionH,
                    int numberOfSegmentPieces);
   void extractNewSegments();
-  double NFA(double prob, int len, int numberOfSegmentPieces);
 
   static void fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
                               int noPixels);
