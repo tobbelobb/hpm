@@ -29,8 +29,8 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
     blurSize /= 2.5;
 
-    filterEdgeImage(blur(LabImgs, blurSize));
-    extractNewSegments();
+    redrawEdgeImage(blur(LabImgs, blurSize));
+    segments = validSegments(edgeImage, segments);
 
   } else {
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh);
@@ -160,7 +160,7 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
 
   int max = 0;
 
-  gradPix *gradImg = gradImage.ptr<gradPix>(0);
+  GradPix *gradImg = gradImage.ptr<GradPix>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Prewitt for channel1
@@ -228,8 +228,8 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   // Scale the gradient values to 0-255
   double const scale = 255.0 / max;
 
-  gradImage.forEach<gradPix>([scale](gradPix &pixel, const int *pos) {
-    pixel = (gradPix)(pixel * scale);
+  gradImage.forEach<GradPix>([scale](GradPix &pixel, const int *pos) {
+    pixel = (GradPix)(pixel * scale);
   });
 
   return {gradImage, dirData};
@@ -261,10 +261,10 @@ std::array<cv::Mat, 3> EDColor::blur(std::array<cv::Mat, 3> src,
 }
 
 //--------------------------------------------------------------------------------------------------------------------
-// Validate the edge segments using the Helmholtz principle (for color images)
-// channel1, channel2 and channel3 images
-// (and remove the invalid ones?)
-void EDColor::filterEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
+// Filter edge segments using the Helmholtz principle
+// Create a gradient image based on Lab encoded input image
+// Then redraw the edgeImage based on the new gradient image
+void EDColor::redrawEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -273,11 +273,11 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   std::vector<double> probabilityFunctionH(maxGradValue, 0.0);
 
   edgeImage.setTo(0);
-  cv::Mat_<gradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
+  cv::Mat_<GradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
 
   std::vector<int> grads(maxGradValue, 0);
 
-  gradPix *gradImg = gradImage.ptr<gradPix>(0);
+  GradPix *gradImg = gradImage.ptr<GradPix>(0);
   for (int i = 1; i < height - 1; i++) {
     for (int j = 1; j < width - 1; j++) {
       // Gradient for channel1
@@ -347,8 +347,8 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
 
   // Validate segments
   for (auto const &segment : segments) {
-    testSegment(segment.begin(), segment.end(), gradImage, probabilityFunctionH,
-                numberOfSegmentPieces);
+    drawFilteredSegment(segment.begin(), segment.end(), gradImage,
+                        probabilityFunctionH, numberOfSegmentPieces);
   }
 }
 
@@ -366,18 +366,17 @@ static double NFA(double prob, int len, int const numberOfSegmentPieces) {
 //
 template <typename Iterator>
 void EDColor::drawFilteredSegment(
-    Iterator firstPoint, Iterator lastPoint, cv::Mat_<gradPix> gradImage,
+    Iterator firstPoint, Iterator lastPoint, cv::Mat_<GradPix> gradImage,
     std::vector<double> const &probabilityFunctionH,
     int const numberOfSegmentPieces) {
 
   int const chainLen = std::distance(firstPoint, lastPoint);
-  static size_t constexpr MIN_PATH_LEN{10};
-  if (chainLen < MIN_PATH_LEN) {
+  if (chainLen < MIN_SEGMENT_LEN) {
     return;
   }
 
   // First find the min. gradient along the segment
-  gradPix const *gradImg = gradImage.ptr<gradPix>(0);
+  GradPix const *gradImg = gradImage.ptr<GradPix>(0);
   auto minGradPoint = std::min_element(
       firstPoint, lastPoint, [&](Point const &p0, Point const &p1) {
         return gradImg[p0.y * width + p0.x] < gradImg[p1.y * width + p1.x];
@@ -403,49 +402,31 @@ void EDColor::drawFilteredSegment(
                       probabilityFunctionH, numberOfSegmentPieces);
 }
 
-//----------------------------------------------------------------------------------------------
-// After the validation of the edge segments, extracts the valid ones
-// In other words, updates the valid segments' pixel arrays and their lengths
-//
-void EDColor::extractNewSegments() {
-  vector<vector<Point>> validSegments;
+vector<Segment> EDColor::validSegments(cv::Mat_<uchar> edgeImage,
+                                       vector<Segment> segmentsIn) const {
+  vector<Segment> valids;
 
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
-  for (int i = 0; i < segments.size(); i++) {
-    int start = 0;
-    while (start < segments[i].size()) {
+  for (auto const &segment : segmentsIn) {
+    auto const end = segment.end();
+    auto front = segment.begin();
+    auto back = segment.begin();
+    while (back != end) {
+      front = std::find_if(front, end, [&](auto const &point) {
+        return edgeImg[point.y * width + point.x];
+      });
+      back = std::find_if_not(front, end, [&](auto const &point) {
+        return edgeImg[point.y * width + point.x];
+      });
 
-      while (start < segments[i].size()) {
-        int r = segments[i][start].y;
-        int c = segments[i][start].x;
-
-        if (edgeImg[r * width + c])
-          break;
-        start++;
+      if (std::distance(front, back) >= MIN_SEGMENT_LEN) {
+        valids.emplace_back(front, std::prev(back));
       }
-
-      int end = start + 1;
-      while (end < segments[i].size()) {
-        int r = segments[i][end].y;
-        int c = segments[i][end].x;
-
-        if (edgeImg[r * width + c] == 0)
-          break;
-        end++;
-      }
-
-      int len = end - start;
-      if (len >= 10) {
-        // A new segment. Accepted only only long enough (whatever that means)
-        validSegments.emplace_back(&segments[i][start], &segments[i][end - 1]);
-      }
-
-      start = end + 1;
+      front = std::next(back);
     }
   }
 
-  // Update
-  segments = validSegments;
+  return valids;
 }
 
 //---------------------------------------------------------
