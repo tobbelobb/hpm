@@ -826,7 +826,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
         for (int k = count - 1; k >= 0; k--) {
           int chainNo = chainNos[k];
 
-#if 1
           /* See if we can erase some pixels from the last chain. This is for
            * cleanup */
 
@@ -857,7 +856,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
             if (dr <= 1 && dc <= 1)
               chains[chainNo].len--;
           }
-#endif
 
           for (int l = chains[chainNo].len - 1; l >= 0; l--) {
             segments.back().push_back(chains[chainNo].pixels[l]);
@@ -883,7 +881,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
         for (int k = 0; k < count; k++) {
           int chainNo = chainNos[k];
 
-#if 1
           /* See if we can erase some pixels from the last chain. This is for
            * cleanup */
           int fr = chains[chainNo].pixels[0].y;
@@ -916,7 +913,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
               startIndex = 1;
             }
           }
-#endif
 
           /* Start a new chain & copy pixels from the new chain */
           for (int l = startIndex; l < chains[chainNo].len; l++) {
@@ -960,7 +956,6 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
           for (int k = 0; k < count; k++) {
             int chainNo = chainNos[k];
 
-#if 1
             /* See if we can erase some pixels from the last chain. This is for
              * cleanup */
             int fr = chains[chainNo].pixels[0].y;
@@ -993,7 +988,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
                 startIndex = 1;
               }
             }
-#endif
+
             /* Start a new chain & copy pixels from the new chain */
             for (int l = startIndex; l < chains[chainNo].len; l++) {
               segments.back().push_back(chains[chainNo].pixels[l]);

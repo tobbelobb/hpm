@@ -33,7 +33,6 @@ void EDPF::validateEdgeSegments() {
   gradImg = ComputePrewitt3x3();
 
   // Compute np: # of segment pieces
-#if 1
   // Does this underestimate the number of pieces of edge segments?
   // What's the correct value?
   np = 0;
@@ -42,14 +41,6 @@ void EDPF::validateEdgeSegments() {
   }
 
   //  np *= 32;
-#elif 0
-  // This definitely overestimates the number of pieces of edge segments
-  int np = 0;
-  for (int i = 0; i < segmentNos; i++) {
-    np += segments[i].size();
-  }
-  np = (np * (np - 1)) / 2;
-#endif
 
   // Validate segments
   for (int i = 0; i < segments.size(); i++) {

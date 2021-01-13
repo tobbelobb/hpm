@@ -119,7 +119,6 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
       else
         l2 = &lines[j + 1];
 
-#if 1
       // If the end points of the lines are far from each other, then stop at
       // this line
       double dx = l1->ex - l2->sx;
@@ -131,7 +130,6 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
         info[j].taken = false;
         continue;
       }
-#endif
 
       // Compute the angle between the lines & their turn direction
       double v1x = l1->ex - l1->sx;
@@ -350,7 +348,6 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
       else
         l2 = &lines[j + 1];
 
-#if 1
       // If the end points of the lines are far from each other, then stop at
       // this line
       double dx = l1->ex - l2->sx;
@@ -362,7 +359,6 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
         info[j].taken = false;
         continue;
       }
-#endif
 
       // Compute the angle between the lines & their turn direction
       double v1x = l1->ex - l1->sx;
@@ -581,7 +577,6 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
       else
         l2 = &lines[j + 1];
 
-#if 1
       // If the end points of the lines are far from each other, then stop at
       // this line
       double dx = l1->ex - l2->sx;
@@ -593,7 +588,6 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
         info[j].taken = false;
         continue;
       }
-#endif
 
       // Compute the angle between the lines & their turn direction
       double v1x = l1->ex - l1->sx;
@@ -876,12 +870,6 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
         bool specialCase = false;
         int wrapCase = -1; // 1: wrap the first two lines with the last line, 2:
                            // wrap the last two lines with the first line
-#if 0
-									// If we do not have 3 lines, then continue
-				if (lastLine - firstLine <= 1) { firstLine = lastLine; continue; }
-#else
-                           //        if (lastLine-firstLine ==
-                           //        0){firstLine=lastLine; continue;}
         if (lastLine - firstLine == 1) {
           // Just 2 lines. If long enough, then try to combine. Angle between 15
           // & 45 degrees. Min. length = 40
@@ -929,7 +917,6 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             continue;
           }
         }
-#endif
 
         // Copy the pixels of this segment to an array
         int noPixels = 0;
@@ -1271,10 +1258,7 @@ void EDCircles::ValidateCircles() {
         tcount++;
       }
 
-#if 1
-      //
       // See if there is an edge pixel within 1 pixel vicinity
-      //
       if (edgeImg[r * width + c] != 255) {
         //   y-cy=-x-cx    y-cy=x-cx
         //         \       /
@@ -1306,14 +1290,12 @@ void EDCircles::ValidateCircles() {
             if (c < width - 1 && edgeImg[r * width + c] == 255)
               goto out;
 
-#if 1
             c = x - 2;
             if (c >= 2 && edgeImg[r * width + c] == 255)
               goto out;
             c = x + 2;
             if (c < width - 2 && edgeImg[r * width + c] == 255)
               goto out;
-#endif
           } else {
             // IV. quadrant
             r = y - 1;
@@ -1322,15 +1304,12 @@ void EDCircles::ValidateCircles() {
             r = y + 1;
             if (r < height - 1 && edgeImg[r * width + c] == 255)
               goto out;
-
-#if 1
             r = y - 2;
             if (r >= 2 && edgeImg[r * width + c] == 255)
               goto out;
             r = y + 2;
             if (r < height - 2 && edgeImg[r * width + c] == 255)
               goto out;
-#endif
           }
 
         } else {
@@ -1342,15 +1321,12 @@ void EDCircles::ValidateCircles() {
             r = y + 1;
             if (r < height - 1 && edgeImg[r * width + c] == 255)
               goto out;
-
-#if 1
             r = y - 2;
             if (r >= 2 && edgeImg[r * width + c] == 255)
               goto out;
             r = y + 2;
             if (r < height - 2 && edgeImg[r * width + c] == 255)
               goto out;
-#endif
           } else {
             // III. quadrant
             c = x - 1;
@@ -1359,15 +1335,12 @@ void EDCircles::ValidateCircles() {
             c = x + 1;
             if (c < width - 1 && edgeImg[r * width + c] == 255)
               goto out;
-
-#if 1
             c = x - 2;
             if (c >= 2 && edgeImg[r * width + c] == 255)
               goto out;
             c = x + 2;
             if (c < width - 2 && edgeImg[r * width + c] == 255)
               goto out;
-#endif
           }
         }
 
@@ -1380,8 +1353,6 @@ void EDCircles::ValidateCircles() {
     out:
       if (edgeImg[r * width + c] == 255)
         noEdgePixels++;
-        //      map->edgeImg[r*width+c] = 254;
-#endif
 
       // compute gx & gy
       int com1 = smoothImg[(r + 1) * width + c + 1] -
@@ -3491,15 +3462,6 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
         solind = i;
   }
 
-#if 0
-	fprintf(stderr, "SOLUTIONS: Selected: %d\n", solind);
-	for (i = 1; i <= 6; i++) {
-		fprintf(stderr, "d[i]: %e, a: %.7lf, b: %.7lf, c: %.7lf, d: %.7lf, e: %.7lf, f: %.7lf\n",
-			d[i], sol[1][i], sol[2][i], sol[3][i], sol[4][i], sol[5][i], sol[6][i]);
-	} //end-for
-
-#endif
-
   bool valid = true;
   if (solind == 0)
     valid = false;
@@ -3639,7 +3601,7 @@ int EDCircles::inverse(double **TB, double **InvB, int N) {
             A[i][j] = A[i][j] - mult * A[k][j];
         }
       }
-    } else { // printf("\n The matrix may be singular !!") ;
+    } else { // The matrix may be singular
 
       DeallocateMatrix(B, N + 1);
       DeallocateMatrix(A, N + 1);
@@ -3648,7 +3610,6 @@ int EDCircles::inverse(double **TB, double **InvB, int N) {
       return (-1);
     }
   }
-  /**   Copia il risultato nella matrice InvB  ***/
   for (k = 1, p = 1; k <= N; k++, p++)
     for (j = N + 2, q = 1; j <= 2 * N + 1; j++, q++)
       InvB[p][q] = A[k][j];

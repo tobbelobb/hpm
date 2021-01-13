@@ -42,10 +42,9 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
   JoinCollinearLines();
 
   /*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5
+  double constexpr PRECISON_ANGLE{22.5};
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
-#undef PRECISON_ANGLE
 
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
@@ -109,10 +108,9 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   JoinCollinearLines();
 
   /*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5
+  double constexpr PRECISON_ANGLE{22.5};
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
-#undef PRECISON_ANGLE
 
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
@@ -176,10 +174,9 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   JoinCollinearLines();
 
   /*----------- VALIDATE LINES ----------------*/
-#define PRECISON_ANGLE 22.5
+  double constexpr PRECISON_ANGLE{22.5};
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
-#undef PRECISON_ANGLE
 
   double logNT = 2.0 * (log10((double)width) + log10((double)height));
 
@@ -271,17 +268,12 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
         break;
       }
 
-#if 1
-      noPixels -= 1; // Go slowly
-      x += 1;
-      y += 1;
-      firstPixelIndex += 1;
-#else
-      noPixels -= 2; // Go faster (for speed)
-      x += 2;
-      y += 2;
-      firstPixelIndex += 2;
-#endif
+      // Coose increment 1 for accuracy, or 2 for speed
+      int constexpr increment{1};
+      noPixels -= increment;
+      x += increment;
+      y += increment;
+      firstPixelIndex += increment;
     }
 
     if (valid == false)
@@ -811,27 +803,6 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
     longer = ls1;
   }
 
-#if 0
-	// Use 5 points to check for collinearity
-#define POINT_COUNT 5
-	double decr = 1.0 / (POINT_COUNT - 1);
-	double alpha = 1.0;
-	dist = 0.0;
-
-	while (alpha >= 0.0) {
-		double px = alpha*shorter->sx + (1.0 - alpha)*shorter->ex;
-		double py = alpha*shorter->sy + (1.0 - alpha)*shorter->ey;
-
-		dist += ComputeMinDistance(px, py, longer->a, longer->b, longer->invert);
-
-		alpha -= decr;
-	} //end-while
-
-	dist /= POINT_COUNT;
-
-#undef POINT_COUNT
-
-#else
   // Just use 3 points to check for collinearity
   dist = ComputeMinDistance(shorter->sx, shorter->sy, longer->a, longer->b,
                             longer->invert);
@@ -842,34 +813,10 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
                              longer->invert);
 
   dist /= 3.0;
-#endif
 
   if (dist > max_error)
     return false;
 
-#if 0
-	// Update the end points of ls1
-	if (which == 0) {       // SS
-		ls1->sx = ls2->ex;
-		ls1->sy = ls2->ey;
-
-	}
-	else if (which == 1) { // SE
-		ls1->sx = ls2->sx;
-		ls1->sy = ls2->sy;
-
-	}
-	else if (which == 2) { // ES
-		ls1->ex = ls2->ex;
-		ls1->ey = ls2->ey;
-
-	}
-	else {                // EE
-		ls1->ex = ls2->sx;
-		ls1->ey = ls2->sy;
-	} //end-else
-
-#else
   /// 4 cases: 1:(s1, s2), 2:(s1, e2), 3:(e1, s2), 4:(e1, e2)
 
   /// case 1: (s1, s2)
@@ -929,8 +876,6 @@ bool EDLines::TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
     ls1->ex = ls2->ex;
     ls1->ey = ls2->ey;
   }
-
-#endif
 
   // Update the first line's parameters
   if (ls1->firstPixelIndex + ls1->len + 5 >= ls2->firstPixelIndex)
@@ -1223,17 +1168,12 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
         break;
       }
 
-#if 1
-      noPixels -= 1; // Go slowly
-      x += 1;
-      y += 1;
-      firstPixelIndex += 1;
-#else
-      noPixels -= 2; // Go faster (for speed)
-      x += 2;
-      y += 2;
-      firstPixelIndex += 2;
-#endif
+      // Coose increment 1 for accuracy, or 2 for speed
+      int constexpr increment{1};
+      noPixels -= increment;
+      x += increment;
+      y += increment;
+      firstPixelIndex += increment;
     }
 
     if (valid == false)
