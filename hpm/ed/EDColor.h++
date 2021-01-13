@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 #include <opencv2/opencv.hpp>
 
 #include <hpm/ed/EDTypes.h++>
@@ -37,15 +39,17 @@ private:
   std::vector<std::vector<cv::Point>> segments;
 
   std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
-  std::array<cv::Mat, 3> smoothChannels(std::array<cv::Mat, 3> src,
-                                        double sigma);
+  std::array<cv::Mat, 3> blur(std::array<cv::Mat, 3> src, double blurSize);
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
 
-  void filterEdgeImage(std::array<cv::Mat, 3> Lab);
-  void testSegment(int i, int index1, int index2, cv::Mat_<gradPix> gradImage,
-                   std::vector<double> const &probabilityFunctionH,
-                   int numberOfSegmentPieces);
+  void filterEdgeImage(std::array<cv::Mat, 3> const &Lab);
+
+  template <typename Iterator>
+  void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
+                           cv::Mat_<gradPix> gradImage,
+                           std::vector<double> const &probabilityFunctionH,
+                           int numberOfSegmentPieces);
   void extractNewSegments();
 
   static void fixEdgeSegments(std::vector<std::vector<cv::Point>> map,

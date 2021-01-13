@@ -19,7 +19,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto LabImgs = MyRGB2LabFast(srcImage);
 
   auto const [gradImage, dirData] =
-      ComputeGradientMapByDiZenzo(smoothChannels(LabImgs, blurSize));
+      ComputeGradientMapByDiZenzo(blur(LabImgs, blurSize));
 
   if (config.filterSegments) {
     // Get Edge Image using ED
@@ -29,10 +29,9 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
     blurSize /= 2.5;
 
-    filterEdgeImage(smoothChannels(LabImgs, blurSize));
-
-    // Extract the new edge segments after validation
+    filterEdgeImage(blur(LabImgs, blurSize));
     extractNewSegments();
+
   } else {
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
@@ -236,8 +235,8 @@ EDColor::ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab) {
   return {gradImage, dirData};
 }
 
-std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
-                                               double const blurSize) {
+std::array<cv::Mat, 3> EDColor::blur(std::array<cv::Mat, 3> src,
+                                     double const blurSize) {
   Mat smoothL = Mat(height, width, CV_8UC1);
   Mat smoothA = Mat(height, width, CV_8UC1);
   Mat smoothB = Mat(height, width, CV_8UC1);
@@ -265,7 +264,7 @@ std::array<cv::Mat, 3> EDColor::smoothChannels(std::array<cv::Mat, 3> src,
 // Validate the edge segments using the Helmholtz principle (for color images)
 // channel1, channel2 and channel3 images
 // (and remove the invalid ones?)
-void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
+void EDColor::filterEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -347,8 +346,8 @@ void EDColor::filterEdgeImage(std::array<cv::Mat, 3> smoothLab) {
   }
 
   // Validate segments
-  for (int i = 0; i < segments.size(); i++) {
-    testSegment(i, 0, segments[i].size() - 1, gradImage, probabilityFunctionH,
+  for (auto const &segment : segments) {
+    testSegment(segment.begin(), segment.end(), gradImage, probabilityFunctionH,
                 numberOfSegmentPieces);
   }
 }
@@ -365,79 +364,43 @@ static double NFA(double prob, int len, int const numberOfSegmentPieces) {
 // Resursive validation using half of the pixels as suggested by DMM algorithm
 // We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
 //
-void EDColor::testSegment(int i, int index1, int index2,
-                          cv::Mat_<gradPix> gradImage,
-                          std::vector<double> const &probabilityFunctionH,
-                          int const numberOfSegmentPieces) {
+template <typename Iterator>
+void EDColor::drawFilteredSegment(
+    Iterator firstPoint, Iterator lastPoint, cv::Mat_<gradPix> gradImage,
+    std::vector<double> const &probabilityFunctionH,
+    int const numberOfSegmentPieces) {
 
-  int const chainLen = index2 - index1 + 1;
-
+  int const chainLen = std::distance(firstPoint, lastPoint);
   static size_t constexpr MIN_PATH_LEN{10};
   if (chainLen < MIN_PATH_LEN) {
     return;
   }
 
-  gradPix *gradImg = gradImage.ptr<gradPix>(0);
-
-  // Test from index1 to index2. If OK, then we are done. Otherwise, split into
-  // two and recursively test the left & right halves
-
   // First find the min. gradient along the segment
-  int minGrad = 1 << 30;
-  int minGradIndex;
-  for (int k = index1; k <= index2; k++) {
-    int r = segments[i][k].y;
-    int c = segments[i][k].x;
-    if (gradImg[r * width + c] < minGrad) {
-      minGrad = gradImg[r * width + c];
-      minGradIndex = k;
-    }
-  }
+  gradPix const *gradImg = gradImage.ptr<gradPix>(0);
+  auto minGradPoint = std::min_element(
+      firstPoint, lastPoint, [&](Point const &p0, Point const &p1) {
+        return gradImg[p0.y * width + p0.x] < gradImg[p1.y * width + p1.x];
+      });
+  int minGrad = gradImg[(*minGradPoint).y * width + (*minGradPoint).x];
 
   double nfa = NFA(probabilityFunctionH[minGrad], (int)(chainLen / 2.25),
                    numberOfSegmentPieces);
 
-  // Here the edgeImage is rebuilt
+  // Draw subsegment on edgeImage
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
   if (nfa <= EPSILON) {
-    for (int k = index1; k <= index2; k++) {
-      int r = segments[i][k].y;
-      int c = segments[i][k].x;
-
-      edgeImg[r * width + c] = 255;
-    }
+    std::for_each(firstPoint, lastPoint, [&](auto const &point) {
+      edgeImg[point.y * width + point.x] = 255;
+    });
 
     return;
   }
 
-  // Split into two halves. We divide at the point where the gradient is the
-  // minimum
-  int end = minGradIndex - 1;
-  while (end > index1) {
-    int r = segments[i][end].y;
-    int c = segments[i][end].x;
-
-    if (gradImg[r * width + c] <= minGrad)
-      end--;
-    else
-      break;
-  }
-
-  int start = minGradIndex + 1;
-  while (start < index2) {
-    int r = segments[i][start].y;
-    int c = segments[i][start].x;
-
-    if (gradImg[r * width + c] <= minGrad)
-      start++;
-    else
-      break;
-  }
-
-  testSegment(i, index1, end, gradImage, probabilityFunctionH,
-              numberOfSegmentPieces);
-  testSegment(i, start, index2, gradImage, probabilityFunctionH,
-              numberOfSegmentPieces);
+  drawFilteredSegment(firstPoint, minGradPoint, gradImage, probabilityFunctionH,
+                      numberOfSegmentPieces);
+  drawFilteredSegment(std::next(minGradPoint), lastPoint, gradImage,
+                      probabilityFunctionH, numberOfSegmentPieces);
 }
 
 //----------------------------------------------------------------------------------------------
