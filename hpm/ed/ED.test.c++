@@ -20,7 +20,7 @@ auto main() -> int {
                          .anchorThresh = 4,
                          .sigma = 1.5,
                          .validateSegments = true}};
-    expect(testEDColor.getSegmentNo() == 212_i);
+    expect(testEDColor.getNumberOfSegments() == 212_i);
 
     EDLines colorLine = EDLines(testEDColor);
     expect(colorLine.getLinesNo() == 585_i);
@@ -39,7 +39,7 @@ auto main() -> int {
                          .anchorThresh = 4,
                          .sigma = 1.5,
                          .validateSegments = false}};
-    expect(testEDColor.getSegmentNo() == 230_i);
+    expect(testEDColor.getNumberOfSegments() == 230_i);
 
     EDLines colorLine = EDLines(testEDColor);
     expect(colorLine.getLinesNo() == 571_i);

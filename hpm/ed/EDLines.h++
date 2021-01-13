@@ -58,7 +58,6 @@ public:
   EDLines(EDColor obj, double _line_error = 1.0, int _min_line_len = -1,
           double _max_distance_between_two_lines = 6.0,
           double _max_error = 1.3);
-  EDLines();
 
   std::vector<LS> getLines();
   int getLinesNo();

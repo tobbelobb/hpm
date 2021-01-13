@@ -23,7 +23,7 @@ public:
   cv::Mat getEdgeImage();
 
   std::vector<std::vector<cv::Point>> getSegments() const;
-  int getSegmentNo() const;
+  int getNumberOfSegments() const;
   int getWidth() const;
   int getHeight() const;
 
@@ -32,8 +32,6 @@ private:
 
   int width;
   int height;
-
-  int segmentNo;
 
   std::vector<std::vector<cv::Point>> segments;
 

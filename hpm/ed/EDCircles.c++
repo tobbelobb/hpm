@@ -13,23 +13,23 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
   // ----------------------------------- DETECT LINES
   // ---------------------------------
   int bufferSize = 0;
-  for (int i = 0; i < segmentPoints.size(); i++)
-    bufferSize += segmentPoints[i].size();
+  for (int i = 0; i < segments.size(); i++)
+    bufferSize += segments[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines = new int[segments.size() + 1];
 
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
 
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
 
-    int noPixels = segmentPoints[i].size();
+    int noPixels = segments[i].size();
 
     if (noPixels < 2 * CIRCLE_MIN_LINE_LEN)
       continue;
@@ -38,8 +38,8 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
     double *y = bm->getY();
 
     for (int j = 0; j < noPixels; j++) {
-      x[j] = segmentPoints[i][j].x;
-      y[j] = segmentPoints[i][j].y;
+      x[j] = segments[i][j].x;
+      y[j] = segments[i][j].y;
     }
 
     // If the segment is reasonably long, then see if the segment traverses the
@@ -101,7 +101,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[segments.size()] = lines.size();
 
   // ------------------------------- DETECT ARCS
   // ---------------------------------
@@ -109,7 +109,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
   info = new Info[lines.size()];
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++) {
       LineSegment *l1 = &lines[j];
       LineSegment *l2;
@@ -244,23 +244,23 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
   // ----------------------------------- DETECT LINES
   // ---------------------------------
   int bufferSize = 0;
-  for (int i = 0; i < segmentPoints.size(); i++)
-    bufferSize += segmentPoints[i].size();
+  for (int i = 0; i < segments.size(); i++)
+    bufferSize += segments[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines = new int[segments.size() + 1];
 
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
 
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
 
-    int noPixels = segmentPoints[i].size();
+    int noPixels = segments[i].size();
 
     if (noPixels < 2 * CIRCLE_MIN_LINE_LEN)
       continue;
@@ -269,8 +269,8 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
     double *y = bm->getY();
 
     for (int j = 0; j < noPixels; j++) {
-      x[j] = segmentPoints[i][j].x;
-      y[j] = segmentPoints[i][j].y;
+      x[j] = segments[i][j].x;
+      y[j] = segments[i][j].y;
     }
 
     // If the segment is reasonably long, then see if the segment traverses the
@@ -332,7 +332,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[segments.size()] = lines.size();
 
   // ------------------------------- DETECT ARCS
   // ---------------------------------
@@ -340,7 +340,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
   info = new Info[lines.size()];
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++) {
       LineSegment *l1 = &lines[j];
       LineSegment *l2;
@@ -475,23 +475,23 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
   // ----------------------------------- DETECT LINES
   // ---------------------------------
   int bufferSize = 0;
-  for (int i = 0; i < segmentPoints.size(); i++)
-    bufferSize += segmentPoints[i].size();
+  for (int i = 0; i < segments.size(); i++)
+    bufferSize += segments[i].size();
 
   // Compute the starting line number for each segment
-  segmentStartLines = new int[segmentNos + 1];
+  segmentStartLines = new int[segments.size() + 1];
 
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
 
 #define CIRCLE_MIN_LINE_LEN 6
 
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
 
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
 
-    int noPixels = segmentPoints[i].size();
+    int noPixels = segments[i].size();
 
     if (noPixels < 2 * CIRCLE_MIN_LINE_LEN)
       continue;
@@ -500,8 +500,8 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
     double *y = bm->getY();
 
     for (int j = 0; j < noPixels; j++) {
-      x[j] = segmentPoints[i][j].x;
-      y[j] = segmentPoints[i][j].y;
+      x[j] = segments[i][j].x;
+      y[j] = segments[i][j].y;
     }
 
     // If the segment is reasonably long, then see if the segment traverses the
@@ -563,7 +563,7 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
     EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
   }
 
-  segmentStartLines[segmentNos] = lines.size();
+  segmentStartLines[segments.size()] = lines.size();
 
   // ------------------------------- DETECT ARCS
   // ---------------------------------
@@ -571,7 +571,7 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
   info = new Info[lines.size()];
 
   // Compute the angle information for each line segment
-  for (int i = 0; i < segmentNos; i++) {
+  for (int i = 0; i < segments.size(); i++) {
     for (int j = segmentStartLines[i]; j < segmentStartLines[i + 1]; j++) {
       LineSegment *l1 = &lines[j];
       LineSegment *l2;
@@ -825,7 +825,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
           PI / 1.9; // 95 degrees
                     //    if (iter == 2) MAX_ANGLE = PI/2.25;  // 80 degrees
 
-    for (int curSegmentNo = 0; curSegmentNo < segmentNos; curSegmentNo++) {
+    for (int curSegmentNo = 0; curSegmentNo < segments.size(); curSegmentNo++) {
       int firstLine = segmentStartLines[curSegmentNo];
       int stopLine = segmentStartLines[curSegmentNo + 1];
 
@@ -942,8 +942,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
           int index = lines[stopLine - 1].firstPixelIndex;
 
           for (int n = 0; n < lines[stopLine - 1].len; n++) {
-            x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
-            y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
+            x[noPixels] = segments[curSegmentNo][index + n].x;
+            y[noPixels] = segments[curSegmentNo][index + n].y;
             noPixels++;
           }
         }
@@ -952,8 +952,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
           int index = lines[m].firstPixelIndex;
 
           for (int n = 0; n < lines[m].len; n++) {
-            x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
-            y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
+            x[noPixels] = segments[curSegmentNo][index + n].x;
+            y[noPixels] = segments[curSegmentNo][index + n].y;
             noPixels++;
           }
         }
@@ -964,8 +964,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
           int index = lines[segmentStartLines[curSegmentNo]].firstPixelIndex;
 
           for (int n = 0; n < lines[segmentStartLines[curSegmentNo]].len; n++) {
-            x[noPixels] = segmentPoints[curSegmentNo][index + n].x;
-            y[noPixels] = segmentPoints[curSegmentNo][index + n].y;
+            x[noPixels] = segments[curSegmentNo][index + n].x;
+            y[noPixels] = segments[curSegmentNo][index + n].y;
             noPixels++;
           }
         }

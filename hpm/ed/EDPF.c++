@@ -37,9 +37,8 @@ void EDPF::validateEdgeSegments() {
   // Does this underestimate the number of pieces of edge segments?
   // What's the correct value?
   np = 0;
-  for (int i = 0; i < segmentNos; i++) {
-    int len = segmentPoints[i].size();
-    np += (len * (len - 1)) / 2;
+  for (auto const &segment : segments) {
+    np += (segment.size() * (segment.size() - 1)) / 2;
   }
 
   //  np *= 32;
@@ -47,14 +46,14 @@ void EDPF::validateEdgeSegments() {
   // This definitely overestimates the number of pieces of edge segments
   int np = 0;
   for (int i = 0; i < segmentNos; i++) {
-    np += segmentPoints[i].size();
+    np += segments[i].size();
   }
   np = (np * (np - 1)) / 2;
 #endif
 
   // Validate segments
-  for (int i = 0; i < segmentNos; i++) {
-    TestSegment(i, 0, segmentPoints[i].size() - 1);
+  for (int i = 0; i < segments.size(); i++) {
+    TestSegment(i, 0, segments[i].size() - 1);
   }
 
   ExtractNewSegments();
@@ -135,8 +134,8 @@ void EDPF::TestSegment(int i, int index1, int index2) {
   int minGrad = 1 << 30;
   int minGradIndex = index1;
   for (int k = index1; k <= index2; k++) {
-    int r = segmentPoints[i][k].y;
-    int c = segmentPoints[i][k].x;
+    int r = segments[i][k].y;
+    int c = segments[i][k].x;
     if (gradImg[r * width + c] < minGrad) {
       minGrad = gradImg[r * width + c];
       minGradIndex = k;
@@ -148,8 +147,8 @@ void EDPF::TestSegment(int i, int index1, int index2) {
 
   if (nfa <= EPSILON) {
     for (int k = index1; k <= index2; k++) {
-      int r = segmentPoints[i][k].y;
-      int c = segmentPoints[i][k].x;
+      int r = segments[i][k].y;
+      int c = segments[i][k].x;
 
       edgeImg[r * width + c] = 255;
     }
@@ -161,8 +160,8 @@ void EDPF::TestSegment(int i, int index1, int index2) {
   // minimum
   int end = std::max(minGradIndex - 1, 0);
   while (end > index1) {
-    int r = segmentPoints[i][end].y;
-    int c = segmentPoints[i][end].x;
+    int r = segments[i][end].y;
+    int c = segments[i][end].x;
 
     if (gradImg[r * width + c] <= minGrad)
       end--;
@@ -172,8 +171,8 @@ void EDPF::TestSegment(int i, int index1, int index2) {
 
   int start = minGradIndex + 1;
   while (start < index2) {
-    int r = segmentPoints[i][start].y;
-    int c = segmentPoints[i][start].x;
+    int r = segments[i][start].y;
+    int c = segments[i][start].x;
 
     if (gradImg[r * width + c] <= minGrad)
       start++;
@@ -190,17 +189,16 @@ void EDPF::TestSegment(int i, int index1, int index2) {
 // In other words, updates the valid segments' pixel arrays and their lengths
 //
 void EDPF::ExtractNewSegments() {
-  // vector<Point> *segments = &segmentPoints[segmentNos];
+  // vector<Point> *segments = &segments[segmentNos];
   vector<vector<Point>> validSegments;
-  int noSegments = 0;
 
-  for (int i = 0; i < segmentNos; i++) {
+  for (auto const &segment : segments) {
     int start = 0;
-    while (start < segmentPoints[i].size()) {
+    while (start < segment.size()) {
 
-      while (start < segmentPoints[i].size()) {
-        int r = segmentPoints[i][start].y;
-        int c = segmentPoints[i][start].x;
+      while (start < segment.size()) {
+        int r = segment[start].y;
+        int c = segment[start].x;
 
         if (edgeImg[r * width + c])
           break;
@@ -208,9 +206,9 @@ void EDPF::ExtractNewSegments() {
       }
 
       int end = start + 1;
-      while (end < segmentPoints[i].size()) {
-        int r = segmentPoints[i][end].y;
-        int c = segmentPoints[i][end].x;
+      while (end < segment.size()) {
+        int r = segment[end].y;
+        int c = segment[end].x;
 
         if (edgeImg[r * width + c] == 0)
           break;
@@ -222,11 +220,7 @@ void EDPF::ExtractNewSegments() {
         // A new segment. Accepted only only long enough (whatever that means)
         // segments[noSegments].pixels = &map->segments[i].pixels[start];
         // segments[noSegments].noPixels = len;
-        validSegments.push_back(vector<Point>());
-        vector<Point> subVec(&segmentPoints[i][start],
-                             &segmentPoints[i][end - 1]);
-        validSegments[noSegments] = subVec;
-        noSegments++;
+        validSegments.emplace_back(&segment[start], &segment[end - 1]);
       }
 
       start = end + 1;
@@ -234,9 +228,7 @@ void EDPF::ExtractNewSegments() {
   }
 
   // Copy to ed
-  segmentPoints = validSegments;
-
-  segmentNos = noSegments;
+  segments = validSegments;
 }
 
 //---------------------------------------------------------------------------

@@ -27,10 +27,10 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
   linesNo = 0;
 
   // Use the whole segment
-  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+  for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
     int k = 0;
-    std::vector<Point> segment = segmentPoints[segmentNumber];
+    std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
       y[k] = segment[k].y;
@@ -94,10 +94,10 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   linesNo = 0;
 
   // Use the whole segment
-  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+  for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
     int k = 0;
-    std::vector<Point> segment = segmentPoints[segmentNumber];
+    std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
       y[k] = segment[k].y;
@@ -161,10 +161,10 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   linesNo = 0;
 
   // Use the whole segment
-  for (int segmentNumber = 0; segmentNumber < segmentPoints.size();
+  for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
     int k = 0;
-    std::vector<Point> segment = segmentPoints[segmentNumber];
+    std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
       y[k] = segment[k].y;
@@ -207,10 +207,6 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   delete[] x;
   delete[] y;
   delete nfa;
-}
-
-EDLines::EDLines() {
-  //
 }
 
 vector<LS> EDLines::getLines() { return linePoints; }
@@ -432,7 +428,7 @@ void EDLines::ValidateLineSegments() {
     if (lineAngle < 0)
       lineAngle += M_PI;
 
-    Point *pixels = &(segmentPoints[ls->segmentNo][0]);
+    Point *pixels = &(segments[ls->segmentNo][0]);
     int noPixels = ls->len;
 
     bool valid = false;

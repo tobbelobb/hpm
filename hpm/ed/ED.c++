@@ -29,8 +29,8 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
   sigma = _sigma;
   sumFlag = _sumFlag;
 
-  segmentNos = 0;
-  segmentPoints.push_back(
+  segments.clear();
+  segments.push_back(
       vector<Point>()); // create empty vector of points for segments
 
   edgeImage = Mat(height, width, CV_8UC1, Scalar(0)); // initialize edge Image
@@ -92,8 +92,7 @@ ED::ED(const ED &cpyObj) {
   smoothImg = smoothImage.data;
   edgeImg = edgeImage.data;
 
-  segmentPoints = cpyObj.segmentPoints;
-  segmentNos = cpyObj.segmentNos;
+  segments = cpyObj.segments;
 }
 
 // This constructor for use of EDColor with use of direction and gradient image
@@ -199,8 +198,8 @@ ED::ED(cv::Mat _gradImage, std::vector<EdgeDir> _dirData, int _gradThresh,
                            // validation applied. (No stable anchors.)
   }
 
-  segmentNos = 0;
-  segmentPoints.push_back(
+  segments.clear();
+  segments.push_back(
       vector<Point>()); // create empty vector of points for segments
 
   JoinAnchorPointsUsingSortedAnchors();
@@ -209,12 +208,7 @@ ED::ED(cv::Mat _gradImage, std::vector<EdgeDir> _dirData, int _gradThresh,
 ED::ED(EDColor &obj) {
   width = obj.getWidth();
   height = obj.getHeight();
-  segmentPoints = obj.getSegments();
-  segmentNos = obj.getSegmentNo();
-}
-
-ED::ED() {
-  //
+  segments = obj.getSegments();
 }
 
 Mat ED::getEdgeImage() { return edgeImage; }
@@ -239,22 +233,22 @@ Mat ED::getGradImage() {
   return result8UC1;
 }
 
-int ED::getSegmentNo() { return segmentNos; }
+int ED::getSegmentNo() { return segments.size(); }
 
 int ED::getAnchorNo() { return anchorNos; }
 
 std::vector<Point> ED::getAnchorPoints() { return anchorPoints; }
 
-std::vector<std::vector<Point>> ED::getSegments() { return segmentPoints; }
+std::vector<std::vector<Point>> ED::getSegments() { return segments; }
 
 std::vector<std::vector<Point>> ED::getSortedSegments() {
   // sort segments from largest to smallest
-  std::sort(segmentPoints.begin(), segmentPoints.end(),
+  std::sort(segments.begin(), segments.end(),
             [](const std::vector<Point> &a, const std::vector<Point> &b) {
               return a.size() > b.size();
             });
 
-  return segmentPoints;
+  return segments;
 }
 
 Mat ED::drawParticularSegments(std::vector<int> list) {
@@ -264,8 +258,7 @@ Mat ED::drawParticularSegments(std::vector<int> list) {
   std::vector<int>::iterator itInt;
 
   for (itInt = list.begin(); itInt != list.end(); itInt++)
-    for (it = segmentPoints[*itInt].begin(); it != segmentPoints[*itInt].end();
-         it++)
+    for (it = segments[*itInt].begin(); it != segments[*itInt].end(); it++)
       segmentsImage.at<uchar>(*it) = 255;
 
   return segmentsImage;
@@ -285,8 +278,8 @@ void ED::ComputeGradient() {
     gradImgRowI[0] = gradImgRowI[width - 1] = gradThresh - 1;
   }
 
-  for (int i = 1; i < height - 2; i++) {
-    for (int j = 1; j < width - 2; j++) {
+  for (int i = 1; i < height - 1; i++) {
+    for (int j = 1; j < width - 1; j++) {
       // Prewitt Operator in horizontal and vertical direction
       // A B C
       // D x E
@@ -842,12 +835,12 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
           int index = noSegmentPixels - 2;
           while (index >= 0) {
-            int dr = abs(fr - segmentPoints[segmentNos][index].y);
-            int dc = abs(fc - segmentPoints[segmentNos][index].x);
+            int dr = abs(fr - segments.back()[index].y);
+            int dc = abs(fc - segments.back()[index].x);
 
             if (dr <= 1 && dc <= 1) {
               // neighbors. Erase last pixel
-              segmentPoints[segmentNos].pop_back();
+              segments.back().pop_back();
               noSegmentPixels--;
               index--;
             } else
@@ -858,8 +851,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
             fr = chains[chainNo].pixels[chains[chainNo].len - 2].y;
             fc = chains[chainNo].pixels[chains[chainNo].len - 2].x;
 
-            int dr = abs(fr - segmentPoints[segmentNos][noSegmentPixels - 1].y);
-            int dc = abs(fc - segmentPoints[segmentNos][noSegmentPixels - 1].x);
+            int dr = abs(fr - segments.back()[noSegmentPixels - 1].y);
+            int dc = abs(fc - segments.back()[noSegmentPixels - 1].x);
 
             if (dr <= 1 && dc <= 1)
               chains[chainNo].len--;
@@ -867,7 +860,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 #endif
 
           for (int l = chains[chainNo].len - 1; l >= 0; l--) {
-            segmentPoints[segmentNos].push_back(chains[chainNo].pixels[l]);
+            segments.back().push_back(chains[chainNo].pixels[l]);
             noSegmentPixels++;
           }
 
@@ -898,12 +891,12 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
           int index = noSegmentPixels - 2;
           while (index >= 0) {
-            int dr = abs(fr - segmentPoints[segmentNos][index].y);
-            int dc = abs(fc - segmentPoints[segmentNos][index].x);
+            int dr = abs(fr - segments.back()[index].y);
+            int dc = abs(fc - segments.back()[index].x);
 
             if (dr <= 1 && dc <= 1) {
               // neighbors. Erase last pixel
-              segmentPoints[segmentNos].pop_back();
+              segments.back().pop_back();
               noSegmentPixels--;
               index--;
             } else
@@ -916,8 +909,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
             int fr = chains[chainNo].pixels[1].y;
             int fc = chains[chainNo].pixels[1].x;
 
-            int dr = abs(fr - segmentPoints[segmentNos][noSegmentPixels - 1].y);
-            int dc = abs(fc - segmentPoints[segmentNos][noSegmentPixels - 1].x);
+            int dr = abs(fr - segments.back()[noSegmentPixels - 1].y);
+            int dc = abs(fc - segments.back()[noSegmentPixels - 1].x);
 
             if (dr <= 1 && dc <= 1) {
               startIndex = 1;
@@ -927,7 +920,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
           /* Start a new chain & copy pixels from the new chain */
           for (int l = startIndex; l < chains[chainNo].len; l++) {
-            segmentPoints[segmentNos].push_back(chains[chainNo].pixels[l]);
+            segments.back().push_back(chains[chainNo].pixels[l]);
             noSegmentPixels++;
           }
 
@@ -936,19 +929,18 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
       }
 
       // See if the first pixel can be cleaned up
-      int fr = segmentPoints[segmentNos][1].y;
-      int fc = segmentPoints[segmentNos][1].x;
+      int fr = segments.back()[1].y;
+      int fc = segments.back()[1].x;
 
-      int dr = abs(fr - segmentPoints[segmentNos][noSegmentPixels - 1].y);
-      int dc = abs(fc - segmentPoints[segmentNos][noSegmentPixels - 1].x);
+      int dr = abs(fr - segments.back()[noSegmentPixels - 1].y);
+      int dc = abs(fc - segments.back()[noSegmentPixels - 1].x);
 
       if (dr <= 1 && dc <= 1) {
-        segmentPoints[segmentNos].erase(segmentPoints[segmentNos].begin());
+        segments.back().erase(segments.back().begin());
         noSegmentPixels--;
       }
 
-      segmentNos++;
-      segmentPoints.push_back(
+      segments.push_back(
           vector<Point>()); // create empty vector of points for segments
 
       // Copy the rest of the long chains here
@@ -976,12 +968,12 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
             int index = noSegmentPixels - 2;
             while (index >= 0) {
-              int dr = abs(fr - segmentPoints[segmentNos][index].y);
-              int dc = abs(fc - segmentPoints[segmentNos][index].x);
+              int dr = abs(fr - segments.back()[index].y);
+              int dc = abs(fc - segments.back()[index].x);
 
               if (dr <= 1 && dc <= 1) {
                 // neighbors. Erase last pixel
-                segmentPoints[segmentNos].pop_back();
+                segments.back().pop_back();
                 noSegmentPixels--;
                 index--;
               } else
@@ -994,10 +986,8 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
               int fr = chains[chainNo].pixels[1].y;
               int fc = chains[chainNo].pixels[1].x;
 
-              int dr =
-                  abs(fr - segmentPoints[segmentNos][noSegmentPixels - 1].y);
-              int dc =
-                  abs(fc - segmentPoints[segmentNos][noSegmentPixels - 1].x);
+              int dr = abs(fr - segments.back()[noSegmentPixels - 1].y);
+              int dc = abs(fc - segments.back()[noSegmentPixels - 1].x);
 
               if (dr <= 1 && dc <= 1) {
                 startIndex = 1;
@@ -1006,15 +996,14 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 #endif
             /* Start a new chain & copy pixels from the new chain */
             for (int l = startIndex; l < chains[chainNo].len; l++) {
-              segmentPoints[segmentNos].push_back(chains[chainNo].pixels[l]);
+              segments.back().push_back(chains[chainNo].pixels[l]);
               noSegmentPixels++;
             }
 
             chains[chainNo].len = 0; // Mark as copied
           }
-          segmentPoints.push_back(
+          segments.push_back(
               vector<Point>()); // create empty vector of points for segments
-          segmentNos++;
         }
       }
     }
@@ -1022,7 +1011,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
   // pop back last segment from vector
   // because of one preallocation in the beginning, it will always empty
-  segmentPoints.pop_back();
+  segments.pop_back();
 
   // Clean up
   delete[] A;

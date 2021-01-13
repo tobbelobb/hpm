@@ -37,7 +37,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
-    segmentNo = edgeObj.getSegmentNo();
   }
 
   // Fix 1 pixel errors in the edge map
@@ -50,7 +49,7 @@ std::vector<std::vector<cv::Point>> EDColor::getSegments() const {
   return segments;
 }
 
-int EDColor::getSegmentNo() const { return segmentNo; }
+int EDColor::getNumberOfSegments() const { return segments.size(); }
 
 int EDColor::getWidth() const { return width; }
 
@@ -435,7 +434,6 @@ void EDColor::testSegment(int i, int index1, int index2,
 //
 void EDColor::extractNewSegments() {
   vector<vector<Point>> validSegments;
-  int noSegments = 0;
 
   uchar *edgeImg = edgeImage.ptr<uchar>(0);
   for (int i = 0; i < segments.size(); i++) {
@@ -464,12 +462,7 @@ void EDColor::extractNewSegments() {
       int len = end - start;
       if (len >= 10) {
         // A new segment. Accepted only only long enough (whatever that means)
-        // segments[noSegments].pixels = &map->segments[i].pixels[start];
-        // segments[noSegments].noPixels = len;
-        validSegments.push_back(vector<Point>());
-        vector<Point> subVec(&segments[i][start], &segments[i][end - 1]);
-        validSegments[noSegments] = subVec;
-        noSegments++;
+        validSegments.emplace_back(&segments[i][start], &segments[i][end - 1]);
       }
 
       start = end + 1;
@@ -478,7 +471,6 @@ void EDColor::extractNewSegments() {
 
   // Update
   segments = validSegments;
-  segmentNo = noSegments; // = validSegments.size()
 }
 
 double EDColor::NFA(double prob, int len, int const numberOfSegmentPieces) {

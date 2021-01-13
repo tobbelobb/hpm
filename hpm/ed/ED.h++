@@ -47,7 +47,6 @@ public:
      int _anchorThresh, int _scanInterval = 1, int _minPathLen = 10,
      bool selectStableAnchors = true);
   ED(EDColor &cpyObj);
-  ED();
 
   cv::Mat getEdgeImage();
   cv::Mat getAnchorImage();
@@ -67,12 +66,11 @@ protected:
   int width;  // width of source image
   int height; // height of source image
   uchar *srcImg;
-  std::vector<std::vector<cv::Point>> segmentPoints;
+  std::vector<std::vector<cv::Point>> segments;
   double sigma; // Gaussian sigma
   cv::Mat smoothImage;
   uchar *edgeImg;   // pointer to edge image data
   uchar *smoothImg; // pointer to smoothed image data
-  int segmentNos;
   int minPathLen;
   cv::Mat srcImage;
 

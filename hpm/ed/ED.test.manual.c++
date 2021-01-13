@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
   }
   if (not silent) {
     cout << "Number of edge segments detected by EDColor: "
-         << testEDColor.getSegmentNo() << endl;
+         << testEDColor.getNumberOfSegments() << endl;
   }
 
   // get lines from color image
