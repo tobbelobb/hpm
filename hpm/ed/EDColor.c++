@@ -22,16 +22,11 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
       ComputeGradientMapByDiZenzo(blur(LabImgs, blurSize));
 
   if (config.filterSegments) {
-    // Get Edge Image using ED
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, 10, false);
     segments = edgeObj.getSegments();
-    edgeImage = edgeObj.getEdgeImage();
 
-    blurSize /= 2.5;
-
-    redrawEdgeImage(blur(LabImgs, blurSize));
+    edgeImage = makeEdgeImage(blur(LabImgs, blurSize / 2.5));
     segments = validSegments(edgeImage, segments);
-
   } else {
     ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh);
     segments = edgeObj.getSegments();
@@ -261,10 +256,10 @@ std::array<cv::Mat, 3> EDColor::blur(std::array<cv::Mat, 3> src,
 }
 
 //--------------------------------------------------------------------------------------------------------------------
-// Filter edge segments using the Helmholtz principle
+// Filter edges using the Helmholtz principle
 // Create a gradient image based on Lab encoded input image
 // Then redraw the edgeImage based on the new gradient image
-void EDColor::redrawEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
+cv::Mat EDColor::makeEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   cv::Mat smoothL = smoothLab[0];
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
@@ -272,8 +267,8 @@ void EDColor::redrawEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   int maxGradValue = MAX_GRAD_VALUE;
   std::vector<double> probabilityFunctionH(maxGradValue, 0.0);
 
-  edgeImage.setTo(0);
   cv::Mat_<GradPix> gradImage = Mat::zeros(height, width, CV_16SC1);
+  cv::Mat edgeImageOut = Mat::zeros(height, width, CV_8UC1);
 
   std::vector<int> grads(maxGradValue, 0);
 
@@ -347,9 +342,10 @@ void EDColor::redrawEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
 
   // Validate segments
   for (auto const &segment : segments) {
-    drawFilteredSegment(segment.begin(), segment.end(), gradImage,
+    drawFilteredSegment(segment.begin(), segment.end(), edgeImageOut, gradImage,
                         probabilityFunctionH, numberOfSegmentPieces);
   }
+  return edgeImageOut;
 }
 
 static double NFA(double prob, int len, int const numberOfSegmentPieces) {
@@ -366,7 +362,8 @@ static double NFA(double prob, int len, int const numberOfSegmentPieces) {
 //
 template <typename Iterator>
 void EDColor::drawFilteredSegment(
-    Iterator firstPoint, Iterator lastPoint, cv::Mat_<GradPix> gradImage,
+    Iterator firstPoint, Iterator lastPoint, cv::Mat edgeImageIn,
+    cv::Mat_<GradPix> gradImage,
     std::vector<double> const &probabilityFunctionH,
     int const numberOfSegmentPieces) {
 
@@ -387,7 +384,7 @@ void EDColor::drawFilteredSegment(
                    numberOfSegmentPieces);
 
   // Draw subsegment on edgeImage
-  uchar *edgeImg = edgeImage.ptr<uchar>(0);
+  uchar *edgeImg = edgeImageIn.ptr<uchar>(0);
   if (nfa <= EPSILON) {
     std::for_each(firstPoint, lastPoint, [&](auto const &point) {
       edgeImg[point.y * width + point.x] = 255;
@@ -396,17 +393,17 @@ void EDColor::drawFilteredSegment(
     return;
   }
 
-  drawFilteredSegment(firstPoint, minGradPoint, gradImage, probabilityFunctionH,
-                      numberOfSegmentPieces);
-  drawFilteredSegment(std::next(minGradPoint), lastPoint, gradImage,
+  drawFilteredSegment(firstPoint, minGradPoint, edgeImageIn, gradImage,
                       probabilityFunctionH, numberOfSegmentPieces);
+  drawFilteredSegment(std::next(minGradPoint), lastPoint, edgeImageIn,
+                      gradImage, probabilityFunctionH, numberOfSegmentPieces);
 }
 
-vector<Segment> EDColor::validSegments(cv::Mat_<uchar> edgeImage,
+vector<Segment> EDColor::validSegments(cv::Mat_<uchar> edgeImageIn,
                                        vector<Segment> segmentsIn) const {
   vector<Segment> valids;
 
-  uchar *edgeImg = edgeImage.ptr<uchar>(0);
+  uchar *edgeImg = edgeImageIn.ptr<uchar>(0);
   for (auto const &segment : segmentsIn) {
     auto const end = segment.end();
     auto front = segment.begin();

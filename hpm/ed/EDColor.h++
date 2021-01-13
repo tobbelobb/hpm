@@ -45,11 +45,11 @@ private:
   GradientMapResult
   ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
 
-  void redrawEdgeImage(std::array<cv::Mat, 3> const &Lab);
+  cv::Mat makeEdgeImage(std::array<cv::Mat, 3> const &Lab);
 
   template <typename Iterator>
   void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
-                           cv::Mat_<GradPix> gradImage,
+                           cv::Mat edgeImageIn, cv::Mat_<GradPix> gradImage,
                            std::vector<double> const &probabilityFunctionH,
                            int numberOfSegmentPieces);
   std::vector<std::vector<cv::Point>>
