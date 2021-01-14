@@ -264,6 +264,12 @@ cv::Mat EDColor::makeEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
   cv::Mat smoothA = smoothLab[1];
   cv::Mat smoothB = smoothLab[2];
 
+  cv::Mat smoothLAB = Mat::zeros(height, width, CV_32SC3);
+  smoothLAB.forEach<Point3i>([&](auto &point, const int position[]) {
+    const int pos = position[0] * width + position[1];
+    point = {(smoothL.data[pos]), (smoothA.data[pos]), (smoothB.data[pos])};
+  });
+
   int maxGradValue = MAX_GRAD_VALUE;
   std::vector<double> probabilityFunctionH(maxGradValue, 0.0);
 
@@ -272,58 +278,37 @@ cv::Mat EDColor::makeEdgeImage(std::array<cv::Mat, 3> const &smoothLab) {
 
   std::vector<int> grads(maxGradValue, 0);
 
+  Point3i *smthLAB = smoothLAB.ptr<Point3i>(0);
   GradPix *gradImg = gradImage.ptr<GradPix>(0);
-  for (int i = 1; i < height - 1; i++) {
-    for (int j = 1; j < width - 1; j++) {
-      // Gradient for channel1
-      int com1 = smoothL.data[(i + 1) * width + j + 1] -
-                 smoothL.data[(i - 1) * width + j - 1];
-      int com2 = smoothL.data[(i - 1) * width + j + 1] -
-                 smoothL.data[(i + 1) * width + j - 1];
 
-      int gxCh1 = abs(
-          com1 + com2 +
-          (smoothL.data[i * width + j + 1] - smoothL.data[i * width + j - 1]));
-      int gyCh1 = abs(com1 - com2 +
-                      (smoothL.data[(i + 1) * width + j] -
-                       smoothL.data[(i - 1) * width + j]));
-      int ch1Grad = gxCh1 + gyCh1;
+  cv::Mat frameless(smoothLAB, cv::Rect(1, 1, width - 2, height - 2));
+  frameless.forEach<Point3i>([&](auto &point, const int position[]) {
+    int const i{position[0] + 1};
+    int const j{position[1] + 1};
+    Point3i const &downRight{smthLAB[(i + 1) * width + j + 1]};
+    Point3i const &upLeft{smthLAB[(i - 1) * width + j - 1]};
+    Point3i const &upRight{smthLAB[(i - 1) * width + j + 1]};
+    Point3i const &downLeft{smthLAB[(i + 1) * width + j - 1]};
+    Point3i const &currRight{smthLAB[i * width + j + 1]};
+    Point3i const &currLeft{smthLAB[i * width + j - 1]};
+    Point3i const &downCurr{smthLAB[(i + 1) * width + j]};
+    Point3i const &upCurr{smthLAB[(i - 1) * width + j]};
+    Point3i const com1 = downRight - upLeft;
+    Point3i const com2 = upRight - downLeft;
 
-      // Gradient for channel2
-      com1 = smoothA.data[(i + 1) * width + j + 1] -
-             smoothA.data[(i - 1) * width + j - 1];
-      com2 = smoothA.data[(i - 1) * width + j + 1] -
-             smoothA.data[(i + 1) * width + j - 1];
+    int const gx0 = abs(com1.x + com2.x + currRight.x - currLeft.x);
+    int const gx1 = abs(com1.y + com2.y + currRight.y - currLeft.y);
+    int const gx2 = abs(com1.z + com2.z + currRight.z - currLeft.z);
 
-      int gxCh2 = abs(
-          com1 + com2 +
-          (smoothA.data[i * width + j + 1] - smoothA.data[i * width + j - 1]));
-      int gyCh2 = abs(com1 - com2 +
-                      (smoothA.data[(i + 1) * width + j] -
-                       smoothA.data[(i - 1) * width + j]));
-      int ch2Grad = gxCh2 + gyCh2;
+    int const gy0 = abs(com1.x + downCurr.x - com2.x - upCurr.x);
+    int const gy1 = abs(com1.y + downCurr.y - com2.y - upCurr.y);
+    int const gy2 = abs(com1.z + downCurr.z - com2.z - upCurr.z);
 
-      // Gradient for channel3
-      com1 = smoothB.data[(i + 1) * width + j + 1] -
-             smoothB.data[(i - 1) * width + j - 1];
-      com2 = smoothB.data[(i - 1) * width + j + 1] -
-             smoothB.data[(i + 1) * width + j - 1];
-
-      int gxCh3 = abs(
-          com1 + com2 +
-          (smoothB.data[i * width + j + 1] - smoothB.data[i * width + j - 1]));
-      int gyCh3 = abs(com1 - com2 +
-                      (smoothB.data[(i + 1) * width + j] -
-                       smoothB.data[(i - 1) * width + j]));
-      int ch3Grad = gxCh3 + gyCh3;
-
-      // Take average
-      int grad = (ch1Grad + ch2Grad + ch3Grad + 2) / 3;
-
-      gradImg[i * width + j] = grad;
-      grads[grad]++;
-    }
-  }
+    GradPix grad =
+        (static_cast<GradPix>(gx0 + gx1 + gx2 + gy0 + gy1 + gy2) + 2) / 3;
+    gradImg[i * width + j] = grad;
+    grads[grad]++;
+  });
 
   // Compute probability function H
   int size = (width - 2) * (height - 2);
