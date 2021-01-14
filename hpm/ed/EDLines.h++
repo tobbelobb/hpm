@@ -60,7 +60,7 @@ public:
           double _max_error = 1.3);
 
   std::vector<LS> getLines();
-  int getLinesNo();
+  int getLinesNo() const;
   cv::Mat getLineImage();
   cv::Mat drawOnImage();
 

@@ -208,7 +208,7 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
 
 vector<LS> EDLines::getLines() { return linePoints; }
 
-int EDLines::getLinesNo() { return linesNo; }
+int EDLines::getLinesNo() const { return linesNo; }
 
 Mat EDLines::getLineImage() {
   Mat lineImage = Mat(height, width, CV_8UC1, Scalar(255));

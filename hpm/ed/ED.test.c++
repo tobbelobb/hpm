@@ -22,7 +22,7 @@ auto main() -> int {
                          .filterSegments = true}};
     expect(testEDColor.getNumberOfSegments() == 212_i);
 
-    EDLines colorLine = EDLines(testEDColor);
+    EDLines const colorLine = EDLines(testEDColor);
     expect(colorLine.getLinesNo() == 585_i);
 
     EDCircles colorCircle{testEDColor};

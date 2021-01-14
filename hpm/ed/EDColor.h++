@@ -7,6 +7,12 @@
 #include <hpm/ed/EDTypes.h++>
 
 using GradPix = short;
+auto constexpr GRAD_PIX_CV_TYPE{CV_16SC1};
+
+using LabPixSingle = uchar;
+auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};
+using LabPix = cv::Point3_<LabPixSingle>;
+
 using Segment = std::vector<cv::Point>;
 
 struct EDColorConfig {
@@ -38,14 +44,13 @@ private:
   int height;
 
   static size_t constexpr MIN_SEGMENT_LEN{10};
-  std::vector<std::vector<cv::Point>> segments;
+  std::vector<Segment> segments;
 
-  std::array<cv::Mat, 3> MyRGB2LabFast(cv::Mat srcImage);
-  std::array<cv::Mat, 3> blur(std::array<cv::Mat, 3> src, double blurSize);
-  GradientMapResult
-  ComputeGradientMapByDiZenzo(std::array<cv::Mat, 3> smoothLab);
+  cv::Mat MyRGB2LabFast(cv::Mat srcImage);
+  void blur(cv::Mat src, double blurSize);
+  GradientMapResult ComputeGradientMapByDiZenzo(cv::Mat lab);
 
-  cv::Mat makeEdgeImage(std::array<cv::Mat, 3> const &Lab);
+  cv::Mat makeEdgeImage(cv::Mat lab);
 
   template <typename Iterator>
   void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
