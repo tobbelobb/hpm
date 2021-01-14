@@ -59,6 +59,4 @@ private:
                            int numberOfSegmentPieces);
   std::vector<Segment> validSegments(cv::Mat edgeImage,
                                      std::vector<Segment> segmentsIn) const;
-
-  void ironSegments();
 };

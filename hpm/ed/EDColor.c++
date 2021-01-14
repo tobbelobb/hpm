@@ -38,8 +38,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     segments = edgeObj.getSegments();
     edgeImage = edgeObj.getEdgeImage();
   }
-
-  ironSegments();
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
@@ -352,52 +350,4 @@ vector<Segment> EDColor::validSegments(cv::Mat edgeImageIn,
   }
 
   return valids;
-}
-
-//---------------------------------------------------------
-// Straighten edge segments having one-pixel fluctuations
-// An example one pixel problem getting fixed:
-//  x
-// x x --> xxx
-void EDColor::ironSegments() {
-  for (auto &segment : segments) {
-    int cp = segment.size() - 2; // Current pixel index
-
-    do {
-      int n1 = cp + 1;          // next pixel
-      cp = cp % segment.size(); // Roll back to the beginning
-      n1 = n1 % segment.size(); // Roll back to the beginning
-
-      int r = segment[cp].y;
-      int c = segment[cp].x;
-
-      int const nextNext = (cp + 2) % segment.size();
-      int const r2 = segment[nextNext].y;
-      int const c2 = segment[nextNext].x;
-
-      bool const sameRow{r2 == r};
-      bool const sameCol{c2 == c};
-      bool const twoAbove{r2 == r - 2};
-      bool const twoBelow{r2 == r + 2};
-      bool const twoLeft{c2 == c - 2};
-      bool const twoRight{c2 == c + 2};
-
-      // 4 cases to fix
-      bool const isAbove{twoAbove and sameCol};
-      bool const isBelow{twoBelow and sameCol};
-      bool const isRight{sameRow and twoRight};
-      bool const isLeft{sameRow and twoLeft};
-      bool const isVertical{isAbove or isBelow};
-      bool const isHorizontal{isRight or isLeft};
-      if (isVertical) {
-        segment[n1].x = c;
-        cp = cp + 2;
-      } else if (isHorizontal) {
-        segment[n1].y = r;
-        cp = cp + 2;
-      } else {
-        cp = cp + 1;
-      }
-    } while (cp + 2 < segment.size());
-  }
 }
