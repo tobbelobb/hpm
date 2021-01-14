@@ -47,12 +47,6 @@ std::vector<std::vector<cv::Point>> EDColor::getSegments() const {
   return segments;
 }
 
-int EDColor::getNumberOfSegments() const { return segments.size(); }
-
-int EDColor::getWidth() const { return width; }
-
-int EDColor::getHeight() const { return height; }
-
 template <std::size_t N> std::array<double, N + 1> static getLut(int which) {
   std::array<double, N + 1> LUT;
 

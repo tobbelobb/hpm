@@ -33,9 +33,9 @@ public:
   cv::Mat getEdgeImage(); // for testing
 
   std::vector<std::vector<cv::Point>> getSegments() const;
-  int getNumberOfSegments() const;
-  int getWidth() const;
-  int getHeight() const;
+  int getNumberOfSegments() const { return segments.size(); }
+  int getWidth() const { return width; }
+  int getHeight() const { return height; }
 
 private:
   cv::Mat edgeImage;
