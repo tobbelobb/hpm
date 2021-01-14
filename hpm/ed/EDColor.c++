@@ -111,43 +111,6 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
     b[pos] = (200 * (y - z));
   });
 
-  // for (int i = 0; i < size; i++) {
-  //  // RGB to XYZ
-  //  double red = bgr[2].data[i] / 255.0;
-  //  double green = bgr[1].data[i] / 255.0;
-  //  double blue = bgr[0].data[i] / 255.0;
-
-  //  red = LUT1[(int)(red * LUT_SIZE + 0.5)];
-  //  green = LUT1[(int)(green * LUT_SIZE + 0.5)];
-  //  blue = LUT1[(int)(blue * LUT_SIZE + 0.5)];
-
-  //  red = red * 100;
-  //  green = green * 100;
-  //  blue = blue * 100;
-
-  //  // Observer. = 2deg, Illuminant = D65
-  //  double x = red * 0.4124564 + green * 0.3575761 + blue * 0.1804375;
-  //  double y = red * 0.2126729 + green * 0.7151522 + blue * 0.0721750;
-  //  double z = red * 0.0193339 + green * 0.1191920 + blue * 0.9503041;
-
-  //  // Now xyz 2 Lab
-  //  double refX = 95.047;
-  //  double refY = 100.000;
-  //  double refZ = 108.883;
-
-  //  x = x / refX; // ref_X =  95.047   Observer= 2deg, Illuminant= D65
-  //  y = y / refY; // ref_Y = 100.000
-  //  z = z / refZ; // ref_Z = 108.883
-
-  //  x = LUT2[(int)(x * LUT_SIZE + 0.5)];
-  //  y = LUT2[(int)(y * LUT_SIZE + 0.5)];
-  //  z = LUT2[(int)(z * LUT_SIZE + 0.5)];
-
-  //  L[i] = ((116.0 * y) - 16);
-  //  a[i] = (500 * (x / y));
-  //  b[i] = (200 * (y - z));
-  //}
-
   cv::Mat Lab_Img(height, width, LAB_PIX_CV_TYPE);
 
   auto const [minL, maxL] = std::minmax_element(L.begin(), L.end());
@@ -384,7 +347,7 @@ void EDColor::drawFilteredSegment(
                       gradImage, probabilityFunctionH, numberOfSegmentPieces);
 }
 
-vector<Segment> EDColor::validSegments(cv::Mat_<uchar> edgeImageIn,
+vector<Segment> EDColor::validSegments(cv::Mat edgeImageIn,
                                        vector<Segment> segmentsIn) const {
   vector<Segment> valids;
 
