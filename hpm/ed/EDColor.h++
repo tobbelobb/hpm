@@ -57,8 +57,8 @@ private:
                            cv::Mat edgeImageIn, cv::Mat_<GradPix> gradImage,
                            std::vector<double> const &probabilityFunctionH,
                            int numberOfSegmentPieces);
-  std::vector<std::vector<cv::Point>>
-  validSegments(cv::Mat edgeImage, std::vector<Segment> segmentsIn) const;
+  std::vector<Segment> validSegments(cv::Mat edgeImage,
+                                     std::vector<Segment> segmentsIn) const;
 
-  static void fixEdgeSegments(std::vector<Segment> map, int noPixels);
+  void ironSegments();
 };

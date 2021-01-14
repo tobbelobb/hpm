@@ -1,3 +1,5 @@
+#include <numeric>
+
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
 
@@ -37,8 +39,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
     edgeImage = edgeObj.getEdgeImage();
   }
 
-  // Fix 1 pixel errors in the edge map
-  fixEdgeSegments(segments, 1);
+  ironSegments();
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
@@ -252,19 +253,20 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
   });
 
   // Compute probability function H
-  int size = (width - 2) * (height - 2);
 
   for (int i = maxGradValue - 1; i > 0; i--)
     grads[i - 1] += grads[i];
 
-  for (int i = 0; i < maxGradValue; i++)
-    probabilityFunctionH[i] = (double)grads[i] / ((double)size);
-
-  int numberOfSegmentPieces = 0;
-  for (int i = 0; i < segments.size(); i++) {
-    int len = segments[i].size();
-    numberOfSegmentPieces += (len * (len - 1)) / 2;
+  for (int i = 0; i < maxGradValue; i++) {
+    probabilityFunctionH[i] =
+        grads[i] / static_cast<double>(frameless.rows * frameless.cols);
   }
+
+  int const numberOfSegmentPieces = std::transform_reduce(
+      segments.begin(), segments.end(), 0, std::plus<>(),
+      [](auto const &segment) {
+        return (segment.size() * (segment.size() - 1)) / 2;
+      });
 
   // Validate segments
   for (auto const &segment : segments) {
@@ -353,74 +355,49 @@ vector<Segment> EDColor::validSegments(cv::Mat edgeImageIn,
 }
 
 //---------------------------------------------------------
-// Fix edge segments having one or two pixel fluctuations
+// Straighten edge segments having one-pixel fluctuations
 // An example one pixel problem getting fixed:
 //  x
 // x x --> xxx
-//
-// An example two pixel problem getting fixed:
-//  xx
-// x  x --> xxxx
-//
-void EDColor::fixEdgeSegments(std::vector<std::vector<cv::Point>> map,
-                              int noPixels) {
-  /// First fix one pixel problems: There are four cases
-  for (int i = 0; i < map.size(); i++) {
-    int cp = map[i].size() - 2; // Current pixel index
-    int n2 = 0;                 // next next pixel index
+void EDColor::ironSegments() {
+  for (auto &segment : segments) {
+    int cp = segment.size() - 2; // Current pixel index
 
-    while (n2 < map[i].size()) {
-      int n1 = cp + 1; // next pixel
+    do {
+      int n1 = cp + 1;          // next pixel
+      cp = cp % segment.size(); // Roll back to the beginning
+      n1 = n1 % segment.size(); // Roll back to the beginning
 
-      cp = cp % map[i].size(); // Roll back to the beginning
-      n1 = n1 % map[i].size(); // Roll back to the beginning
+      int r = segment[cp].y;
+      int c = segment[cp].x;
 
-      int r = map[i][cp].y;
-      int c = map[i][cp].x;
+      int const nextNext = (cp + 2) % segment.size();
+      int const r2 = segment[nextNext].y;
+      int const c2 = segment[nextNext].x;
 
-      int r1 = map[i][n1].y;
-      int c1 = map[i][n1].x;
-
-      int r2 = map[i][n2].y;
-      int c2 = map[i][n2].x;
+      bool const sameRow{r2 == r};
+      bool const sameCol{c2 == c};
+      bool const twoAbove{r2 == r - 2};
+      bool const twoBelow{r2 == r + 2};
+      bool const twoLeft{c2 == c - 2};
+      bool const twoRight{c2 == c + 2};
 
       // 4 cases to fix
-      if (r2 == r - 2 && c2 == c) {
-        if (c1 != c) {
-          map[i][n1].x = c;
-        }
-
-        cp = n2;
-        n2 += 2;
-
-      } else if (r2 == r + 2 && c2 == c) {
-        if (c1 != c) {
-          map[i][n1].x = c;
-        }
-
-        cp = n2;
-        n2 += 2;
-
-      } else if (r2 == r && c2 == c - 2) {
-        if (r1 != r) {
-          map[i][n1].y = r;
-        }
-
-        cp = n2;
-        n2 += 2;
-
-      } else if (r2 == r && c2 == c + 2) {
-        if (r1 != r) {
-          map[i][n1].y = r;
-        }
-
-        cp = n2;
-        n2 += 2;
-
+      bool const isAbove{twoAbove and sameCol};
+      bool const isBelow{twoBelow and sameCol};
+      bool const isRight{sameRow and twoRight};
+      bool const isLeft{sameRow and twoLeft};
+      bool const isVertical{isAbove or isBelow};
+      bool const isHorizontal{isRight or isLeft};
+      if (isVertical) {
+        segment[n1].x = c;
+        cp = cp + 2;
+      } else if (isHorizontal) {
+        segment[n1].y = r;
+        cp = cp + 2;
       } else {
-        cp++;
-        n2++;
+        cp = cp + 1;
       }
-    }
+    } while (cp + 2 < segment.size());
   }
 }
