@@ -132,80 +132,64 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
 
 GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
 
-  std::array<cv::Mat, 3> labSplit;
-  split(lab, labSplit);
-
-  cv::Mat l = labSplit[0];
-  cv::Mat a = labSplit[1];
-  cv::Mat b = labSplit[2];
-  std::vector<EdgeDir> dirData{};
-  dirData.resize(height * width);
-  std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
+  std::vector<EdgeDir> dirData(width * height, EdgeDir::NONE);
   cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, cv::Scalar(0));
 
+  auto *labPtr = lab.ptr<LabPix>(0);
+  auto *gradImg = gradImage.ptr<GradPix>(0);
+  cv::Mat frameless(lab, cv::Rect(1, 1, width - 2, height - 2));
+
   int max = 0;
+  frameless.forEach<LabPix>([&](auto &point, const int position[]) {
+    int const i{position[0] + 1};
+    int const j{position[1] + 1};
+    Point3i const downRight{labPtr[(i + 1) * width + j + 1]};
+    Point3i const upLeft{labPtr[(i - 1) * width + j - 1]};
+    Point3i const upRight{labPtr[(i - 1) * width + j + 1]};
+    Point3i const downLeft{labPtr[(i + 1) * width + j - 1]};
+    Point3i const com1 = downRight - upLeft;
+    Point3i const com2 = upRight - downLeft;
 
-  GradPix *gradImg = gradImage.ptr<GradPix>(0);
-  auto *lPtr = l.ptr<LabPixSingle>(0);
-  auto *aPtr = a.ptr<LabPixSingle>(0);
-  auto *bPtr = b.ptr<LabPixSingle>(0);
-  for (int i = 1; i < height - 1; i++) {
-    for (int j = 1; j < width - 1; j++) {
-      // Prewitt for channel1
-      int com1 = lPtr[(i + 1) * width + j + 1] - lPtr[(i - 1) * width + j - 1];
-      int com2 = lPtr[(i - 1) * width + j + 1] - lPtr[(i + 1) * width + j - 1];
+    LabPix const &currRight{labPtr[i * width + j + 1]};
+    LabPix const &currLeft{labPtr[i * width + j - 1]};
+    LabPix const &downCurr{labPtr[(i + 1) * width + j]};
+    LabPix const &upCurr{labPtr[(i - 1) * width + j]};
 
-      int gxCh1 =
-          com1 + com2 + (lPtr[i * width + j + 1] - lPtr[i * width + j - 1]);
-      int gyCh1 =
-          com1 - com2 + (lPtr[(i + 1) * width + j] - lPtr[(i - 1) * width + j]);
+    int const gx0 = com1.x + com2.x + currRight.x - currLeft.x;
+    int const gx1 = com1.y + com2.y + currRight.y - currLeft.y;
+    int const gx2 = com1.z + com2.z + currRight.z - currLeft.z;
 
-      // Prewitt for channel2
-      com1 = aPtr[(i + 1) * width + j + 1] - aPtr[(i - 1) * width + j - 1];
-      com2 = aPtr[(i - 1) * width + j + 1] - aPtr[(i + 1) * width + j - 1];
+    int const gy0 = com1.x + downCurr.x - com2.x - upCurr.x;
+    int const gy1 = com1.y + downCurr.y - com2.y - upCurr.y;
+    int const gy2 = com1.z + downCurr.z - com2.z - upCurr.z;
 
-      int gxCh2 =
-          com1 + com2 + (aPtr[i * width + j + 1] - aPtr[i * width + j - 1]);
-      int gyCh2 =
-          com1 - com2 + (aPtr[(i + 1) * width + j] - aPtr[(i - 1) * width + j]);
+    int const gxx = gx0 * gx0 + gx1 * gx1 + gx2 * gx2;
+    int const gyy = gy0 * gy0 + gy1 * gy1 + gy2 * gy2;
+    int const gxy = gx0 * gy0 + gx1 * gy1 + gx2 * gy2;
 
-      // Prewitt for channel3
-      com1 = bPtr[(i + 1) * width + j + 1] - bPtr[(i - 1) * width + j - 1];
-      com2 = bPtr[(i - 1) * width + j + 1] - bPtr[(i + 1) * width + j - 1];
+    // Di Zenzo's formulas from Gonzales & Woods - Page 337
+    double twoTheta =
+        atan2(2.0 * gxy, static_cast<double>(gxx - gyy)); // Gradient Direction
+    int grad = static_cast<int>(sqrt((gxx + gyy + (gxx - gyy) * cos(twoTheta) +
+                                      2 * gxy * sin(twoTheta)) /
+                                     2.0) +
+                                0.5); // Gradient Magnitude
 
-      int gxCh3 =
-          com1 + com2 + (bPtr[i * width + j + 1] - bPtr[i * width + j - 1]);
-      int gyCh3 =
-          com1 - com2 + (bPtr[(i + 1) * width + j] - bPtr[(i - 1) * width + j]);
-      int gxx = gxCh1 * gxCh1 + gxCh2 * gxCh2 + gxCh3 * gxCh3;
-      int gyy = gyCh1 * gyCh1 + gyCh2 * gyCh2 + gyCh3 * gyCh3;
-      int gxy = gxCh1 * gyCh1 + gxCh2 * gyCh2 + gxCh3 * gyCh3;
+    // Gradient is perpendicular to the edge passing through the pixel
+    if (twoTheta >= -CV_PI / 2.0 and twoTheta <= CV_PI / 2.0)
+      dirData[i * width + j] = EdgeDir::VERTICAL;
+    else
+      dirData[i * width + j] = EdgeDir::HORIZONTAL;
 
-      // Di Zenzo's formulas from Gonzales & Woods - Page 337
-      double theta =
-          atan2(2.0 * gxy, (double)(gxx - gyy)) / 2; // Gradient Direction
-      int grad = (int)(sqrt(((gxx + gyy) + (gxx - gyy) * cos(2 * theta) +
-                             2 * gxy * sin(2 * theta)) /
-                            2.0) +
-                       0.5); // Gradient Magnitude
-
-      // Gradient is perpendicular to the edge passing through the pixel
-      if (theta >= -3.14159 / 4 && theta <= 3.14159 / 4)
-        dirData[i * width + j] = EdgeDir::VERTICAL;
-      else
-        dirData[i * width + j] = EdgeDir::HORIZONTAL;
-
-      gradImg[i * width + j] = grad;
-      if (grad > max)
-        max = grad;
-    }
-  } // end outer for
+    gradImg[i * width + j] = grad;
+    if (grad > max)
+      max = grad;
+  });
 
   // Scale the gradient values to 0-255
   double const scale = 255.0 / max;
-
-  gradImage.forEach<GradPix>([scale](GradPix &pixel, int const positions[]) {
-    pixel = (GradPix)(pixel * scale);
+  gradImage.forEach<GradPix>([&](GradPix &pixel, int const positions[]) {
+    pixel = static_cast<GradPix>(static_cast<double>(pixel) * scale);
   });
 
   return {gradImage, dirData};
