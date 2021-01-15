@@ -84,7 +84,7 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
 
   // Get rgb->xyz->lab values
   // xyz observer = 2deg, illuminant = D65
-  srcImage.forEach<Point3_<uchar>>([&](auto &point, int const positions[]) {
+  srcImage.forEach<Point3_<uint8_t>>([&](auto &point, int const positions[]) {
     int const pos = positions[0] * width + positions[1];
     Point3d bgr{point.x / 255.0, point.y / 255.0, point.z / 255.0};
     bgr = {100 * LUT1[(int)(bgr.x * LUT_SIZE + 0.5)],
@@ -310,7 +310,7 @@ void EDColor::drawFilteredSegment(
                    numberOfSegmentPieces);
 
   // Draw subsegment on edgeImage
-  uchar *edgeImg = edgeImageIn.ptr<uchar>(0);
+  uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);
   if (nfa <= EPSILON) {
     std::for_each(firstPoint, lastPoint, [&](auto const &point) {
       edgeImg[point.y * width + point.x] = 255;
@@ -329,7 +329,7 @@ vector<Segment> EDColor::validSegments(cv::Mat edgeImageIn,
                                        vector<Segment> segmentsIn) const {
   vector<Segment> valids;
 
-  uchar *edgeImg = edgeImageIn.ptr<uchar>(0);
+  uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);
   for (auto const &segment : segmentsIn) {
     auto const end = segment.end();
     auto front = segment.begin();

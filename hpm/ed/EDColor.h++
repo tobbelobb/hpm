@@ -9,7 +9,7 @@
 using GradPix = short;
 auto constexpr GRAD_PIX_CV_TYPE{CV_16SC1};
 
-using LabPixSingle = uchar;
+using LabPixSingle = uint8_t;
 auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};
 using LabPix = cv::Point3_<LabPixSingle>;
 

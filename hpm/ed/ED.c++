@@ -219,7 +219,7 @@ Mat ED::getAnchorImage() {
   std::vector<Point>::iterator it;
 
   for (it = anchorPoints.begin(); it != anchorPoints.end(); it++)
-    anchorImage.at<uchar>(*it) = 255;
+    anchorImage.at<uint8_t>(*it) = 255;
 
   return anchorImage;
 }
@@ -259,7 +259,7 @@ Mat ED::drawParticularSegments(std::vector<int> list) {
 
   for (itInt = list.begin(); itInt != list.end(); itInt++)
     for (it = segments[*itInt].begin(); it != segments[*itInt].end(); it++)
-      segmentsImage.at<uchar>(*it) = 255;
+      segmentsImage.at<uint8_t>(*it) = 255;
 
   return segmentsImage;
 }

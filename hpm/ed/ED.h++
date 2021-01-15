@@ -66,12 +66,12 @@ public:
 protected:
   int width;  // width of source image
   int height; // height of source image
-  uchar *srcImg;
+  uint8_t *srcImg;
   std::vector<std::vector<cv::Point>> segments;
   double sigma; // Gaussian sigma
   cv::Mat smoothImage;
-  uchar *edgeImg;   // pointer to edge image data
-  uchar *smoothImg; // pointer to smoothed image data
+  uint8_t *edgeImg;   // pointer to edge image data
+  uint8_t *smoothImg; // pointer to smoothed image data
   int minPathLen;
   cv::Mat srcImage;
 

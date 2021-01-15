@@ -6,7 +6,6 @@
 
 #include <hpm/ed/EDLib.h++>
 
-
 auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
