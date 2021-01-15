@@ -13,8 +13,6 @@ using LabPixSingle = uint8_t;
 auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};
 using LabPix = cv::Point3_<LabPixSingle>;
 
-using Segment = std::vector<cv::Point>;
-
 struct EDColorConfig {
   int const gradThresh = 20;
   int const anchorThresh = 4;

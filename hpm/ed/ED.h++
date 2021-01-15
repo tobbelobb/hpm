@@ -8,9 +8,10 @@
 enum class Direction { LEFT, RIGHT, UP, DOWN, NONE };
 
 struct StackNode {
-  int r, c;      // starting pixel
-  int parent;    // parent chain (-1 if no parent)
+  int r;
+  int c;         // starting pixel
   Direction dir; // direction where you are supposed to go
+  int parent;    // parent chain (-1 if no parent)
 };
 
 // Used during Edge Linking
@@ -46,22 +47,22 @@ public:
   int getAnchorNo();
 
   std::vector<cv::Point> getAnchorPoints();
-  std::vector<std::vector<cv::Point>> getSegments();
-  std::vector<std::vector<cv::Point>> getSortedSegments();
+  std::vector<Segment> getSegments();
+  std::vector<Segment> getSortedSegments();
 
   cv::Mat drawParticularSegments(std::vector<int> list);
 
 protected:
-  int width;  // width of source image
-  int height; // height of source image
+  cv::Mat srcImage;
+  int width;
+  int height;
   uint8_t *srcImg;
-  std::vector<std::vector<cv::Point>> segments;
+  std::vector<Segment> segments;
   double sigma; // Gaussian sigma
   cv::Mat smoothImage;
   uint8_t *edgeImg;   // pointer to edge image data
   uint8_t *smoothImg; // pointer to smoothed image data
   int minPathLen;
-  cv::Mat srcImage;
 
 private:
   void ComputeGradient();
@@ -87,6 +88,7 @@ private:
   int anchorThresh;    // anchor point threshold
   int scanInterval;
   bool sumFlag;
+
   static uint8_t constexpr ANCHOR_PIXEL{254};
   static uint8_t constexpr EDGE_PIXEL{255};
 };
