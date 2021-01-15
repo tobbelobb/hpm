@@ -6,28 +6,17 @@
 using namespace cv;
 using namespace std;
 
-ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
-       int _scanInterval, int _minPathLen, double _sigma, bool _sumFlag) {
-  // Check parameters for sanity
-  if (_gradThresh < 1)
-    _gradThresh = 1;
-  if (_anchorThresh < 0)
-    _anchorThresh = 0;
-  if (_sigma < 1.0)
-    _sigma = 1.0;
+ED::ED(Mat _srcImage, EdConfig const &config) {
+  gradThresh = std::max(config.gradThresh, 1);
+  anchorThresh = std::max(config.anchorThresh, 0);
+  scanInterval = config.scanInterval;
+  blurSize = std::max(config.blurSize, 1.0);
+  sumFlag = config.sumFlag;
+  op = config.op;
 
   srcImage = _srcImage;
-
   height = srcImage.rows;
   width = srcImage.cols;
-
-  op = _op;
-  gradThresh = _gradThresh;
-  anchorThresh = _anchorThresh;
-  scanInterval = _scanInterval;
-  minPathLen = _minPathLen;
-  sigma = _sigma;
-  sumFlag = _sumFlag;
 
   segments.clear();
   segments.push_back(
@@ -42,11 +31,11 @@ ED::ED(Mat _srcImage, GradientOperator _op, int _gradThresh, int _anchorThresh,
   //// Detect Edges By Edge Drawing Algorithm  ////
 
   /*------------ SMOOTH THE IMAGE BY A GAUSSIAN KERNEL -------------------*/
-  if (sigma == 1.0)
-    GaussianBlur(srcImage, smoothImage, Size(5, 5), sigma);
+  if (blurSize == 1.0)
+    GaussianBlur(srcImage, smoothImage, Size(5, 5), blurSize);
   else
     GaussianBlur(srcImage, smoothImage, Size(),
-                 sigma); // calculate kernel from sigma
+                 blurSize); // calculate kernel from blurSize
 
   // Assign Pointers from Mat's data
   smoothImg = smoothImage.data;
@@ -79,8 +68,7 @@ ED::ED(const ED &cpyObj) {
   gradThresh = cpyObj.gradThresh;
   anchorThresh = cpyObj.anchorThresh;
   scanInterval = cpyObj.scanInterval;
-  minPathLen = cpyObj.minPathLen;
-  sigma = cpyObj.sigma;
+  blurSize = cpyObj.blurSize;
   sumFlag = cpyObj.sumFlag;
 
   edgeImage = cpyObj.edgeImage.clone();
@@ -98,15 +86,13 @@ ED::ED(const ED &cpyObj) {
 // This constructor for use of EDColor with use of direction and gradient image
 // It finds edge image for given gradient and direction image
 ED::ED(cv::Mat _gradImage, std::vector<EdgeDir> _dirData, int _gradThresh,
-       int _anchorThresh, int _scanInterval, int _minPathLen,
-       bool selectStableAnchors) {
+       int _anchorThresh, int _scanInterval, bool selectStableAnchors) {
   height = _gradImage.rows;
   width = _gradImage.cols;
 
   gradThresh = _gradThresh;
   anchorThresh = _anchorThresh;
   scanInterval = _scanInterval;
-  minPathLen = _minPathLen;
 
   gradImage = _gradImage;
   dirData = _dirData;
@@ -805,7 +791,7 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
       }
     }
 
-    if (len - duplicatePixelCount < minPathLen) {
+    if (len - duplicatePixelCount < MIN_SEGMENT_LEN) {
       for (int k = 0; k < len; k++) {
 
         edgeImg[pixels[k].y * width + pixels[k].x] = 0;

@@ -7,9 +7,9 @@ using namespace cv;
 using namespace std;
 
 EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
-  double blurSize = std::max(config.blurSize, 1.0);
   double gradThresh = std::max(config.gradThresh, 1);
   double anchorThresh = std::max(config.anchorThresh, 0);
+  double blurSize = std::max(config.blurSize, 1.0);
 
   if (config.filterSegments) {
     anchorThresh = 0;
@@ -27,7 +27,7 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   auto const [gradImage, dirData] = ComputeGradientMapByDiZenzo(lab);
 
   if (config.filterSegments) {
-    ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, 10, false);
+    ED edgeObj = ED(gradImage, dirData, gradThresh, anchorThresh, 1, false);
     segments = edgeObj.getSegments();
 
     blur(labClone, blurSize / 2.5);

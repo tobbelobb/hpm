@@ -7,7 +7,8 @@ using namespace std;
 
 EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
                  double _max_distance_between_two_lines, double _max_error)
-    : ED(srcImage, GradientOperator::SOBEL, 36, 8) {
+    : ED(srcImage,
+         {.op = GradientOperator::SOBEL, .gradThresh = 36, .anchorThresh = 8}) {
   min_line_len = _min_line_len;
   line_error = _line_error;
   max_distance_between_two_lines = _max_distance_between_two_lines;

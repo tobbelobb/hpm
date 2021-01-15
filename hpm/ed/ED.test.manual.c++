@@ -21,7 +21,8 @@ int main(int argc, char **argv) {
   }
 
   // Edge and segment detection from grey image
-  ED ed{greyImage, GradientOperator::SOBEL, 36, 8, 1, 10, 1.0, true};
+  ED ed{greyImage,
+        {.op = GradientOperator::SOBEL, .gradThresh = 36, .anchorThresh = 8}};
   if (show) {
     showImage(ed.getEdgeImage(), "edges-from-grey-image.png");
   }

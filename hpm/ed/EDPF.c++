@@ -1,22 +1,26 @@
 #include <hpm/ed/EDPF.h++>
+#include <hpm/ed/EDTypes.h++>
 
 using namespace cv;
 using namespace std;
 
-EDPF::EDPF(Mat srcImage) : ED(srcImage, GradientOperator::PREWITT, 11, 3) {
+EDPF::EDPF(Mat srcImage)
+    : ED(srcImage, {.op = GradientOperator::PREWITT,
+                    .gradThresh = 11,
+                    .anchorThresh = 3}) {
   // Validate Edge Segments
-  sigma /= 2.5;
+  blurSize /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(),
-               sigma); // calculate kernel from sigma
+               blurSize); // calculate kernel from blurSize
 
   validateEdgeSegments();
 }
 
 EDPF::EDPF(ED obj) : ED(obj) {
   // Validate Edge Segments
-  sigma /= 2.5;
+  blurSize /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(),
-               sigma); // calculate kernel from sigma
+               blurSize); // calculate kernel from blurSize
 
   validateEdgeSegments();
 }
@@ -115,7 +119,7 @@ short *EDPF::ComputePrewitt3x3() {
 void EDPF::TestSegment(int i, int index1, int index2) {
 
   int chainLen = index2 - index1 + 1;
-  if (chainLen < minPathLen)
+  if (chainLen < MIN_SEGMENT_LEN)
     return;
 
   // Test from index1 to index2. If OK, then we are done. Otherwise, split into

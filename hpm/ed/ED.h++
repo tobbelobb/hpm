@@ -25,17 +25,23 @@ struct Chain {
 
 enum class GradientOperator { PREWITT, SOBEL, SCHARR, LSD };
 
+struct EdConfig {
+  GradientOperator const op = GradientOperator::PREWITT;
+  int const gradThresh = 20;
+  int const anchorThresh = 4;
+  int const scanInterval = 1;
+  double const blurSize = 1.0;
+  bool const sumFlag = true;
+};
+
 // Edge and segment detection from greyscale input image
 class ED {
 
 public:
-  ED(cv::Mat _srcImage, GradientOperator _op = GradientOperator::PREWITT,
-     int _gradThresh = 20, int _anchorThresh = 0, int _scanInterval = 1,
-     int _minPathLen = 10, double _sigma = 1.0, bool _sumFlag = true);
+  ED(cv::Mat _srcImage, EdConfig const &config);
   ED(const ED &cpyObj);
   ED(cv::Mat gradImage, std::vector<EdgeDir> dirData, int _gradThresh,
-     int _anchorThresh, int _scanInterval = 1, int _minPathLen = 10,
-     bool selectStableAnchors = true);
+     int _anchorThresh, int _scanInterval = 1, bool selectStableAnchors = true);
   ED(EDColor const &cpyObj);
 
   cv::Mat getEdgeImage();
@@ -58,11 +64,10 @@ protected:
   int height;
   uint8_t *srcImg;
   std::vector<Segment> segments;
-  double sigma; // Gaussian sigma
+  double blurSize;
   cv::Mat smoothImage;
   uint8_t *edgeImg;   // pointer to edge image data
   uint8_t *smoothImg; // pointer to smoothed image data
-  int minPathLen;
 
 private:
   void ComputeGradient();

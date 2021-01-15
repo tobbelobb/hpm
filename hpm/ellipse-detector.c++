@@ -20,8 +20,9 @@ using namespace hpm;
 auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> hpm::DetectionResult {
   cv::Mat imageMat{image.getMat()};
-  ED testED = ED(imageMat, GradientOperator::SOBEL, 36, 8, 1, 10, 1.0, true);
-  cv::Mat edgeImage{testED.getEdgeImage()};
+  ED ed{imageMat,
+        {.op = GradientOperator::SOBEL, .gradThresh = 36, .anchorThresh = 8}};
+  cv::Mat edgeImage{ed.getEdgeImage()};
 
   if (showIntermediateImages) {
     showImage(edgeImage, "edgeImage.png");

@@ -41,7 +41,6 @@ private:
   int width;
   int height;
 
-  static size_t constexpr MIN_SEGMENT_LEN{10};
   std::vector<Segment> segments;
 
   cv::Mat MyRGB2LabFast(cv::Mat srcImage);
