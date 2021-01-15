@@ -6,11 +6,13 @@
 #include <hpm/ed/EDTypes.h++>
 
 enum class Direction { LEFT, RIGHT, UP, DOWN, NONE };
+
 struct StackNode {
   int r, c;      // starting pixel
   int parent;    // parent chain (-1 if no parent)
   Direction dir; // direction where you are supposed to go
 };
+
 // Used during Edge Linking
 struct Chain {
   Direction dir;     // Direction of the chain
@@ -20,18 +22,13 @@ struct Chain {
   cv::Point *pixels; // Pointer to the beginning of the pixels array
 };
 
-enum GradientOperator {
-  PREWITT_OPERATOR = 101,
-  SOBEL_OPERATOR = 102,
-  SCHARR_OPERATOR = 103,
-  LSD_OPERATOR = 104
-};
+enum class GradientOperator { PREWITT, SOBEL, SCHARR, LSD };
 
 // Edge and segment detection from greyscale input image
 class ED {
 
 public:
-  ED(cv::Mat _srcImage, GradientOperator _op = PREWITT_OPERATOR,
+  ED(cv::Mat _srcImage, GradientOperator _op = GradientOperator::PREWITT,
      int _gradThresh = 20, int _anchorThresh = 0, int _scanInterval = 1,
      int _minPathLen = 10, double _sigma = 1.0, bool _sumFlag = true);
   ED(const ED &cpyObj);

@@ -14,7 +14,7 @@ auto main() -> int {
       cv::imread(getPath("billiard.jpg"), cv::IMREAD_GRAYSCALE)};
 
   "Billiard Segments from grey image"_test = [billiardGrey] {
-    ED ed{billiardGrey, SOBEL_OPERATOR, 36, 8, 1, 10, 1.0, true};
+    ED ed{billiardGrey, GradientOperator::SOBEL, 36, 8, 1, 10, 1.0, true};
     expect(ed.getSegmentNo() == 415_i);
   };
 
@@ -24,7 +24,7 @@ auto main() -> int {
   };
 
   skip / "Billiard Lines from segments"_test = [billiardGrey] {
-    ED ed{billiardGrey, SOBEL_OPERATOR, 36, 8, 1, 10, 1.0, true};
+    ED ed{billiardGrey, GradientOperator::SOBEL, 36, 8, 1, 10, 1.0, true};
     EDLines edLines{ed};
     expect(edLines.getLinesNo() == 518_i);
   };

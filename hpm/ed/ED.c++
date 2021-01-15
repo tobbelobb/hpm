@@ -328,27 +328,27 @@ void ED::ComputeGradient() {
 
       auto getGxGy = [&]() -> std::pair<int, int> {
         switch (op) {
-        case PREWITT_OPERATOR:
+        case GradientOperator::PREWITT:
           return {abs(com1 + com2 +
                       (smoothImg[i * width + j + 1] -
                        smoothImg[i * width + j - 1])),
                   abs(com1 - com2 +
                       (smoothImg[(i + 1) * width + j] -
                        smoothImg[(i - 1) * width + j]))};
-        case SOBEL_OPERATOR:
+        case GradientOperator::SOBEL:
           return {abs(com1 + com2 +
                       2 * (smoothImg[i * width + j + 1] -
                            smoothImg[i * width + j - 1])),
                   abs(com1 - com2 +
                       2 * (smoothImg[(i + 1) * width + j] -
                            smoothImg[(i - 1) * width + j]))};
-        case SCHARR_OPERATOR:
+        case GradientOperator::SCHARR:
           return {
               abs(3 * (com1 + com2) + 10 * (smoothImg[i * width + j + 1] -
                                             smoothImg[i * width + j - 1])),
               abs(3 * (com1 - com2) + 10 * (smoothImg[(i + 1) * width + j] -
                                             smoothImg[(i - 1) * width + j]))};
-        case LSD_OPERATOR:
+        case GradientOperator::LSD:
           // com1 and com2 differs from previous operators, because LSD has 2x2
           // kernel
           {

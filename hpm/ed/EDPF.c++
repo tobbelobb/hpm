@@ -3,7 +3,7 @@
 using namespace cv;
 using namespace std;
 
-EDPF::EDPF(Mat srcImage) : ED(srcImage, PREWITT_OPERATOR, 11, 3) {
+EDPF::EDPF(Mat srcImage) : ED(srcImage, GradientOperator::PREWITT, 11, 3) {
   // Validate Edge Segments
   sigma /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(),
