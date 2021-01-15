@@ -5,35 +5,26 @@
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/EDTypes.h++>
 
-#define ANCHOR_PIXEL 254
-#define EDGE_PIXEL 255
-
-#define LEFT 1
-#define RIGHT 2
-#define UP 3
-#define DOWN 4
+enum class Direction { LEFT, RIGHT, UP, DOWN, NONE };
+struct StackNode {
+  int r, c;      // starting pixel
+  int parent;    // parent chain (-1 if no parent)
+  Direction dir; // direction where you are supposed to go
+};
+// Used during Edge Linking
+struct Chain {
+  Direction dir;     // Direction of the chain
+  int len;           // # of pixels in the chain
+  int parent;        // Parent of this node (-1 if no parent)
+  int children[2];   // Children of this node (-1 if no children)
+  cv::Point *pixels; // Pointer to the beginning of the pixels array
+};
 
 enum GradientOperator {
   PREWITT_OPERATOR = 101,
   SOBEL_OPERATOR = 102,
   SCHARR_OPERATOR = 103,
   LSD_OPERATOR = 104
-};
-
-struct StackNode {
-  int r, c;   // starting pixel
-  int parent; // parent chain (-1 if no parent)
-  int dir;    // direction where you are supposed to go
-};
-
-// Used during Edge Linking
-struct Chain {
-
-  int dir;           // Direction of the chain
-  int len;           // # of pixels in the chain
-  int parent;        // Parent of this node (-1 if no parent)
-  int children[2];   // Children of this node (-1 if no children)
-  cv::Point *pixels; // Pointer to the beginning of the pixels array
 };
 
 // Edge and segment detection from greyscale input image
@@ -99,4 +90,6 @@ private:
   int anchorThresh;    // anchor point threshold
   int scanInterval;
   bool sumFlag;
+  static uint8_t constexpr ANCHOR_PIXEL{254};
+  static uint8_t constexpr EDGE_PIXEL{255};
 };
