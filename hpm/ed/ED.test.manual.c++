@@ -34,6 +34,9 @@ int main(int argc, char **argv) {
   if (show) {
     showImage(edLines.getLineImage(), "lines-from-grey-image.png");
   }
+  if (verbose) {
+    std::cout << "Lines from grey image: " << edLines.getLinesNo() << '\n';
+  }
 
   // Line detection from segments
   // Avoids redundant detection of segments

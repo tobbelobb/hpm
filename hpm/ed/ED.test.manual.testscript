@@ -9,6 +9,7 @@ EOE
 : Checks what gets printed when run was successful
 $* "$src_base/ed/billiard.jpg" "--verbose" >>"END"
 Segments from grey image: 415
+Lines from grey image: 518
 Lines from segments: 518
 Parameter free segments from grey image: 276
 Circles from grey image: 17
