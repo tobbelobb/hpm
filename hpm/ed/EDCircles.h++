@@ -221,7 +221,7 @@ public:
   EDCircles(ED obj);
   EDCircles(EDColor obj);
 
-  cv::Mat drawResult(bool, ImageStyle);
+  cv::Mat drawResult(cv::Mat, ImageStyle);
 
   std::vector<mCircle> getCircles();
   std::vector<mEllipse> getEllipses();

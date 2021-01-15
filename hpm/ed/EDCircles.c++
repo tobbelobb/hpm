@@ -693,19 +693,24 @@ EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
   delete[] info;
 }
 
-cv::Mat EDCircles::drawResult(bool onImage, ImageStyle style) {
+cv::Mat EDCircles::drawResult(cv::Mat background, ImageStyle style) {
   Mat colorImage;
-  if (onImage) {
-    colorImage = Mat(height, width, CV_8UC1, srcImg);
-    cvtColor(colorImage, colorImage, COLOR_GRAY2BGR);
-  } else
+  int lineThickness = 1;
+  if (background.empty()) {
     colorImage = Mat(height, width, CV_8UC3, Scalar(0, 0, 0));
+  } else if (background.channels() == 1) {
+    colorImage = Mat(height, width, CV_8UC1, srcImg);
+    cvtColor(background, colorImage, COLOR_GRAY2BGR);
+  } else {
+    colorImage = background.clone();
+    lineThickness = 3;
+  }
 
   // Circles will be indicated in green
   if (style == ImageStyle::CIRCLES || style == ImageStyle::BOTH)
     for (int i = 0; i < circles.size(); i++)
-      circle(colorImage, circles[i].center, circles[i].r, Scalar(0, 255, 0), 1,
-             LINE_AA);
+      circle(colorImage, circles[i].center, circles[i].r, Scalar(0, 255, 0),
+             lineThickness, LINE_AA);
 
   // Ellipses will be indicated in red
   if (style == ImageStyle::ELLIPSES || style == ImageStyle::BOTH)
@@ -714,7 +719,7 @@ cv::Mat EDCircles::drawResult(bool onImage, ImageStyle style) {
           (ellipses[i].theta * 180) / PI; // convert radian to degree (opencv's
                                           // ellipse function works with degree)
       ellipse(colorImage, ellipses[i].center, ellipses[i].axes, degree, 0.0,
-              360.0, Scalar(0, 0, 255), 1, LINE_AA);
+              360.0, Scalar(0, 0, 255), lineThickness, LINE_AA);
     }
 
   return colorImage;

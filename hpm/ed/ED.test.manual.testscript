@@ -8,11 +8,12 @@ EOE
 : End-as-expected
 : Checks what gets printed when run was successful
 $* "$src_base/ed/billiard.jpg" "--verbose" >>"END"
-Number of edge segments: 415
-Number of line segments: 518
-Number of edge segments found by EDPF: 276
-Number of circles: 17
-Number of edge segments detected by EDColor: 212
-Number of line segments: 585
-Number of circles: 49
+Segments from grey image: 415
+Lines from segments: 518
+Parameter free segments from grey image: 276
+Circles from grey image: 17
+Circles from parameter free segments: 17
+Segments from color image: 212
+Lines from segments from color image: 585
+Circles from segments from color image: 49
 END

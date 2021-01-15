@@ -1,165 +1,117 @@
 #include <iostream>
 
 #include <hpm/ed/EDLib.h++>
+#include <hpm/util.h++>
 
 using namespace cv;
 using namespace std;
 
 int main(int argc, char **argv) {
-  //***************************** ED Edge Segment Detection
-  //***************************** Detection of edge segments from an input image
   if (argc < 2) {
     std::cout << "Usage:\n" << argv[0] << " <image> [--verbose [--show]]\n";
     return 0;
   }
   std::string const fileName{argv[1]};
-  bool silent{true};
-  bool show{false};
-  if (argc >= 3) {
-    silent = false;
-    if (argc >= 4) {
-      show = true;
-    }
-  }
-  Mat testImg = imread(fileName, 0);
+  bool verbose{argc >= 3};
+  bool show{argc >= 4};
 
+  Mat greyImage{imread(fileName, IMREAD_GRAYSCALE)};
   if (show) {
-    imshow("Source Image", testImg);
+    showImage(greyImage, "grey-source.png");
   }
 
-  // Call ED constructor
-  ED testED = ED(testImg, SOBEL_OPERATOR, 36, 8, 1, 10, 1.0,
-                 true); // apply ED algorithm
-
-  // Show resulting edge image
-  Mat edgeImg = testED.getEdgeImage();
+  // Edge and segment detection from grey image
+  ED ed{greyImage, SOBEL_OPERATOR, 36, 8, 1, 10, 1.0, true};
   if (show) {
-    imshow("Edge Image - PRESS ANY KEY TO CONTINUE", edgeImg);
+    showImage(ed.getEdgeImage(), "edges-from-grey-image.png");
+  }
+  if (verbose) {
+    std::cout << "Segments from grey image: " << ed.getSegmentNo() << '\n';
   }
 
-  // Output number of segments
-  int noSegments = testED.getSegmentNo();
-  if (not silent) {
-    std::cout << "Number of edge segments: " << noSegments << std::endl;
-  }
-
-  // Get edges in segment form (getSortedSegments() gives segments sorted
-  // w.r.t. legnths)
-  std::vector<std::vector<Point>> segments = testED.getSegments();
-
-  //***************************** EDLINES Line Segment Detection
-  //***************************** Detection of line segments from the same
-  // image
-  EDLines testEDLines = EDLines(testImg);
-  Mat lineImg = testEDLines.getLineImage(); // draws on an empty image
+  // Line detection from grey image
+  EDLines edLines{greyImage};
   if (show) {
-    imshow("Line Image 1 - PRESS ANY KEY TO CONTINUE", lineImg);
+    showImage(edLines.getLineImage(), "lines-from-grey-image.png");
   }
 
-  // Detection of lines segments from edge segments instead of input image
-  // Therefore, redundant detection of edge segmens can be avoided
-  EDLines testEDLines2{testED};
-  lineImg = testEDLines2.drawOnImage(); // draws on the input image
+  // Line detection from segments
+  // Avoids redundant detection of segments
+  EDLines edLines2{ed};
   if (show) {
-    imshow("Line Image 2  - PRESS ANY KEY TO CONTINUE", lineImg);
+    showImage(edLines2.drawOnImage(), "lines-from-ed.png");
+  }
+  if (verbose) {
+    std::cout << "Lines from segments: " << edLines2.getLinesNo() << '\n';
   }
 
-  // Acquiring line information, i.e. start & end points
-  vector<LS> lines = testEDLines2.getLines();
-  int noLines = testEDLines2.getLinesNo();
-  if (not silent) {
-    std::cout << "Number of line segments: " << noLines << std::endl;
-  }
-
-  //************************** EDPF Parameter-free Edge Segment Detection
-  //**************************
-  // Detection of edge segments with parameter free ED (EDPF)
-
-  EDPF testEDPF = EDPF(testImg);
-  Mat edgePFImage = testEDPF.getEdgeImage();
-
+  // Parameter free edge and segment detection from grey image
+  EDPF edpf{greyImage};
   if (show) {
-    imshow("Edge Image Parameter Free", edgePFImage);
+    showImage(edpf.getEdgeImage(), "edpf-edges-from-grey-image.png");
   }
-  if (not silent) {
-    cout << "Number of edge segments found by EDPF: " << testEDPF.getSegmentNo()
-         << endl;
+  if (verbose) {
+    std::cout << "Parameter free segments from grey image: "
+              << edpf.getSegmentNo() << '\n';
   }
-  //***************************** EDCIRCLES Circle Segment Detection
-  //***************************** Detection of circles directly from the input
-  // image
 
-  EDCircles testEDCircles = EDCircles(testImg);
-  Mat circleImg = testEDCircles.drawResult(false, ImageStyle::CIRCLES);
-
+  // Circle and ellipse detection from grey image
+  EDCircles edCirclesFromGreyImage{greyImage};
   if (show) {
-    imshow("Circle Image 1", circleImg);
+    showImage(edCirclesFromGreyImage.drawResult(cv::Mat(), ImageStyle::CIRCLES),
+              "circles-and-ellipses-from-grey-image.png");
+  }
+  if (verbose) {
+    std::cout << "Circles from grey image: "
+              << edCirclesFromGreyImage.getCirclesNo() << '\n';
   }
 
-  // Detection of circles from already available EDPF or ED image
-  EDCircles testEDCircles2{testEDPF};
-
-  // Get circle information as [cx, cy, r]
-  vector<mCircle> circles = testEDCircles2.getCircles();
-
-  // Get ellipse information as [cx, cy, a, b, theta]
-  vector<mEllipse> ellipses = testEDCircles2.getEllipses();
-
-  // Circles and ellipses will be indicated in green and red, resp.
-  circleImg = testEDCircles2.drawResult(true, ImageStyle::BOTH);
-
+  // Circle and ellipse detection from (parameter free) segments
+  EDCircles edCirclesFromEdpf{edpf};
   if (show) {
-    imshow("CIRCLES and ELLIPSES RESULT IMAGE", circleImg);
+    showImage(edCirclesFromEdpf.drawResult(greyImage, ImageStyle::BOTH),
+              "circles-and-ellipses-from-edpf.png");
+  }
+  if (verbose) {
+    std::cout << "Circles from parameter free segments: "
+              << edCirclesFromEdpf.getCirclesNo() << '\n';
   }
 
-  int noCircles = testEDCircles2.getCirclesNo();
-  if (not silent) {
-    std::cout << "Number of circles: " << noCircles << std::endl;
-  }
-
-  //*********************** EDCOLOR Edge Segment Detection from Color Images
-  //**********************
-
-  Mat colorImg = imread(fileName);
-  EDColor testEDColor{colorImg,
-                      {.gradThresh = 36,
-                       .anchorThresh = 4,
-                       .blurSize = 1.5,
-                       .filterSegments = true}};
+  // Edge and segment detection from color image
+  Mat colorImage{imread(fileName, IMREAD_COLOR)};
+  EDColor edColor{colorImage,
+                  {.gradThresh = 36,
+                   .anchorThresh = 4,
+                   .blurSize = 1.5,
+                   .filterSegments = true}};
   if (show) {
-    imshow("Color Edge Image - PRESS ANY KEY TO QUIT",
-           testEDColor.getEdgeImage());
+    showImage(edColor.getEdgeImage(), "edges-from-color-image.png");
   }
-  if (not silent) {
-    cout << "Number of edge segments detected by EDColor: "
-         << testEDColor.getNumberOfSegments() << endl;
+  if (verbose) {
+    std::cout << "Segments from color image: " << edColor.getNumberOfSegments()
+              << '\n';
   }
 
-  // get lines from color image
-  EDLines colorLine = EDLines(testEDColor);
+  // Line detection from segments from color image
+  EDLines colorLines{edColor};
   if (show) {
-    imshow("Color Line", colorLine.getLineImage());
+    showImage(colorLines.getLineImage(),
+              "lines-from-segments-from-color-image.png");
   }
-  if (not silent) {
-    std::cout << "Number of line segments: " << colorLine.getLinesNo()
-              << std::endl;
+  if (verbose) {
+    std::cout << "Lines from segments from color image: "
+              << colorLines.getLinesNo() << '\n';
   }
 
-  // get circles from color image
-  EDCircles colorCircle{testEDColor};
-
-  if (not silent) {
-    // TODO: drawResult doesnt overlay (onImage = true) when input is from
-    // EDColor
-    std::cout << "Number of circles: " << colorCircle.getCirclesNo()
-              << std::endl;
+  // Circle and ellipse detection from segments from color image
+  EDCircles colorCircle{edColor};
+  if (verbose) {
+    std::cout << "Circles from segments from color image: "
+              << colorCircle.getCirclesNo() << '\n';
   }
   if (show) {
-    Mat circleImg2 = colorCircle.drawResult(false, ImageStyle::BOTH);
-    imshow("Color Circle", circleImg2);
-
-    waitKey();
+    showImage(colorCircle.drawResult(colorImage, ImageStyle::BOTH),
+              "circles-and-ellipses-from-segments-from-color-image.png");
   }
-
   return 0;
 }

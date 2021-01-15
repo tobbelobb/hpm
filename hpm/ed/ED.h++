@@ -36,6 +36,7 @@ struct Chain {
   cv::Point *pixels; // Pointer to the beginning of the pixels array
 };
 
+// Edge and segment detection from greyscale input image
 class ED {
 
 public:
