@@ -52,22 +52,25 @@ std::pair<cv::Mat_<GradPix>, std::vector<double>> EDPF::ComputePrewitt3x3() {
   auto const *srcImg = srcImage.ptr<uint8_t>(0);
   auto *gradImg = gradImage.ptr<GradPix>(0);
   cv::Mat frameless(srcImage, cv::Rect(1, 1, width - 2, height - 2));
-  frameless.forEach<uint8_t>([&](auto &pix, const int position[]) {
+  frameless.forEach<uint8_t>([&](auto &unused, const int position[]) {
+    (void)unused;
     int const i{position[0] + 1};
     int const j{position[1] + 1};
-    int const downRight{srcImg[(i + 1) * width + j + 1]};
-    int const upLeft{srcImg[(i - 1) * width + j - 1]};
-    int const upRight{srcImg[(i - 1) * width + j + 1]};
-    int const downLeft{srcImg[(i + 1) * width + j - 1]};
-    int const currRight{srcImg[i * width + j + 1]};
-    int const currLeft{srcImg[i * width + j - 1]};
-    int const downCurr{srcImg[(i + 1) * width + j]};
-    int const upCurr{srcImg[(i - 1) * width + j]};
+    GradPix const downRight{srcImg[(i + 1) * width + j + 1]};
+    GradPix const upLeft{srcImg[(i - 1) * width + j - 1]};
+    GradPix const upRight{srcImg[(i - 1) * width + j + 1]};
+    GradPix const downLeft{srcImg[(i + 1) * width + j - 1]};
+    GradPix const currRight{srcImg[i * width + j + 1]};
+    GradPix const currLeft{srcImg[i * width + j - 1]};
+    GradPix const downCurr{srcImg[(i + 1) * width + j]};
+    GradPix const upCurr{srcImg[(i - 1) * width + j]};
     // Prewitt Operator in horizontal and vertical direction
-    int const com1 = downRight - upLeft;
-    int const com2 = upRight - downLeft;
-    int const gx = abs(com1 + com2 + currRight - currLeft);
-    int const gy = abs(com1 - com2 + downCurr - upCurr);
+    GradPix const com1 = downRight - upLeft;
+    GradPix const com2 = upRight - downLeft;
+    GradPix const gx =
+        static_cast<GradPix>(abs(com1 + com2 + currRight - currLeft));
+    GradPix const gy =
+        static_cast<GradPix>(abs(com1 - com2 + downCurr - upCurr));
 
     gradImg[i * width + j] = gx + gy;
   });

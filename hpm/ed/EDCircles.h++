@@ -284,9 +284,9 @@ private:
   static int inverse(double **TB, double **InvB, int N);
   static void DeallocateMatrix(double **m, int noRows);
   static void AperB_T(double **_A, double **_B, double **_res, int _righA,
-                      int _colA, int _righB, int _colB);
+                      int _colA, int _colB);
   static void AperB(double **_A, double **_B, double **_res, int _righA,
-                    int _colA, int _righB, int _colB);
+                    int _colA, int _colB);
   static void jacobi(double **a, int n, double d[], double **v, int nrot);
   static void ROTATE(double **a, int i, int j, int k, int l, double tau,
                      double s);

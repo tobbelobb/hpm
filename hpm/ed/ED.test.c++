@@ -24,12 +24,12 @@ auto main() -> int {
     expect(ed.getSegmentNo() == 415_i);
   };
 
-  skip / "Billiard Lines from grey image"_test = [billiardGrey] {
+  "Billiard Lines from grey image"_test = [billiardGrey] {
     EDLines edLines{billiardGrey};
     expect(edLines.getLinesNo() == 518_i);
   };
 
-  skip / "Billiard Lines from segments"_test = [billiardGrey] {
+  "Billiard Lines from segments"_test = [billiardGrey] {
     ED ed{billiardGrey,
           {.op = GradientOperator::SOBEL, .gradThresh = 36, .anchorThresh = 8}};
     EDLines edLines{ed};
@@ -58,11 +58,10 @@ auto main() -> int {
                      .anchorThresh = 4,
                      .blurSize = 1.5,
                      .filterSegments = true}};
-    expect(edColor.getNumberOfSegments() == 212_i);
+    expect(edColor.getNumberOfSegments() == 212_u);
   };
 
-  skip /
-      "Billiard Lines from segments from color image"_test = [billiardColor] {
+  "Billiard Lines from segments from color image"_test = [billiardColor] {
     EDColor edColor{billiardColor,
                     {.gradThresh = 36,
                      .anchorThresh = 4,
@@ -88,7 +87,7 @@ auto main() -> int {
                          .anchorThresh = 4,
                          .blurSize = 1.5,
                          .filterSegments = false}};
-    expect(testEDColor.getNumberOfSegments() == 230_i);
+    expect(testEDColor.getNumberOfSegments() == 230_u);
 
     EDLines colorLine = EDLines(testEDColor);
     expect(colorLine.getLinesNo() == 571_i);

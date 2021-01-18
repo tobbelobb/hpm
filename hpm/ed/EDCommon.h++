@@ -19,8 +19,8 @@ void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
                          int const numberOfSegmentPieces) {
   int const width{gradImage.cols};
 
-  int const chainLen = std::distance(firstPoint, lastPoint);
-  if (chainLen < MIN_SEGMENT_LEN) {
+  auto const chainLen = std::distance(firstPoint, lastPoint);
+  if (chainLen < static_cast<ssize_t>(MIN_SEGMENT_LEN)) {
     return;
   }
 
@@ -30,10 +30,11 @@ void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
       firstPoint, lastPoint, [&](cv::Point const &p0, cv::Point const &p1) {
         return gradImg[p0.y * width + p0.x] < gradImg[p1.y * width + p1.x];
       });
-  int minGrad = gradImg[(*minGradPoint).y * width + (*minGradPoint).x];
+  GradPix minGrad = gradImg[(*minGradPoint).y * width + (*minGradPoint).x];
 
-  double nfa = NFA(probabilityFunctionH[minGrad],
-                   static_cast<int>(chainLen / 2.25), numberOfSegmentPieces);
+  double nfa = NFA(probabilityFunctionH[static_cast<size_t>(minGrad)],
+                   static_cast<int>(static_cast<double>(chainLen) / 2.25),
+                   numberOfSegmentPieces);
 
   // Draw subsegment on edgeImage
   uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);

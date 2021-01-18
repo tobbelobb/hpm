@@ -7,6 +7,8 @@
 using namespace cv;
 using namespace std;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   int gradThresh = std::max(config.gradThresh, 1);
   int anchorThresh = std::max(config.anchorThresh, 0);
@@ -87,12 +89,12 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   // Get rgb->xyz->lab values
   // xyz observer = 2deg, illuminant = D65
   srcImage.forEach<Point3_<uint8_t>>([&](auto &point, int const positions[]) {
-    int const pos = positions[0] * width + positions[1];
+    size_t const pos = static_cast<size_t>(positions[0] * width + positions[1]);
     Point3d bgr{point.x / 255.0, point.y / 255.0, point.z / 255.0};
     static auto const BGR_LUT = getBgrLut<LUT_SIZE>();
-    bgr = {100 * BGR_LUT[static_cast<int>(bgr.x * LUT_SIZE + 0.5)],
-           100 * BGR_LUT[static_cast<int>(bgr.y * LUT_SIZE + 0.5)],
-           100 * BGR_LUT[static_cast<int>(bgr.z * LUT_SIZE + 0.5)]};
+    bgr = {100 * BGR_LUT[static_cast<size_t>(bgr.x * LUT_SIZE + 0.5)],
+           100 * BGR_LUT[static_cast<size_t>(bgr.y * LUT_SIZE + 0.5)],
+           100 * BGR_LUT[static_cast<size_t>(bgr.z * LUT_SIZE + 0.5)]};
     double x =
         (bgr.z * 0.4124564 + bgr.y * 0.3575761 + bgr.x * 0.1804375) / 95.047;
     double y =
@@ -100,9 +102,9 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
     double z =
         (bgr.z * 0.0193339 + bgr.y * 0.1191920 + bgr.x * 0.9503041) / 108.883;
     static auto const XYZ_LUT = getXyzLut<LUT_SIZE>();
-    x = XYZ_LUT[static_cast<int>(x * LUT_SIZE + 0.5)];
-    y = XYZ_LUT[static_cast<int>(y * LUT_SIZE + 0.5)];
-    z = XYZ_LUT[static_cast<int>(z * LUT_SIZE + 0.5)];
+    x = XYZ_LUT[static_cast<size_t>(x * LUT_SIZE + 0.5)];
+    y = XYZ_LUT[static_cast<size_t>(y * LUT_SIZE + 0.5)];
+    z = XYZ_LUT[static_cast<size_t>(z * LUT_SIZE + 0.5)];
     L[pos] = ((116.0 * y) - 16);
     a[pos] = (500 * (x / y));
     b[pos] = (200 * (y - z));
@@ -118,7 +120,7 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   double const scaleB = 255.0 / (*maxB - *minB);
 
   Lab_Img.forEach<LabPix>([&](auto &point, int const positions[]) {
-    int const pos = positions[0] * width + positions[1];
+    size_t const pos = static_cast<size_t>(positions[0] * width + positions[1]);
     point = {static_cast<LabPixSingle>((L[pos] - *minL) * scaleL),
              static_cast<LabPixSingle>((a[pos] - *minA) * scaleA),
              static_cast<LabPixSingle>((b[pos] - *minB) * scaleB)};
@@ -138,7 +140,8 @@ GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
   cv::Mat frameless(lab, cv::Rect(1, 1, width - 2, height - 2));
 
   int max = 0;
-  frameless.forEach<LabPix>([&](auto &point, const int position[]) {
+  frameless.forEach<LabPix>([&](auto &unused, const int position[]) {
+    (void)unused;
     int const i{position[0] + 1};
     int const j{position[1] + 1};
     Point3i const downRight{labPtr[(i + 1) * width + j + 1]};
@@ -168,16 +171,18 @@ GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
     // Di Zenzo's formulas from Gonzales & Woods - Page 337
     double twoTheta =
         atan2(2.0 * gxy, static_cast<double>(gxx - gyy)); // Gradient Direction
-    int grad = static_cast<int>(sqrt((gxx + gyy + (gxx - gyy) * cos(twoTheta) +
-                                      2 * gxy * sin(twoTheta)) /
-                                     2.0) +
-                                0.5); // Gradient Magnitude
+    GradPix grad =
+        static_cast<GradPix>(sqrt((gxx + gyy + (gxx - gyy) * cos(twoTheta) +
+                                   2 * gxy * sin(twoTheta)) /
+                                  2.0) +
+                             0.5); // Gradient Magnitude
 
     // Gradient is perpendicular to the edge passing through the pixel
-    if (twoTheta >= -CV_PI / 2.0 and twoTheta <= CV_PI / 2.0)
+    if (twoTheta >= -CV_PI / 2.0 and twoTheta <= CV_PI / 2.0) {
       dirData[i * width + j] = EdgeDir::VERTICAL;
-    else
+    } else {
       dirData[i * width + j] = EdgeDir::HORIZONTAL;
+    }
 
     gradImg[i * width + j] = grad;
     if (grad > max)
@@ -222,7 +227,8 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
   auto const *labPtr = lab.ptr<LabPix>(0);
   auto *gradImg = gradImage.ptr<GradPix>(0);
   cv::Mat frameless(lab, cv::Rect(1, 1, width - 2, height - 2));
-  frameless.forEach<LabPix>([&](auto &point, const int position[]) {
+  frameless.forEach<LabPix>([&](auto &unused, const int position[]) {
+    (void)unused;
     int const i{position[0] + 1};
     int const j{position[1] + 1};
     Point3i const downRight{labPtr[(i + 1) * width + j + 1]};
@@ -245,8 +251,8 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
     int const gy1 = abs(com1.y + downCurr.y - com2.y - upCurr.y);
     int const gy2 = abs(com1.z + downCurr.z - com2.z - upCurr.z);
 
-    GradPix grad =
-        (static_cast<GradPix>(gx0 + gx1 + gx2 + gy0 + gy1 + gy2) + 2) / 3;
+    GradPix const grad =
+        static_cast<GradPix>(((gx0 + gx1 + gx2 + gy0 + gy1 + gy2) + 2) / 3);
     gradImg[i * width + j] = grad;
   });
 
@@ -278,3 +284,4 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
   }
   return edgeImageOut;
 }
+#pragma GCC diagnostic pop

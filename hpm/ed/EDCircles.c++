@@ -7,6 +7,7 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than="
 EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
   edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
@@ -805,7 +806,7 @@ void EDCircles::GenerateCandidateCircles() {
       // Circle is not possible. Try an ellipse
       EllipseEquation eq;
       double ellipseFitError = 1e10;
-      double coverRatio;
+      double coverRatio = 0.0;
 
       int noPixels = arcs[i].noPixels;
       if (EllipseFit(arcs[i].x, arcs[i].y, noPixels, &eq)) {
@@ -982,7 +983,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
         bm->move(noPixels);
 
         // Try to fit a circle to the entire arc of lines
-        double xc, yc, radius, circleFitError;
+        double radius = 0.0;
+        double xc, yc, circleFitError;
         CircleFit(x, y, noPixels, &xc, &yc, &radius, &circleFitError);
 
         double coverage = noPixels / (TWOPI * radius);
@@ -1527,7 +1529,7 @@ void EDCircles::JoinCircles() {
     bool CircleFitValid = false;
 
     EllipseEquation Eq;
-    double EllipseFitError;
+    double EllipseFitError = 0.0;
     bool EllipseFitValid = false;
 
     if (noCandidateCircles > 0) {
@@ -2725,9 +2727,10 @@ double EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
   double E = eq->E() * mult;
   double F = eq->F() * mult;
 
-  double A2, C2, D2, E2, F2, theta; // rotated coefficients
-  double D3, E3, F3;                // ellipse form coefficients
-  double cX, cY, a, b; //(cX,cY) center, a & b: semimajor & semiminor axes
+  double theta = 0.0;
+  double A2, C2, D2, E2, F2; // rotated coefficients
+  double D3, E3, F3;         // ellipse form coefficients
+  double cX, cY, a, b;       //(cX,cY) center, a & b: semimajor & semiminor axes
   bool rotation = false;
 
 #define pi 3.14159265
@@ -2873,11 +2876,11 @@ void EDCircles::ComputeEllipsePoints(double *pvec, double *px, double *py,
 
   inverse(A, Ai, 2);
 
-  AperB(Ai, b, Aib, 2, 2, 2, 1);
+  AperB(Ai, b, Aib, 2, 2, 1);
   A_TperB(b, Aib, r1, 2, 1, 1);
   r1[1][1] = r1[1][1] - 4 * Ao;
 
-  AperB(Ai, u, Aiu, 2, 2, 2, npts);
+  AperB(Ai, u, Aiu, 2, 2, npts);
   for (i = 1; i <= 2; i++)
     for (j = 1; j <= npts; j++)
       uAiu[i][j] = u[i][j] * Aiu[i][j];
@@ -2904,8 +2907,8 @@ void EDCircles::ComputeEllipsePoints(double *pvec, double *px, double *py,
     ss2[2][j] = 0.5 * (-L[2][j] * u[2][j] - B[2][j]);
   }
 
-  AperB(Ai, ss1, Xpos, 2, 2, 2, npts);
-  AperB(Ai, ss2, Xneg, 2, 2, 2, npts);
+  AperB(Ai, ss1, Xpos, 2, 2, npts);
+  AperB(Ai, ss2, Xneg, 2, 2, npts);
 
   for (j = 1; j <= npts; j++) {
     if (lambda[j] == -1.0) {
@@ -3424,8 +3427,8 @@ bool EDCircles::EllipseFit(double *x, double *y, int noPoints,
   inverse(L, invL, 6);
   // pm(invL,"inverse");
 
-  AperB_T(Const, invL, temp, 6, 6, 6, 6);
-  AperB(invL, temp, C, 6, 6, 6, 6);
+  AperB_T(Const, invL, temp, 6, 6, 6);
+  AperB(invL, temp, C, 6, 6, 6);
   // pm(C,"The C matrix");
 
   jacobi(C, 6, d, V, nrot);
@@ -3629,7 +3632,7 @@ void EDCircles::DeallocateMatrix(double **m, int noRows) {
 }
 
 void EDCircles::AperB_T(double **_A, double **_B, double **_res, int _righA,
-                        int _colA, int _righB, int _colB) {
+                        int _colA, int _colB) {
   int p, q, l;
   for (p = 1; p <= _colA; p++)
     for (q = 1; q <= _colB; q++) {
@@ -3640,7 +3643,7 @@ void EDCircles::AperB_T(double **_A, double **_B, double **_res, int _righA,
 }
 
 void EDCircles::AperB(double **_A, double **_B, double **_res, int _righA,
-                      int _colA, int _righB, int _colB) {
+                      int _colA, int _colB) {
   int p, q, l;
   for (p = 1; p <= _righA; p++)
     for (q = 1; q <= _colB; q++) {
