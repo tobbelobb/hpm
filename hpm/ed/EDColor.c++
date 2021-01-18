@@ -2,6 +2,7 @@
 
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
+#include <hpm/ed/EDCommon.h++>
 
 using namespace cv;
 using namespace std;
@@ -41,10 +42,6 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 }
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
-
-std::vector<std::vector<cv::Point>> EDColor::getSegments() const {
-  return segments;
-}
 
 template <std::size_t N> std::array<double, N + 1> static getLut(int which) {
   std::array<double, N + 1> LUT;
@@ -209,17 +206,12 @@ void EDColor::blur(cv::Mat src, double const blurSize) {
 // Create a gradient image based on Lab encoded input image
 // Then redraw the edgeImage based on the new gradient image
 cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
-  int maxGradValue = MAX_GRAD_VALUE;
-  std::vector<double> probabilityFunctionH(maxGradValue, 0.0);
 
   cv::Mat_<GradPix> gradImage = Mat::zeros(height, width, GRAD_PIX_CV_TYPE);
   cv::Mat edgeImageOut = Mat::zeros(height, width, CV_8UC1);
 
-  std::vector<int> grads(maxGradValue, 0);
-
-  auto *labPtr = lab.ptr<LabPix>(0);
+  auto const *labPtr = lab.ptr<LabPix>(0);
   auto *gradImg = gradImage.ptr<GradPix>(0);
-
   cv::Mat frameless(lab, cv::Rect(1, 1, width - 2, height - 2));
   frameless.forEach<LabPix>([&](auto &point, const int position[]) {
     int const i{position[0] + 1};
@@ -247,15 +239,20 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
     GradPix grad =
         (static_cast<GradPix>(gx0 + gx1 + gx2 + gy0 + gy1 + gy2) + 2) / 3;
     gradImg[i * width + j] = grad;
-    grads[grad]++;
   });
 
-  // Compute probability function H
-
-  for (int i = maxGradValue - 1; i > 0; i--)
+  std::vector<int> grads(MAX_GRAD_VALUE, 0);
+  for (int i = 1; i < height - 1; ++i) {
+    for (int j = 1; j < width - 1; ++j) {
+      grads[gradImg[i * width + j]]++;
+    }
+  }
+  for (int i = MAX_GRAD_VALUE - 1; i > 0; i--) {
     grads[i - 1] += grads[i];
+  }
 
-  for (int i = 0; i < maxGradValue; i++) {
+  std::vector<double> probabilityFunctionH(MAX_GRAD_VALUE, 0.0);
+  for (int i = 0; i < MAX_GRAD_VALUE; i++) {
     probabilityFunctionH[i] =
         grads[i] / static_cast<double>(frameless.rows * frameless.cols);
   }
@@ -266,88 +263,9 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
         return (segment.size() * (segment.size() - 1)) / 2;
       });
 
-  // Validate segments
   for (auto const &segment : segments) {
     drawFilteredSegment(segment.begin(), segment.end(), edgeImageOut, gradImage,
                         probabilityFunctionH, numberOfSegmentPieces);
   }
   return edgeImageOut;
-}
-
-static double NFA(double prob, int len, int const numberOfSegmentPieces) {
-  double nfa = static_cast<double>(numberOfSegmentPieces);
-  for (int i = 0; i < len && nfa > EPSILON; i++) {
-    nfa *= prob;
-  }
-  return nfa;
-}
-
-//----------------------------------------------------------------------------------
-// Resursive validation using half of the pixels as suggested by DMM algorithm
-// We take pixels at Nyquist distance, i.e., 2 (as suggested by DMM)
-//
-template <typename Iterator>
-void EDColor::drawFilteredSegment(
-    Iterator firstPoint, Iterator lastPoint, cv::Mat edgeImageIn,
-    cv::Mat_<GradPix> gradImage,
-    std::vector<double> const &probabilityFunctionH,
-    int const numberOfSegmentPieces) {
-
-  int const chainLen = std::distance(firstPoint, lastPoint);
-  if (chainLen < MIN_SEGMENT_LEN) {
-    return;
-  }
-
-  // First find the min. gradient along the segment
-  GradPix const *gradImg = gradImage.ptr<GradPix>(0);
-  auto minGradPoint = std::min_element(
-      firstPoint, lastPoint, [&](Point const &p0, Point const &p1) {
-        return gradImg[p0.y * width + p0.x] < gradImg[p1.y * width + p1.x];
-      });
-  int minGrad = gradImg[(*minGradPoint).y * width + (*minGradPoint).x];
-
-  double nfa = NFA(probabilityFunctionH[minGrad], (int)(chainLen / 2.25),
-                   numberOfSegmentPieces);
-
-  // Draw subsegment on edgeImage
-  uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);
-  if (nfa <= EPSILON) {
-    std::for_each(firstPoint, lastPoint, [&](auto const &point) {
-      edgeImg[point.y * width + point.x] = 255;
-    });
-
-    return;
-  }
-
-  drawFilteredSegment(firstPoint, minGradPoint, edgeImageIn, gradImage,
-                      probabilityFunctionH, numberOfSegmentPieces);
-  drawFilteredSegment(std::next(minGradPoint), lastPoint, edgeImageIn,
-                      gradImage, probabilityFunctionH, numberOfSegmentPieces);
-}
-
-vector<Segment> EDColor::validSegments(cv::Mat edgeImageIn,
-                                       vector<Segment> segmentsIn) const {
-  vector<Segment> valids;
-
-  uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);
-  for (auto const &segment : segmentsIn) {
-    auto const end = segment.end();
-    auto front = segment.begin();
-    auto back = segment.begin();
-    while (back != end) {
-      front = std::find_if(front, end, [&](auto const &point) {
-        return edgeImg[point.y * width + point.x];
-      });
-      back = std::find_if_not(front, end, [&](auto const &point) {
-        return edgeImg[point.y * width + point.x];
-      });
-
-      if (std::distance(front, back) >= MIN_SEGMENT_LEN) {
-        valids.emplace_back(front, std::prev(back));
-      }
-      front = std::next(back);
-    }
-  }
-
-  return valids;
 }

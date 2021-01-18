@@ -2,12 +2,20 @@
 
 #include <span>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#endif
 #include <opencv2/opencv.hpp>
+#pragma GCC diagnostic pop
 
 #include <hpm/ed/EDTypes.h++>
-
-using GradPix = short;
-auto constexpr GRAD_PIX_CV_TYPE{CV_16SC1};
 
 using LabPixSingle = uint8_t;
 auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};
@@ -30,8 +38,8 @@ public:
   EDColor(cv::Mat srcImage, EDColorConfig const &config);
   cv::Mat getEdgeImage(); // for testing
 
-  std::vector<std::vector<cv::Point>> getSegments() const;
-  int getNumberOfSegments() const { return segments.size(); }
+  std::vector<Segment> getSegments() const { return segments; }
+  size_t getNumberOfSegments() const { return segments.size(); }
   int getWidth() const { return width; }
   int getHeight() const { return height; }
 
@@ -48,12 +56,4 @@ private:
   GradientMapResult ComputeGradientMapByDiZenzo(cv::Mat lab);
 
   cv::Mat makeEdgeImage(cv::Mat lab);
-
-  template <typename Iterator>
-  void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
-                           cv::Mat edgeImageIn, cv::Mat_<GradPix> gradImage,
-                           std::vector<double> const &probabilityFunctionH,
-                           int numberOfSegmentPieces);
-  std::vector<Segment> validSegments(cv::Mat edgeImage,
-                                     std::vector<Segment> segmentsIn) const;
 };

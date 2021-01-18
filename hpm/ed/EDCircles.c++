@@ -4,6 +4,7 @@ using namespace cv;
 using namespace std;
 
 EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
+  edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
@@ -233,6 +234,7 @@ EDCircles::EDCircles(Mat srcImage) : EDPF(srcImage) {
 }
 
 EDCircles::EDCircles(ED obj) : EDPF(obj) {
+  edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
@@ -462,6 +464,7 @@ EDCircles::EDCircles(ED obj) : EDPF(obj) {
 }
 
 EDCircles::EDCircles(EDColor obj) : EDPF(obj) {
+  edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
   // If the end-points of the segment is very close to each other,
   // then directly fit a circle/ellipse instread of line fitting
@@ -1192,8 +1195,8 @@ void EDCircles::ValidateCircles() {
   double *py = new double[8 * (width + height)];
 
   // logNT & LUT for NFA computation
-  double logNT =
-      2 * log10((double)(width * height)) + log10((double)(width + height));
+  double logNT = 2 * log10(static_cast<double>(width * height)) +
+                 log10(static_cast<double>(width + height));
 
   int lutSize = (width + height) / 8;
   nfa = new NFALUT(lutSize, prob, logNT); // create look up table
@@ -1265,19 +1268,18 @@ void EDCircles::ValidateCircles() {
 
       // See if there is an edge pixel within 1 pixel vicinity
       if (edgeImg[r * width + c] != 255) {
-        //   y-cy=-x-cx    y-cy=x-cx
-        //         \       /
-        //          \ IV. /
-        //           \   /
-        //            \ /
-        //     III.    +   I. quadrant
-        //            / \
-				//           /   \
-				//          / II. \
-				//         /       \
-				//
-        // (x, y)-->(x-cx, y-cy)
-        //
+        //   y-cy=-x-cx    y-cy=x-cx    //
+        //         \       /            //
+        //          \ IV. /             //
+        //           \   /              //
+        //            \ /               //
+        //     III.    +   I. quadrant  //
+        //            / \               //
+        //           /   \              //
+        //          / II. \             //
+        //         /       \            //
+        //                              //
+        // (x, y)-->(x-cx, y-cy)        //
 
         int x = c;
         int y = r;
@@ -3065,7 +3067,8 @@ void EDCircles::addArc(MyArc *arcs, int &noArcs, double xc, double yc, double r,
   arcs[noArcs].sTheta = sTheta;
   arcs[noArcs].eTheta = eTheta;
   arcs[noArcs].coverRatio =
-      (double)((1.0 - overlapRatio) * noPixels) / computeEllipsePerimeter(pEq);
+      static_cast<double>((1.0 - overlapRatio) * noPixels) /
+      computeEllipsePerimeter(pEq);
   //  arcs[noArcs].coverRatio = noPixels/ComputeEllipsePerimeter(pEq);
   //  arcs[noArcs].coverRatio = ArcLength(sTheta, eTheta)/(TWOPI);
 

@@ -45,7 +45,7 @@ double NFALUT::myAtan2(double yy, double xx) {
   static bool tableInited = false;
   if (!tableInited) {
     for (int i = 0; i <= MAX_LUT_SIZE; i++) {
-      LUT[i] = atan((double)i / MAX_LUT_SIZE);
+      LUT[i] = atan(static_cast<double>(i) / MAX_LUT_SIZE);
     }
 
     tableInited = true;
@@ -68,7 +68,7 @@ double NFALUT::myAtan2(double yy, double xx) {
 
   ratio = y / x;
 
-  double angle = LUT[(int)(ratio * MAX_LUT_SIZE)];
+  double angle = LUT[static_cast<int>(ratio * MAX_LUT_SIZE)];
 
   if (xx >= 0) {
     if (yy >= 0) {
@@ -116,7 +116,7 @@ double NFALUT::nfa(int n, int k) {
   if (n == 0 || k == 0)
     return -logNT;
   if (n == k)
-    return -logNT - (double)n * log10(prob);
+    return -logNT - static_cast<double>(n) * log10(prob);
 
   /* probability term */
   p_term = prob / (1.0 - prob);
@@ -129,14 +129,17 @@ double NFALUT::nfa(int n, int k) {
   bincoef(n,k) = gamma(n+1) / ( gamma(k+1) * gamma(n-k+1) ).
   We use this to compute the first term. Actually the log of it.
   */
-  log1term = log_gamma((double)n + 1.0) - log_gamma((double)k + 1.0) -
-             log_gamma((double)(n - k) + 1.0) + (double)k * log(prob) +
-             (double)(n - k) * log(1.0 - prob);
+  log1term = log_gamma(static_cast<double>(n) + 1.0) -
+             log_gamma(static_cast<double>(k) + 1.0) -
+             log_gamma(static_cast<double>(n - k) + 1.0) +
+             static_cast<double>(k) * log(prob) +
+             static_cast<double>(n - k) * log(1.0 - prob);
   term = exp(log1term);
 
   /* in some cases no more computations are needed */
-  if (double_equal(term, 0.0)) {         /* the first term is almost zero */
-    if ((double)k > (double)n * prob)    /* at begin or end of the tail?  */
+  if (double_equal(term, 0.0)) { /* the first term is almost zero */
+    if (static_cast<double>(k) >
+        static_cast<double>(n) * prob)   /* at begin or end of the tail?  */
       return -log1term / M_LN10 - logNT; /* end: use just the first term  */
     else
       return -logNT; /* begin: the tail is roughly 1  */
@@ -159,9 +162,10 @@ double NFALUT::nfa(int n, int k) {
     p/(1-p) is computed only once and stored in 'p_term'.
     */
     bin_term =
-        (double)(n - i + 1) *
-        (i < TABSIZE ? (inv[i] != 0.0 ? inv[i] : (inv[i] = 1.0 / (double)i))
-                     : 1.0 / (double)i);
+        static_cast<double>(n - i + 1) *
+        (i < TABSIZE ? (inv[i] != 0.0 ? inv[i]
+                                      : (inv[i] = 1.0 / static_cast<double>(i)))
+                     : 1.0 / static_cast<double>(i));
 
     mult_term = bin_term * p_term;
     term *= mult_term;
@@ -172,9 +176,9 @@ double NFALUT::nfa(int n, int k) {
       Then, the error on the binomial tail when truncated at
       the i term can be bounded by a geometric series of form
       term_i * sum mult_term_i^j.                            */
-      err = term *
-            ((1.0 - pow(mult_term, (double)(n - i + 1))) / (1.0 - mult_term) -
-             1.0);
+      err = term * ((1.0 - pow(mult_term, static_cast<double>(n - i + 1))) /
+                        (1.0 - mult_term) -
+                    1.0);
 
       /* One wants an error at most of tolerance*final_result, or:
       tolerance * abs(-log10(bin_tail)-logNT).
@@ -201,8 +205,8 @@ double NFALUT::log_gamma_lanczos(double x) {
   int n;
 
   for (n = 0; n < 7; n++) {
-    a -= log(x + (double)n);
-    b += q[n] * pow(x, (double)n);
+    a -= log(x + static_cast<double>(n));
+    b += q[n] * pow(x, static_cast<double>(n));
   }
   return a + log(b);
 }
@@ -219,7 +223,6 @@ double NFALUT::log_gamma(double x) {
 int NFALUT::double_equal(double a, double b) {
   double abs_diff, aa, bb, abs_max;
 
-  /* trivial case */
   if (a == b)
     return TRUE;
 

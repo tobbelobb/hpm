@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   // Circle and ellipse detection from grey image
   EDCircles edCirclesFromGreyImage{greyImage};
   if (show) {
-    showImage(edCirclesFromGreyImage.drawResult(cv::Mat(), ImageStyle::CIRCLES),
+    showImage(edCirclesFromGreyImage.drawResult(cv::Mat(), ImageStyle::BOTH),
               "circles-and-ellipses-from-grey-image.png");
   }
   if (verbose) {

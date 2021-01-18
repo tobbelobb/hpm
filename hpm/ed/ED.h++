@@ -1,6 +1,17 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
+#endif
 #include <opencv2/opencv.hpp>
+#pragma GCC diagnostic pop
 
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/EDTypes.h++>
@@ -68,6 +79,7 @@ protected:
   cv::Mat smoothImage;
   uint8_t *edgeImg;   // pointer to edge image data
   uint8_t *smoothImg; // pointer to smoothed image data
+  cv::Mat edgeImage;
 
 private:
   void ComputeGradient();
@@ -83,7 +95,6 @@ private:
   std::vector<cv::Point> anchorPoints;
   std::vector<cv::Point> edgePoints;
 
-  cv::Mat edgeImage;
   cv::Mat gradImage;
 
   std::vector<EdgeDir> dirData;
