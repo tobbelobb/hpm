@@ -8,8 +8,8 @@ using namespace cv;
 using namespace std;
 
 EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
-  double gradThresh = std::max(config.gradThresh, 1);
-  double anchorThresh = std::max(config.anchorThresh, 0);
+  int gradThresh = std::max(config.gradThresh, 1);
+  int anchorThresh = std::max(config.anchorThresh, 0);
   double blurSize = std::max(config.blurSize, 1.0);
 
   if (config.filterSegments) {
@@ -43,23 +43,30 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
 
 cv::Mat EDColor::getEdgeImage() { return edgeImage; }
 
-template <std::size_t N> std::array<double, N + 1> static getLut(int which) {
+template <std::size_t N> std::array<double, N + 1> static getBgrLut() {
   std::array<double, N + 1> LUT;
 
   for (size_t i = 0; i < N + 1; ++i) {
     double const d = static_cast<double>(i) / static_cast<double>(N);
-    if (which == 1) {
-      if (d >= 0.04045) {
-        LUT[i] = pow(((d + 0.055) / 1.055), 2.4);
-      } else {
-        LUT[i] = d / 12.92;
-      }
+    if (d >= 0.04045) {
+      LUT[i] = pow(((d + 0.055) / 1.055), 2.4);
     } else {
-      if (d > 0.008856) {
-        LUT[i] = pow(d, 1.0 / 3.0);
-      } else {
-        LUT[i] = (7.787 * d) + (16.0 / 116.0);
-      }
+      LUT[i] = d / 12.92;
+    }
+  }
+
+  return LUT;
+}
+
+template <std::size_t N> std::array<double, N + 1> static getXyzLut() {
+  std::array<double, N + 1> LUT;
+
+  for (size_t i = 0; i < N + 1; ++i) {
+    double const d = static_cast<double>(i) / static_cast<double>(N);
+    if (d > 0.008856) {
+      LUT[i] = pow(d, 1.0 / 3.0);
+    } else {
+      LUT[i] = (7.787 * d) + (16.0 / 116.0);
     }
   }
 
@@ -68,8 +75,6 @@ template <std::size_t N> std::array<double, N + 1> static getLut(int which) {
 
 cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   static size_t constexpr LUT_SIZE{1024 * 4096};
-  static auto const LUT1 = getLut<LUT_SIZE>(1);
-  static auto const LUT2 = getLut<LUT_SIZE>(2);
 
   auto const size{static_cast<size_t>(width * height)};
   std::vector<double> L(size, 0.0);
@@ -84,18 +89,20 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   srcImage.forEach<Point3_<uint8_t>>([&](auto &point, int const positions[]) {
     int const pos = positions[0] * width + positions[1];
     Point3d bgr{point.x / 255.0, point.y / 255.0, point.z / 255.0};
-    bgr = {100 * LUT1[(int)(bgr.x * LUT_SIZE + 0.5)],
-           100 * LUT1[(int)(bgr.y * LUT_SIZE + 0.5)],
-           100 * LUT1[(int)(bgr.z * LUT_SIZE + 0.5)]};
+    static auto const BGR_LUT = getBgrLut<LUT_SIZE>();
+    bgr = {100 * BGR_LUT[static_cast<int>(bgr.x * LUT_SIZE + 0.5)],
+           100 * BGR_LUT[static_cast<int>(bgr.y * LUT_SIZE + 0.5)],
+           100 * BGR_LUT[static_cast<int>(bgr.z * LUT_SIZE + 0.5)]};
     double x =
         (bgr.z * 0.4124564 + bgr.y * 0.3575761 + bgr.x * 0.1804375) / 95.047;
     double y =
         (bgr.z * 0.2126729 + bgr.y * 0.7151522 + bgr.x * 0.0721750) / 100.000;
     double z =
         (bgr.z * 0.0193339 + bgr.y * 0.1191920 + bgr.x * 0.9503041) / 108.883;
-    x = LUT2[(int)(x * LUT_SIZE + 0.5)];
-    y = LUT2[(int)(y * LUT_SIZE + 0.5)];
-    z = LUT2[(int)(z * LUT_SIZE + 0.5)];
+    static auto const XYZ_LUT = getXyzLut<LUT_SIZE>();
+    x = XYZ_LUT[static_cast<int>(x * LUT_SIZE + 0.5)];
+    y = XYZ_LUT[static_cast<int>(y * LUT_SIZE + 0.5)];
+    z = XYZ_LUT[static_cast<int>(z * LUT_SIZE + 0.5)];
     L[pos] = ((116.0 * y) - 16);
     a[pos] = (500 * (x / y));
     b[pos] = (200 * (y - z));
@@ -122,7 +129,8 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
 
 GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
 
-  std::vector<EdgeDir> dirData(width * height, EdgeDir::NONE);
+  std::vector<EdgeDir> dirData(static_cast<size_t>(width * height),
+                               EdgeDir::NONE);
   cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, cv::Scalar(0));
 
   auto *labPtr = lab.ptr<LabPix>(0);
@@ -178,7 +186,8 @@ GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
 
   // Scale the gradient values to 0-255
   double const scale = 255.0 / max;
-  gradImage.forEach<GradPix>([&](GradPix &pixel, int const positions[]) {
+  gradImage.forEach<GradPix>([&](GradPix &pixel, int const unused[]) {
+    (void)unused;
     pixel = static_cast<GradPix>(static_cast<double>(pixel) * scale);
   });
 
@@ -207,8 +216,8 @@ void EDColor::blur(cv::Mat src, double const blurSize) {
 // Then redraw the edgeImage based on the new gradient image
 cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
 
-  cv::Mat_<GradPix> gradImage = Mat::zeros(height, width, GRAD_PIX_CV_TYPE);
-  cv::Mat edgeImageOut = Mat::zeros(height, width, CV_8UC1);
+  cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, Scalar(0));
+  cv::Mat edgeImageOut(height, width, CV_8UC1, Scalar(0));
 
   auto const *labPtr = lab.ptr<LabPix>(0);
   auto *gradImg = gradImage.ptr<GradPix>(0);
@@ -244,15 +253,15 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
   std::vector<int> grads(MAX_GRAD_VALUE, 0);
   for (int i = 1; i < height - 1; ++i) {
     for (int j = 1; j < width - 1; ++j) {
-      grads[gradImg[i * width + j]]++;
+      grads[static_cast<size_t>(gradImg[i * width + j])]++;
     }
   }
-  for (int i = MAX_GRAD_VALUE - 1; i > 0; i--) {
+  for (size_t i = MAX_GRAD_VALUE - 1; i > 0; i--) {
     grads[i - 1] += grads[i];
   }
 
   std::vector<double> probabilityFunctionH(MAX_GRAD_VALUE, 0.0);
-  for (int i = 0; i < MAX_GRAD_VALUE; i++) {
+  for (size_t i = 0; i < MAX_GRAD_VALUE; i++) {
     probabilityFunctionH[i] =
         grads[i] / static_cast<double>(frameless.rows * frameless.cols);
   }

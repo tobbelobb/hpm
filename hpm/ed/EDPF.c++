@@ -6,6 +6,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 using namespace cv;
 using namespace std;
 
@@ -46,7 +47,7 @@ cv::Mat EDPF::makeEdgeImage() {
 }
 
 std::pair<cv::Mat_<GradPix>, std::vector<double>> EDPF::ComputePrewitt3x3() {
-  cv::Mat_<GradPix> gradImage = Mat::zeros(height, width, GRAD_PIX_CV_TYPE);
+  cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, cv::Scalar(0));
 
   auto const *srcImg = srcImage.ptr<uint8_t>(0);
   auto *gradImg = gradImage.ptr<GradPix>(0);
@@ -74,7 +75,7 @@ std::pair<cv::Mat_<GradPix>, std::vector<double>> EDPF::ComputePrewitt3x3() {
   std::vector<int> grads(MAX_GRAD_VALUE, 0);
   for (int i = 1; i < height - 1; ++i) {
     for (int j = 1; j < width - 1; ++j) {
-      grads[gradImg[i * width + j]]++;
+      grads[static_cast<size_t>(gradImg[i * width + j])]++;
     }
   }
   for (int i = MAX_GRAD_VALUE - 1; i > 0; i--) {

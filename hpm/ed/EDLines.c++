@@ -5,6 +5,10 @@
 using namespace cv;
 using namespace std;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wconversion"
 EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
                  double _max_distance_between_two_lines, double _max_error)
     : ED(srcImage,
@@ -30,7 +34,6 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
   // Use the whole segment
   for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
-    int k = 0;
     std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
@@ -47,7 +50,8 @@ EDLines::EDLines(Mat srcImage, double _line_error, int _min_line_len,
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
 
-  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+  double logNT = 2.0 * (log10(static_cast<double>(width)) +
+                        log10(static_cast<double>(height)));
 
   int lutSize = (width + height) / 8;
   nfa = new NFALUT(lutSize, prob, logNT); // create look up table
@@ -96,7 +100,6 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   // Use the whole segment
   for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
-    int k = 0;
     std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
@@ -113,7 +116,8 @@ EDLines::EDLines(ED obj, double _line_error, int _min_line_len,
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
 
-  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+  double logNT = 2.0 * (log10(static_cast<double>(width)) +
+                        log10(static_cast<double>(height)));
 
   int lutSize = (width + height) / 8;
   nfa = new NFALUT(lutSize, prob, logNT); // create look up table
@@ -162,7 +166,6 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   // Use the whole segment
   for (int segmentNumber = 0; segmentNumber < segments.size();
        segmentNumber++) {
-    int k = 0;
     std::vector<Point> segment = segments[segmentNumber];
     for (int k = 0; k < segment.size(); k++) {
       x[k] = segment[k].x;
@@ -179,7 +182,8 @@ EDLines::EDLines(EDColor obj, double _line_error, int _min_line_len,
   prec = (PRECISON_ANGLE / 180) * M_PI;
   double prob = 0.125;
 
-  double logNT = 2.0 * (log10((double)width) + log10((double)height));
+  double logNT = 2.0 * (log10(static_cast<double>(width)) +
+                        log10(static_cast<double>(height)));
 
   int lutSize = (width + height) / 8;
   nfa = new NFALUT(lutSize, prob, logNT); // create look up table
@@ -242,8 +246,9 @@ int EDLines::ComputeMinLineLength() {
   // a line segment of length "l" there are "2*l" many pixels. Thus, a line
   // segment of length "l" has a chance of getting validated by NFA.
 
-  double logNT = 2.0 * (log10((double)width) + log10((double)height));
-  return (int)round((-logNT / log10(0.125)) * 0.5);
+  double logNT = 2.0 * (log10(static_cast<double>(width)) +
+                        log10(static_cast<double>(height)));
+  return static_cast<int>(round((-logNT / log10(0.125)) * 0.5));
 }
 
 //-----------------------------------------------------------------
@@ -402,7 +407,6 @@ void EDLines::ValidateLineSegments() {
   int *y = new int[(width + height) * 4];
 
   int noValidLines = 0;
-  int eraseOffset = 0;
   for (int i = 0; i < linesNo; i++) {
     LineSegment *ls = &lines[i];
 
@@ -480,7 +484,8 @@ void EDLines::ValidateLineSegments() {
         int gy = com1 - com2 + srcImg[(r + 1) * width + c] -
                  srcImg[(r - 1) * width + c];
 
-        double pixelAngle = nfa->myAtan2((double)gx, (double)-gy);
+        double pixelAngle =
+            nfa->myAtan2(static_cast<double>(gx), static_cast<double>(-gy));
         double diff = fabs(lineAngle - pixelAngle);
 
         if (diff <= prec || diff >= M_PI - prec)
@@ -568,7 +573,8 @@ bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {
         com1 + com2 + srcImg[r * width + c + 1] - srcImg[r * width + c - 1];
     int gy =
         com1 - com2 + srcImg[(r + 1) * width + c] - srcImg[(r - 1) * width + c];
-    double pixelAngle = nfa->myAtan2((double)gx, (double)-gy);
+    double pixelAngle =
+        nfa->myAtan2(static_cast<double>(gx), static_cast<double>(-gy));
 
     double diff = fabs(lineAngle - pixelAngle);
 
@@ -1033,9 +1039,10 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
   one, so 'ri_inc' (that will increase x by one) will advance to
   the first 'column'.
   */
-  int x = (int)ceil(vx[0]) - 1;
-  int y = (int)ceil(vy[0]);
-  double ys = -DBL_MAX, ye = -DBL_MAX;
+  int x = static_cast<int>(ceil(vx[0])) - 1;
+  int y = static_cast<int>(ceil(vy[0]));
+  double ys = -DBL_MAX;
+  double ye = -DBL_MAX;
 
   int noPoints = 0;
   while (1) {
@@ -1069,7 +1076,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
       or last 'columns') then we pick the lower value of the side
       by using 'inter_low'.
       */
-      if ((double)x < vx[3]) {
+      if (static_cast<double>(x) < vx[3]) {
         /* interpolation */
         if (fabs(vx[0] - vx[3]) <= 0.01) {
           if (vy[0] < vy[3])
@@ -1109,7 +1116,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
       or last 'columns') then we pick the lower value of the side
       by using 'inter_low'.
       */
-      if ((double)x < vx[1]) {
+      if (static_cast<double>(x) < vx[1]) {
         /* interpolation */
         if (fabs(vx[0] - vx[1]) <= 0.01) {
           if (vy[0] < vy[1])
@@ -1135,7 +1142,7 @@ void EDLines::EnumerateRectPoints(double sx, double sy, double ex, double ey,
       }
 
       /* new y */
-      y = (int)ceil(ys);
+      y = static_cast<int>(ceil(ys));
     }
 
     // Are we done?
@@ -1248,3 +1255,4 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
     firstPixelIndex += len;
   }
 }
+#pragma GCC diagnostic pop

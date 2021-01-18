@@ -279,7 +279,7 @@ private:
                          EllipseEquation *pResult, int mode = FPF);
   static double **AllocateMatrix(int noRows, int noColumns);
   static void A_TperB(double **_A, double **_B, double **_res, int _righA,
-                      int _colA, int _righB, int _colB);
+                      int _colA, int _colB);
   static void choldc(double **a, int n, double **l);
   static int inverse(double **TB, double **InvB, int N);
   static void DeallocateMatrix(double **m, int noRows);
@@ -306,7 +306,7 @@ private:
                      double circleFitError, // Circular arc
                      double sTheta, double eTheta, int turn, int segmentNo,
                      int sx, int sy, int ex, int ey, double *x, double *y,
-                     int noPixels, double overlapRatio = 0.0);
+                     int noPixels);
   static void addArc(MyArc *arcs, int &noArchs, double xc, double yc, double r,
                      double circleFitError, // Elliptic arc
                      double sTheta, double eTheta, int turn, int segmentNo,

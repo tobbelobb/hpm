@@ -29,7 +29,7 @@ std::vector<Segment> validSegments(cv::Mat edgeImageIn,
         return edgeImg[point.y * width + point.x];
       });
 
-      if (std::distance(front, back) >= MIN_SEGMENT_LEN) {
+      if (std::distance(front, back) >= static_cast<ssize_t>(MIN_SEGMENT_LEN)) {
         valids.emplace_back(front, std::prev(back));
       }
       front = std::next(back);

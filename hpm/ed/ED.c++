@@ -6,6 +6,10 @@
 using namespace cv;
 using namespace std;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 ED::ED(Mat _srcImage, EdConfig const &config) {
   gradThresh = std::max(config.gradThresh, 1);
   anchorThresh = std::max(config.anchorThresh, 0);
@@ -41,7 +45,7 @@ ED::ED(Mat _srcImage, EdConfig const &config) {
   smoothImg = smoothImage.data;
   edgeImg = edgeImage.data;
 
-  dirData.resize(width * height);
+  dirData.resize(static_cast<size_t>(width * height));
   std::fill(dirData.begin(), dirData.end(), EdgeDir::NONE);
 
   /*------------ COMPUTE GRADIENT & EDGE DIRECTION MAPS -------------------*/
@@ -351,7 +355,10 @@ void ED::ComputeGradient() {
 
       auto const [gx, gy] = getGxGy();
 
-      int const sum = sumFlag ? gx + gy : (int)sqrt((double)gx * gx + gy * gy);
+      int const sum =
+          sumFlag
+              ? gx + gy
+              : static_cast<int>(sqrt(static_cast<double>(gx) * gx + gy * gy));
 
       int const index = i * width + j;
       short *gradImg = gradImage.ptr<short>(0);
@@ -419,17 +426,12 @@ void ED::JoinAnchorPointsUsingSortedAnchors() {
 
   // Now join the anchors starting with the anchor having the greatest gradient
   // value
-  int totalPixels = 0;
-
   short *gradImg = gradImage.ptr<short>(0);
   for (int k = anchorNos - 1; k >= 0; k--) {
     int pixelOffset = A[k];
 
     int i = pixelOffset / width;
     int j = pixelOffset % width;
-
-    // int i = anchorPoints[k].y;
-    // int j = anchorPoints[k].x;
 
     if (edgeImg[i * width + j] != ANCHOR_PIXEL)
       continue;
@@ -1101,3 +1103,4 @@ int ED::RetrieveChainNos(Chain *chains, int root, int chainNos[]) {
 
   return count;
 }
+#pragma GCC diagnostic pop
