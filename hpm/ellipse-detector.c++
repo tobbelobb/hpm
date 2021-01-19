@@ -69,12 +69,6 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     double const dist =
         sqrt(distCoord.x * distCoord.x + distCoord.y * distCoord.y);
     double const maxDist{0.5 * static_cast<double>(imageMat.rows)};
-    if (e.m_major != e.m_minor) {
-      std::cout << "size=" << e.m_major << ", " << e.m_minor
-                << " shouldAngle=" << shouldAngle << " m_rot=" << e.m_rot
-                << " diff in deg="
-                << std::abs(shouldAngle - e.m_rot) * 180.0 / M_PI << '\n';
-    }
     if (dist < maxDist and e.m_major == e.m_minor) {
       // a circle near middle of image
       centerPointingEllipses.emplace_back(e);
