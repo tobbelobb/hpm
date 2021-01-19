@@ -2,7 +2,6 @@
 
 #include <hpm/ed/EDCircles.h++>
 
-
 using namespace cv;
 using namespace std;
 
@@ -740,7 +739,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   delete[] info;
 }
 
-auto EDCircles::drawResult(const cv::Mat &background, ImageStyle style)
+auto EDCircles::drawResult(const cv::Mat &background, ImageStyle style) const
     -> cv::Mat {
   Mat colorImage;
   int lineThickness = 1;
@@ -775,10 +774,6 @@ auto EDCircles::drawResult(const cv::Mat &background, ImageStyle style)
 
   return colorImage;
 }
-
-auto EDCircles::getCircles() -> vector<mCircle> { return circles; }
-
-auto EDCircles::getEllipses() -> vector<mEllipse> { return ellipses; }
 
 auto EDCircles::getCirclesNo() const -> int { return noCircles; }
 

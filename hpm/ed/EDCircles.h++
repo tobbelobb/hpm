@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <vector>
 
 #include <hpm/ed/EDLines.h++>
 #include <hpm/ed/EDPF.h++>
@@ -48,10 +49,7 @@ enum ImageStyle { NONE = 0, CIRCLES, ELLIPSES, BOTH };
 struct mCircle {
   cv::Point2d center;
   double r;
-  mCircle(cv::Point2d _center, double _r) {
-    center = std::move(_center);
-    r = _r;
-  }
+  mCircle(cv::Point2d _center, double _r) : center(std::move(_center)), r(_r) {}
 };
 
 // Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
@@ -59,11 +57,8 @@ struct mEllipse {
   cv::Point2d center;
   cv::Size axes;
   double theta;
-  mEllipse(cv::Point2d _center, cv::Size _axes, double _theta) {
-    center = std::move(_center);
-    axes = std::move(_axes);
-    theta = _theta;
-  }
+  mEllipse(cv::Point2d _center, cv::Size _axes, double _theta)
+      : center(std::move(_center)), axes(std::move(_axes)), theta(_theta) {}
 };
 
 //----------------------------------------------------------
@@ -229,10 +224,22 @@ public:
   EDCircles(const ED &obj);
   EDCircles(const EDColor &obj);
 
-  auto drawResult(const cv::Mat &, ImageStyle) -> cv::Mat;
+  auto drawResult(const cv::Mat &, ImageStyle) const -> cv::Mat;
 
   auto getCircles() -> std::vector<mCircle>;
   auto getEllipses() -> std::vector<mEllipse>;
+
+  [[nodiscard]] auto getCircles() const -> std::vector<mCircle> {
+    return circles;
+  }
+  [[nodiscard]] auto getEllipses() const -> std::vector<mEllipse> {
+    return ellipses;
+  }
+  auto getCirclesRef() const -> std::vector<mCircle> const & { return circles; }
+  auto getEllipsesRef() const -> std::vector<mEllipse> const & {
+    return ellipses;
+  }
+
   [[nodiscard]] auto getCirclesNo() const -> int;
   [[nodiscard]] auto getEllipsesNo() const -> int;
 

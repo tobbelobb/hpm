@@ -43,8 +43,6 @@ EDColor::EDColor(const Mat &srcImage, EDColorConfig const &config) {
   }
 }
 
-auto EDColor::getEdgeImage() -> cv::Mat { return edgeImage; }
-
 template <std::size_t N> auto static getBgrLut() -> std::array<double, N + 1> {
   std::array<double, N + 1> LUT{};
 

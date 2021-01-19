@@ -185,7 +185,7 @@ auto main() -> int {
             .first};
 
     // Random false positive red detection result
-    KeyPoint const falsePositiveRed{{{200, 500}, 40}};
+    KeyPoint const falsePositiveRed{PixelPosition{200, 500}, 40.0};
     // A bit harder to sort out false positive blue detection
     KeyPoint const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
                                      MARKER_SIZE_STRAIGHT * 1.08};

@@ -143,7 +143,7 @@ auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
   // size
   //         So we know its semi-major axis size and direction,
   //         We also know the position of its center
-  PixelPosition const fromCenter = blob.center - imageCenter;
+  PixelPosition const fromCenter = blob.m_center - imageCenter;
   // This approximation works well close to x and y axis, but
   // if keyPoint lies along y = x, then this approximation isn't good
 
@@ -164,8 +164,8 @@ auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
   // the SimpleBlobDetector include/enclose in its marker size?
   double constexpr detectorEllipsenessInclusion{0.5};
 
-  double const semiMajorAxis = (blob.size / 2.0) * xyOffnessFactor;
-  double const majorAxis = 2 * semiMajorAxis;
+  double const majorAxis = blob.m_major * xyOffnessFactor;
+  double const semiMajorAxis = majorAxis / 2.0;
 
   // Step 2: We know that this ellipsis is a projection cast by a circular
   // disc

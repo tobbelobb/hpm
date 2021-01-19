@@ -11,7 +11,7 @@ DISABLE_WARNINGS
 ENABLE_WARNINGS
 
 #include <hpm/blob-detector.h++>
-//#include <hpm/ellipse-detector.h++>
+#include <hpm/ellipse-detector.h++>
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/util.h++>
 
@@ -19,8 +19,8 @@ using namespace hpm;
 
 auto findMarks(cv::InputArray undistortedImage, bool showIntermediateImages)
     -> DetectionResult {
-  return blobDetect(undistortedImage, showIntermediateImages);
-  // return ellipseDetect(undistortedImage, showIntermediateImages);
+  // return blobDetect(undistortedImage, showIntermediateImages);
+  return ellipseDetect(undistortedImage, showIntermediateImages);
 }
 
 void filterMarksByDistance(DetectionResult &marks,

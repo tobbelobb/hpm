@@ -8,6 +8,53 @@
 
 namespace hpm {
 
+struct KeyPoint {
+  PixelPosition m_center{0, 0};
+  double m_major{0.0};
+  double m_minor{0.0};
+  double m_rot{0.0};
+
+  explicit KeyPoint(cv::KeyPoint const &keyPointIn)
+      : m_center(static_cast<PixelPosition>(keyPointIn.pt)),
+        m_major(static_cast<double>(keyPointIn.size)), m_minor(m_major),
+        m_rot(0.0) {}
+
+  KeyPoint(PixelPosition const &center_, double size_)
+      : m_center(center_), m_major(size_), m_minor(size_), m_rot(0.0) {}
+
+  KeyPoint(mCircle const &circle)
+      : m_center(circle.center), m_major(2.0 * circle.r), m_minor(m_major),
+        m_rot(0.0) {}
+
+  KeyPoint(mEllipse const &ellipse) : m_center(ellipse.center) {
+    if (ellipse.axes.width >= ellipse.axes.height) {
+      m_major = 2.0 * ellipse.axes.width;
+      m_minor = 2.0 * ellipse.axes.height;
+      m_rot = ellipse.theta;
+    } else {
+      m_major = 2.0 * ellipse.axes.height;
+      m_minor = 2.0 * ellipse.axes.width;
+      if (ellipse.theta > 0.0) {
+        m_rot = ellipse.theta - M_PI / 2.0;
+      } else {
+        m_rot = ellipse.theta + M_PI / 2.0;
+      }
+    }
+  }
+
+  cv::KeyPoint toCv() const {
+    return {static_cast<cv::Point2f>(m_center),
+            static_cast<float>(std::midpoint(m_major, m_minor))};
+  }
+
+  friend std::ostream &operator<<(std::ostream &out, KeyPoint const &keyPoint) {
+    return out << keyPoint.m_center << ' ' << keyPoint.m_major << ' '
+               << keyPoint.m_minor;
+  };
+
+  bool operator==(KeyPoint const &) const = default;
+};
+
 struct DetectionResult {
   std::vector<hpm::KeyPoint> red;
   std::vector<hpm::KeyPoint> green;

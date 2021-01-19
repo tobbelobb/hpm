@@ -25,7 +25,7 @@ static void fanSort(std::vector<hpm::KeyPoint> &fan) {
   std::sort(
       std::next(fan.begin()), fan.end(),
       [&pivot](hpm::KeyPoint const &lhs, hpm::KeyPoint const &rhs) -> bool {
-        return isRight(pivot.center, lhs.center, rhs.center);
+        return isRight(pivot.m_center, lhs.m_center, rhs.m_center);
       });
 }
 
@@ -56,13 +56,13 @@ struct IdentifiedHpMarks {
     }
 
     std::vector<hpm::KeyPoint> all{foundMarkers.getFlatCopy()};
-    if (not(isRight(all[0].center, all[1].center, all[2].center))) {
+    if (not(isRight(all[0].m_center, all[1].m_center, all[2].m_center))) {
       std::swap(all[0], all[1]);
     }
     fanSort(all);
 
-    m_pixelPositions = {all[0].center, all[1].center, all[2].center,
-                        all[3].center, all[4].center, all[5].center};
+    m_pixelPositions = {all[0].m_center, all[1].m_center, all[2].m_center,
+                        all[3].m_center, all[4].m_center, all[5].m_center};
     m_identified = {true, true, true, true, true, true};
   }
 

@@ -28,7 +28,11 @@ struct GradientMapResult {
 class EDColor {
 public:
   EDColor(const cv::Mat &srcImage, EDColorConfig const &config);
-  auto getEdgeImage() -> cv::Mat; // for testing
+
+  // for testing
+  [[nodiscard]] auto getEdgeImage() const -> cv::Mat {
+    return edgeImage.clone();
+  }
 
   [[nodiscard]] auto getSegments() const -> std::vector<Segment> {
     return segments;

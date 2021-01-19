@@ -1,16 +1,11 @@
 #include <cmath>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#if defined(__clang__)
-#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-#endif
+#include <hpm/open-cv-warnings-disabler.h++>
+DISABLE_WARNINGS
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#pragma GCC diagnostic pop
+ENABLE_WARNINGS
 
 #include <hpm/util.h++>
 
@@ -20,9 +15,11 @@ void drawKeyPoints(cv::InputOutputArray image,
                    std::vector<hpm::KeyPoint> const &keyPoints,
                    cv::Scalar const &color) {
   for (auto const &keyPoint : keyPoints) {
-    cv::circle(image, keyPoint.center, static_cast<int>(keyPoint.size / 2.0),
-               color, 3);
-    cv::circle(image, keyPoint.center, 2, color, 3);
+    cv::ellipse(image, keyPoint.m_center,
+                cv::Size{static_cast<int>(keyPoint.m_major / 2.0),
+                         static_cast<int>(keyPoint.m_minor / 2.0)},
+                keyPoint.m_rot, 0.0, 360.0, color, 3);
+    cv::circle(image, keyPoint.m_center, 2, color, 3);
   }
 }
 
