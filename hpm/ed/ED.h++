@@ -43,34 +43,33 @@ class ED {
 public:
   ED(cv::Mat _srcImage, EdConfig const &config);
   ED(const ED &cpyObj);
-  ED(cv::Mat gradImage, std::vector<EdgeDir> dirData, int _gradThresh,
+  ED(const cv::Mat &gradImage, std::vector<EdgeDir> dirData, int _gradThresh,
      int _anchorThresh, int _scanInterval = 1, bool selectStableAnchors = true);
   ED(EDColor const &cpyObj);
 
-  cv::Mat getEdgeImage();
-  cv::Mat getAnchorImage();
-  cv::Mat getSmoothImage();
-  cv::Mat getGradImage();
+  auto getEdgeImage() -> cv::Mat;
+  auto getAnchorImage() -> cv::Mat;
+  auto getSmoothImage() -> cv::Mat;
+  auto getGradImage() -> cv::Mat;
 
-  int getSegmentNo();
-  int getAnchorNo();
+  [[nodiscard]] auto getSegmentNo() const -> int;
+  [[nodiscard]] auto getAnchorNo() const -> int;
+  [[nodiscard]] auto getAnchorPoints() const -> std::vector<cv::Point>;
+  [[nodiscard]] auto getSegments() const -> std::vector<Segment>;
+  [[nodiscard]] auto getSortedSegments() const -> std::vector<Segment>;
 
-  std::vector<cv::Point> getAnchorPoints();
-  std::vector<Segment> getSegments();
-  std::vector<Segment> getSortedSegments();
-
-  cv::Mat drawParticularSegments(std::vector<int> list);
+  auto drawParticularSegments(std::vector<int> list) -> cv::Mat;
 
 protected:
   cv::Mat srcImage;
   int width;
   int height;
-  uint8_t *srcImg;
+  uint8_t *srcImg{nullptr};
   std::vector<Segment> segments;
-  double blurSize;
+  double blurSize{0.0};
   cv::Mat smoothImage;
-  uint8_t *edgeImg;   // pointer to edge image data
-  uint8_t *smoothImg; // pointer to smoothed image data
+  uint8_t *edgeImg{nullptr};   // pointer to edge image data
+  uint8_t *smoothImg{nullptr}; // pointer to smoothed image data
   cv::Mat edgeImage;
 
 private:
@@ -78,12 +77,12 @@ private:
   void ComputeAnchorPoints();
   void JoinAnchorPointsUsingSortedAnchors();
   void sortAnchorsByGradValue();
-  int *sortAnchorsByGradValue1();
+  auto sortAnchorsByGradValue1() -> int *;
 
-  static int LongestChain(Chain *chains, int root);
-  static int RetrieveChainNos(Chain *chains, int root, int chainNos[]);
+  static auto LongestChain(Chain *chains, int root) -> int;
+  static auto RetrieveChainNos(Chain *chains, int root, int chainNos[]) -> int;
 
-  int anchorNos;
+  int anchorNos{};
   std::vector<cv::Point> anchorPoints;
   std::vector<cv::Point> edgePoints;
 
@@ -92,10 +91,10 @@ private:
   std::vector<EdgeDir> dirData;
 
   GradientOperator op; // operation used in gradient calculation
-  int gradThresh;      // gradient threshold
-  int anchorThresh;    // anchor point threshold
-  int scanInterval;
-  bool sumFlag;
+  int gradThresh{};    // gradient threshold
+  int anchorThresh{};  // anchor point threshold
+  int scanInterval{};
+  bool sumFlag{};
 
   static uint8_t constexpr ANCHOR_PIXEL{254};
   static uint8_t constexpr EDGE_PIXEL{255};

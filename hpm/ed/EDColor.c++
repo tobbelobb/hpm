@@ -9,7 +9,7 @@ using namespace std;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
+EDColor::EDColor(const Mat &srcImage, EDColorConfig const &config) {
   int gradThresh = std::max(config.gradThresh, 1);
   int anchorThresh = std::max(config.anchorThresh, 0);
   double blurSize = std::max(config.blurSize, 1.0);
@@ -43,10 +43,10 @@ EDColor::EDColor(Mat srcImage, EDColorConfig const &config) {
   }
 }
 
-cv::Mat EDColor::getEdgeImage() { return edgeImage; }
+auto EDColor::getEdgeImage() -> cv::Mat { return edgeImage; }
 
-template <std::size_t N> std::array<double, N + 1> static getBgrLut() {
-  std::array<double, N + 1> LUT;
+template <std::size_t N> auto static getBgrLut() -> std::array<double, N + 1> {
+  std::array<double, N + 1> LUT{};
 
   for (size_t i = 0; i < N + 1; ++i) {
     double const d = static_cast<double>(i) / static_cast<double>(N);
@@ -60,8 +60,8 @@ template <std::size_t N> std::array<double, N + 1> static getBgrLut() {
   return LUT;
 }
 
-template <std::size_t N> std::array<double, N + 1> static getXyzLut() {
-  std::array<double, N + 1> LUT;
+template <std::size_t N> auto static getXyzLut() -> std::array<double, N + 1> {
+  std::array<double, N + 1> LUT{};
 
   for (size_t i = 0; i < N + 1; ++i) {
     double const d = static_cast<double>(i) / static_cast<double>(N);
@@ -75,7 +75,7 @@ template <std::size_t N> std::array<double, N + 1> static getXyzLut() {
   return LUT;
 }
 
-cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
+auto EDColor::MyRGB2LabFast(cv::Mat srcImage) -> cv::Mat {
   static size_t constexpr LUT_SIZE{1024 * 4096};
 
   auto const size{static_cast<size_t>(width * height)};
@@ -89,7 +89,7 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   // Get rgb->xyz->lab values
   // xyz observer = 2deg, illuminant = D65
   srcImage.forEach<Point3_<uint8_t>>([&](auto &point, int const positions[]) {
-    size_t const pos = static_cast<size_t>(positions[0] * width + positions[1]);
+    auto const pos = static_cast<size_t>(positions[0] * width + positions[1]);
     Point3d bgr{point.x / 255.0, point.y / 255.0, point.z / 255.0};
     static auto const BGR_LUT = getBgrLut<LUT_SIZE>();
     bgr = {100 * BGR_LUT[static_cast<size_t>(bgr.x * LUT_SIZE + 0.5)],
@@ -123,7 +123,7 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   double const scaleB = 255.0 / (*maxBiter - minB);
 
   Lab_Img.forEach<LabPix>([&](auto &point, int const positions[]) {
-    size_t const pos = static_cast<size_t>(positions[0] * width + positions[1]);
+    auto const pos = static_cast<size_t>(positions[0] * width + positions[1]);
     point = {static_cast<LabPixSingle>((L[pos] - minL) * scaleL),
              static_cast<LabPixSingle>((a[pos] - minA) * scaleA),
              static_cast<LabPixSingle>((b[pos] - minB) * scaleB)};
@@ -132,7 +132,7 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
   return Lab_Img;
 }
 
-GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
+auto EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) -> GradientMapResult {
 
   std::vector<EdgeDir> dirData(static_cast<size_t>(width * height),
                                EdgeDir::NONE);
@@ -174,7 +174,7 @@ GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
     // Di Zenzo's formulas from Gonzales & Woods - Page 337
     double twoTheta =
         atan2(2.0 * gxy, static_cast<double>(gxx - gyy)); // Gradient Direction
-    GradPix grad =
+    auto grad =
         static_cast<GradPix>(sqrt((gxx + gyy + (gxx - gyy) * cos(twoTheta) +
                                    2 * gxy * sin(twoTheta)) /
                                   2.0) +
@@ -188,8 +188,9 @@ GradientMapResult EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) {
     }
 
     gradImg[i * width + j] = grad;
-    if (grad > max)
+    if (grad > max) {
       max = grad;
+    }
   });
 
   // Scale the gradient values to 0-255
@@ -222,7 +223,7 @@ void EDColor::blur(cv::Mat src, double const blurSize) {
 // Filter edges using the Helmholtz principle
 // Create a gradient image based on Lab encoded input image
 // Then redraw the edgeImage based on the new gradient image
-cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
+auto EDColor::makeEdgeImage(cv::Mat lab) -> cv::Mat {
 
   cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, Scalar(0));
   cv::Mat edgeImageOut(height, width, CV_8UC1, Scalar(0));
@@ -254,7 +255,7 @@ cv::Mat EDColor::makeEdgeImage(cv::Mat lab) {
     int const gy1 = abs(com1.y + downCurr.y - com2.y - upCurr.y);
     int const gy2 = abs(com1.z + downCurr.z - com2.z - upCurr.z);
 
-    GradPix const grad =
+    auto const grad =
         static_cast<GradPix>(((gx0 + gx1 + gx2 + gy0 + gy1 + gy2) + 2) / 3);
     gradImg[i * width + j] = grad;
   });

@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-EDPF::EDPF(Mat srcImage)
+EDPF::EDPF(const Mat &srcImage)
     : ED(srcImage, {.op = GradientOperator::PREWITT,
                     .gradThresh = 11,
                     .anchorThresh = 3}) {
@@ -20,16 +20,16 @@ EDPF::EDPF(Mat srcImage)
   segments = validSegments(edgeImage, segments);
 }
 
-EDPF::EDPF(ED obj) : ED(obj) {
+EDPF::EDPF(const ED &obj) : ED(obj) {
   blurSize /= 2.5;
   GaussianBlur(srcImage, smoothImage, Size(), blurSize);
   edgeImage = makeEdgeImage();
   segments = validSegments(edgeImage, segments);
 }
 
-EDPF::EDPF(EDColor obj) : ED(obj) {}
+EDPF::EDPF(const EDColor &obj) : ED(obj) {}
 
-cv::Mat EDPF::makeEdgeImage() {
+auto EDPF::makeEdgeImage() -> cv::Mat {
   auto [gradImage, probabilityFunctionH] = ComputePrewitt3x3();
 
   int const numberOfSegmentPieces = std::transform_reduce(
@@ -46,7 +46,8 @@ cv::Mat EDPF::makeEdgeImage() {
   return edgeImageOut;
 }
 
-std::pair<cv::Mat_<GradPix>, std::vector<double>> EDPF::ComputePrewitt3x3() {
+auto EDPF::ComputePrewitt3x3()
+    -> std::pair<cv::Mat_<GradPix>, std::vector<double>> {
   cv::Mat gradImage(height, width, GRAD_PIX_CV_TYPE, cv::Scalar(0));
 
   auto const *srcImg = srcImage.ptr<uint8_t>(0);
@@ -67,10 +68,9 @@ std::pair<cv::Mat_<GradPix>, std::vector<double>> EDPF::ComputePrewitt3x3() {
     // Prewitt Operator in horizontal and vertical direction
     GradPix const com1 = downRight - upLeft;
     GradPix const com2 = upRight - downLeft;
-    GradPix const gx =
+    auto const gx =
         static_cast<GradPix>(abs(com1 + com2 + currRight - currLeft));
-    GradPix const gy =
-        static_cast<GradPix>(abs(com1 - com2 + downCurr - upCurr));
+    auto const gy = static_cast<GradPix>(abs(com1 - com2 + downCurr - upCurr));
 
     gradImg[i * width + j] = gx + gy;
   });

@@ -27,13 +27,17 @@ struct GradientMapResult {
 
 class EDColor {
 public:
-  EDColor(cv::Mat srcImage, EDColorConfig const &config);
-  cv::Mat getEdgeImage(); // for testing
+  EDColor(const cv::Mat &srcImage, EDColorConfig const &config);
+  auto getEdgeImage() -> cv::Mat; // for testing
 
-  std::vector<Segment> getSegments() const { return segments; }
-  size_t getNumberOfSegments() const { return segments.size(); }
-  int getWidth() const { return width; }
-  int getHeight() const { return height; }
+  [[nodiscard]] auto getSegments() const -> std::vector<Segment> {
+    return segments;
+  }
+  [[nodiscard]] auto getNumberOfSegments() const -> size_t {
+    return segments.size();
+  }
+  [[nodiscard]] auto getWidth() const -> int { return width; }
+  [[nodiscard]] auto getHeight() const -> int { return height; }
 
 private:
   cv::Mat edgeImage;
@@ -43,9 +47,9 @@ private:
 
   std::vector<Segment> segments;
 
-  cv::Mat MyRGB2LabFast(cv::Mat srcImage);
-  void blur(cv::Mat src, double blurSize);
-  GradientMapResult ComputeGradientMapByDiZenzo(cv::Mat lab);
+  auto MyRGB2LabFast(cv::Mat srcImage) -> cv::Mat;
+  static void blur(cv::Mat src, double blurSize);
+  auto ComputeGradientMapByDiZenzo(cv::Mat lab) -> GradientMapResult;
 
-  cv::Mat makeEdgeImage(cv::Mat lab);
+  auto makeEdgeImage(cv::Mat lab) -> cv::Mat;
 };

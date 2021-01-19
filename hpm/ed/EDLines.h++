@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/NFA.h++>
@@ -15,8 +17,8 @@ struct LS {
   cv::Point2d end;
 
   LS(cv::Point2d _start, cv::Point2d _end) {
-    start = _start;
-    end = _end;
+    start = std::move(_start);
+    end = std::move(_end);
   }
 };
 
@@ -52,17 +54,17 @@ public:
   EDLines(cv::Mat srcImage, double _line_error = 1.0, int _min_line_len = -1,
           double _max_distance_between_two_lines = 6.0,
           double _max_error = 1.3);
-  EDLines(ED obj, double _line_error = 1.0, int _min_line_len = -1,
+  EDLines(const ED &obj, double _line_error = 1.0, int _min_line_len = -1,
           double _max_distance_between_two_lines = 6.0,
           double _max_error = 1.3);
-  EDLines(EDColor obj, double _line_error = 1.0, int _min_line_len = -1,
+  EDLines(const EDColor &obj, double _line_error = 1.0, int _min_line_len = -1,
           double _max_distance_between_two_lines = 6.0,
           double _max_error = 1.3);
 
-  std::vector<LS> getLines();
-  int getLinesNo() const;
-  cv::Mat getLineImage();
-  cv::Mat drawOnImage();
+  auto getLines() -> std::vector<LS>;
+  [[nodiscard]] auto getLinesNo() const -> int;
+  auto getLineImage() -> cv::Mat;
+  auto drawOnImage() -> cv::Mat;
 
   // EDCircle uses this one
   static void SplitSegment2Lines(double *x, double *y, int noPixels,
@@ -81,26 +83,26 @@ private:
   double prec;
   NFALUT *nfa;
 
-  int ComputeMinLineLength();
+  auto ComputeMinLineLength() -> int;
   void SplitSegment2Lines(double *x, double *y, int noPixels, int segmentNo);
   void JoinCollinearLines();
 
   void ValidateLineSegments();
-  bool ValidateLineSegmentRect(int *x, int *y, LineSegment *ls);
-  bool TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
-                                int changeIndex);
+  auto ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) -> bool;
+  auto TryToJoinTwoLineSegments(LineSegment *ls1, LineSegment *ls2,
+                                int changeIndex) -> bool;
 
-  static double ComputeMinDistance(double x1, double y1, double a, double b,
-                                   int invert);
+  static auto ComputeMinDistance(double x1, double y1, double a, double b,
+                                 int invert) -> double;
   static void ComputeClosestPoint(double x1, double y1, double a, double b,
                                   int invert, double &xOut, double &yOut);
   static void LineFit(double *x, double *y, int count, double &a, double &b,
                       int invert);
   static void LineFit(double *x, double *y, int count, double &a, double &b,
                       double &e, int &invert);
-  static double ComputeMinDistanceBetweenTwoLines(LineSegment *ls1,
-                                                  LineSegment *ls2,
-                                                  int *pwhich);
+  static auto ComputeMinDistanceBetweenTwoLines(LineSegment *ls1,
+                                                LineSegment *ls2, int *pwhich)
+      -> double;
   static void UpdateLineParameters(LineSegment *ls);
   static void EnumerateRectPoints(double sx, double sy, double ex, double ey,
                                   int ptsx[], int ptsy[], int *pNoPoints);

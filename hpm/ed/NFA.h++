@@ -35,13 +35,13 @@ public:
   double prob;
   double logNT;
 
-  bool checkValidationByNFA(int n, int k);
-  static double myAtan2(double yy, double xx);
+  auto checkValidationByNFA(int n, int k) -> bool;
+  static auto myAtan2(double yy, double xx) -> double;
 
 private:
-  double nfa(int n, int k);
-  static double log_gamma_lanczos(double x);
-  static double log_gamma_windschitl(double x);
-  static double log_gamma(double x);
-  static int double_equal(double a, double b);
+  [[nodiscard]] auto nfa(int n, int k) const -> double;
+  static auto log_gamma_lanczos(double x) -> double;
+  static auto log_gamma_windschitl(double x) -> double;
+  static auto log_gamma(double x) -> double;
+  static auto double_equal(double a, double b) -> int;
 };

@@ -1,5 +1,5 @@
-#include <float.h>
-#include <math.h>
+#include <cfloat>
+#include <cmath>
 
 #include <hpm/ed/NFA.h++>
 
@@ -19,12 +19,14 @@ NFALUT::NFALUT(int size, double _prob, double _logNT) {
       while (j < i) {
         j++;
         ret = nfa(i, j);
-        if (ret >= 0)
+        if (ret >= 0) {
           break;
+        }
       }
 
-      if (ret < 0)
+      if (ret < 0) {
         continue;
+      }
     }
 
     LUT[i] = j;
@@ -33,14 +35,14 @@ NFALUT::NFALUT(int size, double _prob, double _logNT) {
 
 NFALUT::~NFALUT() { delete[] LUT; }
 
-bool NFALUT::checkValidationByNFA(int n, int k) {
-  if (n >= LUTSize)
+auto NFALUT::checkValidationByNFA(int n, int k) -> bool {
+  if (n >= LUTSize) {
     return nfa(n, k) >= 0.0;
-  else
-    return k >= LUT[n];
+  }
+  { return k >= LUT[n]; }
 }
 
-double NFALUT::myAtan2(double yy, double xx) {
+auto NFALUT::myAtan2(double yy, double xx) -> double {
   static double LUT[MAX_LUT_SIZE + 1];
   static bool tableInited = false;
   if (!tableInited) {
@@ -62,9 +64,10 @@ double NFALUT::myAtan2(double yy, double xx) {
     invert = true;
   }
 
-  double ratio;
-  if (x == 0) // avoid division error
+  double ratio = NAN;
+  if (x == 0) { // avoid division error
     x = 0.000001;
+  }
 
   ratio = y / x;
 
@@ -73,50 +76,63 @@ double NFALUT::myAtan2(double yy, double xx) {
   if (xx >= 0) {
     if (yy >= 0) {
       // I. quadrant
-      if (invert)
+      if (invert) {
         angle = M_PI / 2 - angle;
+      }
 
     } else {
       // IV. quadrant
-      if (invert == false)
+      if (!invert) {
         angle = M_PI - angle;
-      else
+      } else {
         angle = M_PI / 2 + angle;
+      }
     }
 
   } else {
     if (yy >= 0) {
       /// II. quadrant
-      if (invert == false)
+      if (!invert) {
         angle = M_PI - angle;
-      else
+      } else {
         angle = M_PI / 2 + angle;
+      }
 
     } else {
       /// III. quadrant
-      if (invert)
+      if (invert) {
         angle = M_PI / 2 - angle;
+      }
     }
   }
 
   return angle;
 }
 
-double NFALUT::nfa(int n, int k) {
+auto NFALUT::nfa(int n, int k) const -> double {
   static double inv[TABSIZE]; /* table to keep computed inverse values */
   double tolerance = 0.1;     /* an error of 10% in the result is accepted */
-  double log1term, term, bin_term, mult_term, bin_tail, err, p_term;
-  int i;
+  double log1term = NAN;
+  double term = NAN;
+  double bin_term = NAN;
+  double mult_term = NAN;
+  double bin_tail = NAN;
+  double err = NAN;
+  double p_term = NAN;
+  int i = 0;
 
   /* check parameters */
-  if (n < 0 || k < 0 || k > n || prob <= 0.0 || prob >= 1.0)
+  if (n < 0 || k < 0 || k > n || prob <= 0.0 || prob >= 1.0) {
     return -1.0;
+  }
 
   /* trivial cases */
-  if (n == 0 || k == 0)
+  if (n == 0 || k == 0) {
     return -logNT;
-  if (n == k)
+  }
+  if (n == k) {
     return -logNT - static_cast<double>(n) * log10(prob);
+  }
 
   /* probability term */
   p_term = prob / (1.0 - prob);
@@ -137,12 +153,12 @@ double NFALUT::nfa(int n, int k) {
   term = exp(log1term);
 
   /* in some cases no more computations are needed */
-  if (double_equal(term, 0.0)) { /* the first term is almost zero */
+  if (double_equal(term, 0.0) != 0) { /* the first term is almost zero */
     if (static_cast<double>(k) >
-        static_cast<double>(n) * prob)   /* at begin or end of the tail?  */
+        static_cast<double>(n) * prob) { /* at begin or end of the tail?  */
       return -log1term / M_LN10 - logNT; /* end: use just the first term  */
-    else
-      return -logNT; /* begin: the tail is roughly 1  */
+    }
+    { return -logNT; /* begin: the tail is roughly 1  */ }
   }
 
   /* compute more terms if needed */
@@ -188,21 +204,22 @@ double NFALUT::nfa(int n, int k) {
       tolerance * abs(-log10(bin_tail)-logNT) / (1/bin_tail)
       Finally, we truncate the tail if the error is less than:
       tolerance * abs(-log10(bin_tail)-logNT) * bin_tail        */
-      if (err < tolerance * fabs(-log10(bin_tail) - logNT) * bin_tail)
+      if (err < tolerance * fabs(-log10(bin_tail) - logNT) * bin_tail) {
         break;
+      }
     }
   }
 
   return -log10(bin_tail) - logNT;
 }
 
-double NFALUT::log_gamma_lanczos(double x) {
+auto NFALUT::log_gamma_lanczos(double x) -> double {
   static double q[7] = {75122.6331530, 80916.6278952, 36308.2951477,
                         8687.24529705, 1168.92649479, 83.8676043424,
                         2.50662827511};
   double a = (x + 0.5) * log(x + 5.5) - (x + 5.5);
   double b = 0.0;
-  int n;
+  int n = 0;
 
   for (n = 0; n < 7; n++) {
     a -= log(x + static_cast<double>(n));
@@ -211,34 +228,35 @@ double NFALUT::log_gamma_lanczos(double x) {
   return a + log(b);
 }
 
-double NFALUT::log_gamma_windschitl(double x) {
+auto NFALUT::log_gamma_windschitl(double x) -> double {
   return 0.918938533204673 + (x - 0.5) * log(x) - x +
          0.5 * x * log(x * sinh(1 / x) + 1 / (810.0 * pow(x, 6.0)));
 }
 
-double NFALUT::log_gamma(double x) {
+auto NFALUT::log_gamma(double x) -> double {
   return x > 15 ? log_gamma_windschitl(x) : log_gamma_lanczos(x);
 }
 
-int NFALUT::double_equal(double a, double b) {
-  double abs_diff, aa, bb, abs_max;
-
-  if (a == b)
+auto NFALUT::double_equal(double a, double b) -> int {
+  if (a == b) {
     return TRUE;
+  }
 
-  abs_diff = fabs(a - b);
-  aa = fabs(a);
-  bb = fabs(b);
-  abs_max = aa > bb ? aa : bb;
+  double const abs_diff = fabs(a - b);
+  double const aa = fabs(a);
+  double const bb = fabs(b);
+  double abs_max = aa > bb ? aa : bb;
 
   /* DBL_MIN is the smallest normalized number, thus, the smallest
   number whose relative error is bounded by DBL_EPSILON. For
   smaller numbers, the same quantization steps as for DBL_MIN
   are used. Then, for smaller numbers, a meaningful "relative"
   error should be computed by dividing the difference by DBL_MIN. */
-  if (abs_max < DBL_MIN)
+  if (abs_max < DBL_MIN) {
     abs_max = DBL_MIN;
+  }
 
   /* equal if relative error <= factor x eps */
-  return (abs_diff / abs_max) <= (RELATIVE_ERROR_FACTOR * DBL_EPSILON);
+  return static_cast<int>((abs_diff / abs_max) <=
+                          (RELATIVE_ERROR_FACTOR * DBL_EPSILON));
 }

@@ -6,7 +6,7 @@
 using namespace cv;
 using namespace std;
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
   if (argc < 2) {
     std::cout << "Usage:\n" << argv[0] << " <image> [--verbose [--show]]\n";
     return 0;

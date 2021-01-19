@@ -5,14 +5,14 @@
 
 class EDPF : public ED {
 public:
-  EDPF(cv::Mat srcImage);
-  EDPF(ED obj);
-  EDPF(EDColor obj);
+  EDPF(const cv::Mat &srcImage);
+  EDPF(const ED &obj);
+  EDPF(const EDColor &obj);
 
 private:
-  cv::Mat makeEdgeImage();
+  auto makeEdgeImage() -> cv::Mat;
 
   // differs from base class's prewit function
   // (calculates H)
-  std::pair<cv::Mat_<GradPix>, std::vector<double>> ComputePrewitt3x3();
+  auto ComputePrewitt3x3() -> std::pair<cv::Mat_<GradPix>, std::vector<double>>;
 };

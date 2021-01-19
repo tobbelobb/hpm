@@ -4,10 +4,10 @@
 
 #include <hpm/ed/EDTypes.h++>
 
-double NFA(double prob, int len, int const numberOfSegmentPieces);
+auto NFA(double prob, int len, int numberOfSegmentPieces) -> double;
 
-std::vector<Segment> validSegments(cv::Mat edgeImageIn,
-                                   std::vector<Segment> const &segmentsIn);
+auto validSegments(cv::Mat edgeImageIn, std::vector<Segment> const &segmentsIn)
+    -> std::vector<Segment>;
 
 //----------------------------------------------------------------------------------
 // Resursive validation using half of the pixels as suggested by DMM algorithm
@@ -37,7 +37,7 @@ void drawFilteredSegment(Iterator firstPoint, Iterator lastPoint,
                    numberOfSegmentPieces);
 
   // Draw subsegment on edgeImage
-  uint8_t *edgeImg = edgeImageIn.ptr<uint8_t>(0);
+  auto *edgeImg = edgeImageIn.ptr<uint8_t>(0);
   if (nfa <= EPSILON) {
     std::for_each(firstPoint, lastPoint, [&](auto const &point) {
       edgeImg[point.y * width + point.x] = 255;
