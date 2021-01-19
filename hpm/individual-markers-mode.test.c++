@@ -5,16 +5,11 @@
 
 #include <gsl/span_ext>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#if defined(__clang__)
-#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-#endif
+#include <hpm/open-cv-warnings-disabler.h++>
+DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#pragma GCC diagnostic pop
+ENABLE_WARNINGS
 
 #include <boost/ut.hpp> //import boost.ut;
 

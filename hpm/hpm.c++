@@ -1,12 +1,8 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#if defined(__clang__)
-#pragma GCC diagnostic ignored "-Wdeprecated-anon-enum-enum-conversion"
-#endif
+
+#include <hpm/open-cv-warnings-disabler.h++>
+DISABLE_WARNINGS
 #include <opencv2/calib3d.hpp> // Rodrigues
-#pragma GCC diagnostic pop
+ENABLE_WARNINGS
 
 #include <hpm/hpm.h++>
 
