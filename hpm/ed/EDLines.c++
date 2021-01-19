@@ -509,8 +509,8 @@ void EDLines::ValidateLineSegments() {
 
   linesNo = noValidLines;
 
-  delete x;
-  delete y;
+  delete[] x;
+  delete[] y;
 }
 
 bool EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) {

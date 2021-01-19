@@ -112,18 +112,21 @@ cv::Mat EDColor::MyRGB2LabFast(cv::Mat srcImage) {
 
   cv::Mat Lab_Img(height, width, LAB_PIX_CV_TYPE);
 
-  auto const [minL, maxL] = std::minmax_element(L.begin(), L.end());
-  auto const [minA, maxA] = std::minmax_element(a.begin(), a.end());
-  auto const [minB, maxB] = std::minmax_element(b.begin(), b.end());
-  double const scaleL = 255.0 / (*maxL - *minL);
-  double const scaleA = 255.0 / (*maxA - *minA);
-  double const scaleB = 255.0 / (*maxB - *minB);
+  auto const [minLiter, maxLiter] = std::minmax_element(L.begin(), L.end());
+  auto const [minAiter, maxAiter] = std::minmax_element(a.begin(), a.end());
+  auto const [minBiter, maxBiter] = std::minmax_element(b.begin(), b.end());
+  auto const minL{*minLiter};
+  auto const minA{*minAiter};
+  auto const minB{*minBiter};
+  double const scaleL = 255.0 / (*maxLiter - minL);
+  double const scaleA = 255.0 / (*maxAiter - minA);
+  double const scaleB = 255.0 / (*maxBiter - minB);
 
   Lab_Img.forEach<LabPix>([&](auto &point, int const positions[]) {
     size_t const pos = static_cast<size_t>(positions[0] * width + positions[1]);
-    point = {static_cast<LabPixSingle>((L[pos] - *minL) * scaleL),
-             static_cast<LabPixSingle>((a[pos] - *minA) * scaleA),
-             static_cast<LabPixSingle>((b[pos] - *minB) * scaleB)};
+    point = {static_cast<LabPixSingle>((L[pos] - minL) * scaleL),
+             static_cast<LabPixSingle>((a[pos] - minA) * scaleA),
+             static_cast<LabPixSingle>((b[pos] - minB) * scaleB)};
   });
 
   return Lab_Img;
