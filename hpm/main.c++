@@ -162,10 +162,7 @@ auto main(int const argc, char **const argv) -> int {
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
   DetectionResult marks{findMarks(undistortedImage, showIntermediateImages)};
-  if (showIntermediateImages) {
-    showImage(imageWithDetectionResult(undistortedImage, marks),
-              "found-marks-before-filtering-by-distance.png");
-  }
+
   filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
                         imageCenter, markerDiameter);
 

@@ -19,8 +19,14 @@ using namespace hpm;
 
 auto findMarks(cv::InputArray undistortedImage, bool showIntermediateImages)
     -> DetectionResult {
-  // return blobDetect(undistortedImage, showIntermediateImages);
-  return ellipseDetect(undistortedImage, showIntermediateImages);
+
+  auto const foundMarks{
+      ellipseDetect(undistortedImage, showIntermediateImages)};
+  if (showIntermediateImages) {
+    showImage(imageWithDetectionResult(undistortedImage, foundMarks),
+              "found-marks-before-filtering-by-distance.png");
+  }
+  return foundMarks;
 }
 
 void filterMarksByDistance(DetectionResult &marks,
