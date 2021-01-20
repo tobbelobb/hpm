@@ -16,10 +16,8 @@ struct LS {
   cv::Point2d start;
   cv::Point2d end;
 
-  LS(cv::Point2d _start, cv::Point2d _end) {
-    start = std::move(_start);
-    end = std::move(_end);
-  }
+  LS(cv::Point2d _start, cv::Point2d _end)
+      : start(std::move(_start)), end(std::move(_end)) {}
 };
 
 struct LineSegment {

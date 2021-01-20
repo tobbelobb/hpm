@@ -244,6 +244,7 @@ public:
   [[nodiscard]] auto getEllipsesNo() const -> int;
 
 private:
+  static constexpr int CIRCLE_MIN_LINE_LEN{6};
   int noEllipses;
   int noCircles;
   std::vector<mCircle> circles;

@@ -31,8 +31,6 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
 
-#define CIRCLE_MIN_LINE_LEN 6
-
   for (int i = 0; i < segments.size(); i++) {
 
     // Make note of the starting line number for this segment
@@ -273,8 +271,6 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
 
-#define CIRCLE_MIN_LINE_LEN 6
-
   for (int i = 0; i < segments.size(); i++) {
 
     // Make note of the starting line number for this segment
@@ -498,14 +494,14 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
   // If the end-points of the segment is very close to each other,
-  // then directly fit a circle/ellipse instread of line fitting
+  // then directly fit a circle/ellipse instead of line fitting
   noCircles1 = 0;
   circles1 = new Circle[(width + height) * 8];
 
   // ----------------------------------- DETECT LINES
   // ---------------------------------
   int bufferSize = 0;
-  for (auto &segment : segments) {
+  for (auto const &segment : segments) {
     bufferSize += segment.size();
   }
 
@@ -514,8 +510,6 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
 
   bm = new BufferManager(bufferSize * 8);
   vector<LineSegment> lines;
-
-#define CIRCLE_MIN_LINE_LEN 6
 
   for (int i = 0; i < segments.size(); i++) {
 
@@ -546,7 +540,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
       double d = sqrt(dx * dx + dy * dy);
       double r = noPixels / TWOPI; // Assume a complete circle
 
-      double maxDistanceBetweenEndPoints = MAX(3, r / 4);
+      double maxDistanceBetweenEndPoints = std::max(3.0, r / 4.0);
 
       // If almost closed loop, then try to fit a circle/ellipse
       if (d <= maxDistanceBetweenEndPoints) {
@@ -1297,7 +1291,9 @@ void EDCircles::ValidateCircles() {
     int noPoints = 0;
 
     if (circle->isEllipse) {
-      noPoints = static_cast<int>(computeEllipsePerimeter(&circle->eq));
+      noPoints =
+          std::min(static_cast<int>(computeEllipsePerimeter(&circle->eq)),
+                   8 * (width + height));
 
       if ((noPoints % 2) != 0) {
         noPoints--;
@@ -2933,8 +2929,6 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
     D2 = D;
     E2 = E;
     F2 = F;
-
-    //		printf("No Rotation is applied\n\n");
   } else if (B != 0) // Rotate the axes
   {
     rotation = true;
@@ -2954,8 +2948,6 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
     E2 = -D * sin(theta) + E * cos(theta);
 
     F2 = F;
-
-    //		printf("Rotation in degrees: %.2f\n\n", theta * 180 / pi);
   }
 
   // Transform the conic equation into the ellipse form
