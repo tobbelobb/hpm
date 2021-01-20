@@ -66,24 +66,23 @@ struct IdentifiedHpMarks {
     m_identified = {true, true, true, true, true, true};
   }
 
-  bool isIdentified(size_t idx) const {
-    if (idx < NUM_MARKERS) {
-      return m_identified[idx];
-    }
-    return false;
+  // clang-format off
+  [[nodiscard]] bool isIdentified(size_t idx) const {
+    return idx < m_identified.size() and m_identified[idx];
   }
 
-  PixelPosition getPixelPosition(size_t idx) const {
+  [[nodiscard]] PixelPosition getPixelPosition(size_t idx) const {
     return m_pixelPositions[idx];
   }
+  // clang-format on
 
-  bool allIdentified() const {
+  [[nodiscard]] bool allIdentified() const {
     return std::all_of(m_identified.begin(), m_identified.end(),
                        std::identity());
   }
 
-  friend std::ostream &operator<<(std::ostream &out,
-                                  IdentifiedHpMarks const &identifiedHpMarks) {
+  friend std::ostream &
+  operator<<(std::ostream &out, IdentifiedHpMarks const &identifiedHpMarks) {
     for (size_t i{0}; i < identifiedHpMarks.m_pixelPositions.size(); ++i) {
       if (identifiedHpMarks.isIdentified(i)) {
         out << identifiedHpMarks.m_pixelPositions[i];

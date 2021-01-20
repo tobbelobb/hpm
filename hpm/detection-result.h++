@@ -14,6 +14,10 @@ struct KeyPoint {
   double m_minor{0.0};
   double m_rot{0.0};
 
+  explicit KeyPoint(PixelPosition const center, double major, double minor,
+                    double rot)
+      : m_center(center), m_major(major), m_minor(minor), m_rot(rot) {}
+
   explicit KeyPoint(cv::KeyPoint const &keyPointIn)
       : m_center(static_cast<PixelPosition>(keyPointIn.pt)),
         m_major(static_cast<double>(keyPointIn.size)), m_minor(m_major),

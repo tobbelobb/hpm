@@ -18,7 +18,7 @@ auto main() -> int {
 
   "sphere to sphere width and height"_test = [&] {
     CameraFramedPosition const center{0.0, 0.0, zDist};
-    auto const [width, height] =
+    auto const [width, height, xt, yt] =
         sphereToEllipseWidthHeight(center, focalLength, sphereRadius);
 
     expect(abs(width - height) < EPS)
@@ -35,13 +35,13 @@ auto main() -> int {
     double constexpr angStep{5};
     for (double len{1.0}; len < 2001; len += 100) {
       CameraFramedPosition const firstPos{len, 0, zDist};
-      auto const [firstWidth, firstHeight] =
+      auto const [firstWidth, firstHeight, xt, yt] =
           sphereToEllipseWidthHeight(firstPos, focalLength, sphereRadius);
 
       for (double ang{0.0}; ang < 360; ang += angStep) {
         CameraFramedPosition const pos{len * cos(ang * CV_PI / 180),
                                        len * sin(ang * CV_PI / 180), zDist};
-        auto const [width, height] =
+        auto const [width, height, xt, yt] =
             sphereToEllipseWidthHeight(pos, focalLength, sphereRadius);
         expect(width > height);
         expect(abs(height - moreExactHeight) < EPS);
@@ -60,7 +60,7 @@ auto main() -> int {
       for (double ang{0.0}; ang < 360; ang += angStep) {
         CameraFramedPosition const pos{len * cos(ang * CV_PI / 180),
                                        len * sin(ang * CV_PI / 180), zDist};
-        auto const [width, height] =
+        auto const [width, height, xt, yt] =
             sphereToEllipseWidthHeight(pos, focalLength, sphereRadius);
         auto const [width2, height2] =
             sphereToEllipseWidthHeight2(pos, focalLength, sphereRadius);

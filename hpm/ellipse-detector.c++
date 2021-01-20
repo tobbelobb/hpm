@@ -86,6 +86,10 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     showImage(cpy, "center-pointing-ellipses.png");
   }
 
+  if (centerPointingEllipses.empty()) {
+    return {};
+  }
+
   // TODO: Pick out hue channel only
   cv::Mat hsv{};
   cv::cvtColor(imageMat, hsv, cv::COLOR_BGR2HSV);
@@ -126,4 +130,40 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   }
 
   return result;
+}
+
+auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
+                       hpm::PixelPosition const &imageCenter,
+                       double markerDiameter) -> hpm::CameraFramedPosition {
+  PixelPosition const fromCenter = ellipse.m_center - imageCenter;
+  double const lengthFromOrigin = cv::norm(fromCenter);
+  PixelPosition const dirToOrigin = lengthFromOrigin == 0.0
+                                        ? PixelPosition{1.0, 0}
+                                        : -fromCenter / lengthFromOrigin;
+  double const majorAxis = ellipse.m_major;
+  double const semiMajorAxis = majorAxis / 2.0;
+  PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
+  PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
+  double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
+  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
+  if (lengthFromOrigin < semiMajorAxis) {
+    smallestAng = -smallestAng;
+  }
+  // facing disc's midpoint ang
+  double const alpha = std::midpoint(smallestAng, largestAng);
+  // facing disc's angular radius seen from the pinhole
+  double const gamma1 = std::midpoint(largestAng, -smallestAng);
+
+  // We know that
+  //   gamma1 = asin(r/d),
+  // where r is markerDiameter/2,
+  // and d is the marker's total distance from the pinhole
+
+  double const d = (markerDiameter / 2.0) / sin(gamma1);
+  double const dxy = sin(alpha) * d;
+  double const z = cos(alpha) * d;
+  double const x = dxy * cos(ellipse.m_rot);
+  double const y = dxy * sin(ellipse.m_rot);
+
+  return {x, y, z};
 }

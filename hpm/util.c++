@@ -103,7 +103,7 @@ static inline auto sq(auto num) { return num * num; }
 auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
                                 double const focalLength,
                                 double const sphereRadius)
-    -> std::pair<double, double> {
+    -> EllipseProjection {
   long double const x{sphereCenter.x};
   long double const y{sphereCenter.y};
   long double const z{sphereCenter.z};
@@ -151,8 +151,8 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
   long double const width{2.0 * sqrtl(abs(appp / r0))};
   long double const height{2.0 * sqrtl(abs(appp / r1))};
 
-  // return {width, height};
-  return {static_cast<double>(width), static_cast<double>(height)};
+  return {static_cast<double>(width), static_cast<double>(height),
+          static_cast<double>(xt), static_cast<double>(yt)};
 }
 
 // An alternative, geometric derivation

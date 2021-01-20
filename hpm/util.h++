@@ -44,9 +44,16 @@ cv::Mat getHueChannelCopy(cv::InputArray image);
 
 cv::Mat invertedCopy(cv::InputArray image);
 
+struct EllipseProjection {
+  double width;
+  double height;
+  double xt;
+  double yt;
+};
+
 // Units of sphereCenter and sphereRadius must be the same.
 // Returned values will have the same units as focalLength has.
-std::pair<double, double>
+EllipseProjection
 sphereToEllipseWidthHeight(hpm::CameraFramedPosition const &sphereCenter,
                            double focalLength, double sphereRadius);
 

@@ -12,3 +12,7 @@ hpm::DetectionResult ellipseDetect(cv::InputArray image,
                                    bool showIntermediateImages);
 
 hpm::DetectionResult ellipseDetect(cv::InputArray image);
+
+hpm::CameraFramedPosition
+ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
+                  hpm::PixelPosition const &imageCenter, double markerDiameter);

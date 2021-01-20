@@ -179,8 +179,8 @@ auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
   //         (angles measured from z-axis to ray)
   PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
   PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
-  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
   double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
+  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
   if (cv::norm(fromCenter) < semiMajorAxis) {
     smallestAng = -smallestAng;
   }
@@ -192,8 +192,8 @@ auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
   // The center point of the facing disc is not projected onto
   // the center of the ellipsis we see on the sensor
   // Rather, we need to go via alpha to find that
-  auto projectionOfFacingDiscCenterPoint{-dirToOrigin * focalLength *
-                                         tan(alpha)};
+  PixelPosition const projectionOfFacingDiscCenterPoint{
+      -dirToOrigin * focalLength * tan(alpha)};
 
   // The facing disc is not parallell to the image plane,
   // therefore, its projection gets dragged out into an ellipse
