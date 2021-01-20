@@ -13,7 +13,7 @@ struct HuedKeyPoint {
 
 static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
     -> std::vector<hpm::KeyPoint> {
-  std::vector<hpm::KeyPoint> bigEllipses;
+  std::vector<hpm::KeyPoint> bigEllipses{};
   for (auto const &circle : edCircles.getCirclesRef()) {
     if (circle.r > sizeThreshold) {
       bigEllipses.emplace_back(circle);
@@ -31,11 +31,13 @@ static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
 auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> hpm::DetectionResult {
   cv::Mat imageMat{image.getMat()};
-  EDColor const edColor{imageMat,
-                        {.gradThresh = 36,
-                         .anchorThresh = 4,
-                         .blurSize = 1.5,
-                         .filterSegments = true}};
+  EDColor const edColor{
+      imageMat,
+      {.gradThresh = 27, // lower gradThresh finds more ellipses, both true and
+                         // false positives
+       .anchorThresh = 4,
+       .blurSize = 1.5,
+       .filterSegments = true}};
   if (showIntermediateImages) {
     showImage(edColor.getEdgeImage(), "edgeImage.png");
   }
@@ -72,7 +74,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     if (dist < maxDist and e.m_major == e.m_minor) {
       // a circle near middle of image
       centerPointingEllipses.emplace_back(e);
-    } else if (std::abs(shouldAngle - e.m_rot) < (10.0 * M_PI / 180.0) and
+    } else if (std::abs(shouldAngle - e.m_rot) < (17.0 * M_PI / 180.0) and
                e.m_major != e.m_minor) {
       // a center pointing ellipse
       centerPointingEllipses.emplace_back(e);
@@ -103,7 +105,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   double const max = static_cast<double>(huedEllipses.back().hue);
   double const diff = max - min;
   double redMid = min + diff / 6.0;
-  double greenMid = std::midpoint(min, max);
+  double greenMid = huedEllipses[huedEllipses.size() / 2].hue;
   double blueMid = max - diff / 6.0;
 
   DetectionResult result{};
