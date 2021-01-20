@@ -87,24 +87,24 @@ auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
   return findMarks(undistortedImage, false);
 }
 
-auto findIndividualMarkerPositions(DetectionResult const &blobs,
+auto findIndividualMarkerPositions(DetectionResult const &detectionResult,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
                                    PixelPosition const &imageCenter)
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
-  positions.reserve(blobs.size());
-  for (auto const &blob : blobs.red) {
-    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
-                                          imageCenter, knownMarkerDiameter));
+  positions.reserve(detectionResult.size());
+  for (auto const &detected : detectionResult.red) {
+    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
+                                             knownMarkerDiameter));
   }
-  for (auto const &blob : blobs.green) {
-    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
-                                          imageCenter, knownMarkerDiameter));
+  for (auto const &detected : detectionResult.green) {
+    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
+                                             knownMarkerDiameter));
   }
-  for (auto const &blob : blobs.blue) {
-    positions.emplace_back(blobToPosition(hpm::KeyPoint{blob}, focalLength,
-                                          imageCenter, knownMarkerDiameter));
+  for (auto const &detected : detectionResult.blue) {
+    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
+                                             knownMarkerDiameter));
   }
 
   return positions;

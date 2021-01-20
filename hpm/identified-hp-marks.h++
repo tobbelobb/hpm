@@ -81,8 +81,8 @@ struct IdentifiedHpMarks {
                        std::identity());
   }
 
-  friend std::ostream &
-  operator<<(std::ostream &out, IdentifiedHpMarks const &identifiedHpMarks) {
+  friend std::ostream &operator<<(std::ostream &out,
+                                  IdentifiedHpMarks const &identifiedHpMarks) {
     for (size_t i{0}; i < identifiedHpMarks.m_pixelPositions.size(); ++i) {
       if (identifiedHpMarks.isIdentified(i)) {
         out << identifiedHpMarks.m_pixelPositions[i];

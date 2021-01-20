@@ -158,12 +158,14 @@ auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
   //   gamma1 = asin(r/d),
   // where r is markerDiameter/2,
   // and d is the marker's total distance from the pinhole
+  //
+  double const rot = atan2(fromCenter.y, fromCenter.x);
 
   double const d = (markerDiameter / 2.0) / sin(gamma1);
   double const dxy = sin(alpha) * d;
   double const z = cos(alpha) * d;
-  double const x = dxy * cos(ellipse.m_rot);
-  double const y = dxy * sin(ellipse.m_rot);
+  double const x = dxy * cos(rot);
+  double const y = dxy * sin(rot);
 
   return {x, y, z};
 }
