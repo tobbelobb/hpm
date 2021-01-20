@@ -18,7 +18,7 @@ void drawKeyPoints(cv::InputOutputArray image,
     cv::ellipse(image, keyPoint.m_center,
                 cv::Size{static_cast<int>(keyPoint.m_major / 2.0),
                          static_cast<int>(keyPoint.m_minor / 2.0)},
-                keyPoint.m_rot, 0.0, 360.0, color, 3);
+                keyPoint.m_rot * 180.0 / M_PI, 0.0, 360.0, color, 3);
     cv::circle(image, keyPoint.m_center, 2, color, 3);
   }
 }
