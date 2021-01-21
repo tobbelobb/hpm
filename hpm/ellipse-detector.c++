@@ -33,7 +33,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
       imageMat,
-      {.gradThresh = 27, // lower gradThresh finds more ellipses, both true and
+      {.gradThresh = 10, // lower gradThresh finds more ellipses, both true and
                          // false positives
        .anchorThresh = 4,
        .blurSize = 1.5,
