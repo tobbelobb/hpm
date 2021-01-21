@@ -48,9 +48,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
               "edCircles.png");
   }
 
-  // Size of a marker must be at least 1/150 of the image width
+  // Size of a marker must be at least 1/200 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};
-  double constexpr SIZE_THRESHOLD_DENOMINATOR{150.0};
+  double constexpr SIZE_THRESHOLD_DENOMINATOR{200.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
   std::vector<hpm::KeyPoint> bigEllipses{
@@ -62,31 +62,28 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     showImage(cpy, "big-ellipses.png");
   }
 
-  std::vector<hpm::KeyPoint> centerPointingEllipses;
+  std::vector<hpm::KeyPoint> almostRoundEllipses;
   for (auto const &e : bigEllipses) {
     PixelPosition const center{static_cast<double>(imageMat.cols) / 2.0,
                                static_cast<double>(imageMat.rows) / 2.0};
     PixelPosition const distCoord = e.m_center - center;
-    double const shouldAngle = atan(distCoord.y / distCoord.x);
     double const dist =
         sqrt(distCoord.x * distCoord.x + distCoord.y * distCoord.y);
     double const maxDist{0.5 * static_cast<double>(imageMat.rows)};
     if (dist < maxDist and e.m_major == e.m_minor) {
       // a circle near middle of image
-      centerPointingEllipses.emplace_back(e);
-    } else if (std::abs(shouldAngle - e.m_rot) < (17.0 * M_PI / 180.0) and
-               e.m_major != e.m_minor) {
-      // a center pointing ellipse
-      centerPointingEllipses.emplace_back(e);
+      almostRoundEllipses.emplace_back(e);
+    } else if (e.m_minor * 1.2 > e.m_major and e.m_major != e.m_minor) {
+      almostRoundEllipses.emplace_back(e);
     }
   }
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawKeyPoints(cpy, centerPointingEllipses, cv::Scalar(255, 255, 0));
-    showImage(cpy, "center-pointing-ellipses.png");
+    drawKeyPoints(cpy, almostRoundEllipses, cv::Scalar(255, 255, 0));
+    showImage(cpy, "almost-round-ellipses.png");
   }
 
-  if (centerPointingEllipses.empty()) {
+  if (almostRoundEllipses.empty()) {
     return {};
   }
 
@@ -96,7 +93,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   cv::Mat hue = getHueChannelCopy(hsv);
 
   std::vector<HuedKeyPoint> huedEllipses;
-  for (auto const &ellipse : centerPointingEllipses) {
+  for (auto const &ellipse : almostRoundEllipses) {
     huedEllipses.emplace_back(ellipse,
                               (hue.at<uint8_t>(ellipse.m_center) + 30) % 180);
   }
@@ -107,10 +104,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
 
   double const min = static_cast<double>(huedEllipses[0].hue);
   double const max = static_cast<double>(huedEllipses.back().hue);
-  double const diff = max - min;
-  double redMid = min + diff / 6.0;
+  double redMid = min;
   double greenMid = huedEllipses[huedEllipses.size() / 2].hue;
-  double blueMid = max - diff / 6.0;
+  double blueMid = max;
 
   DetectionResult result{};
   for (auto const &he : huedEllipses) {
