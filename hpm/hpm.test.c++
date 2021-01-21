@@ -40,7 +40,13 @@ auto main() -> int {
         -72.4478, -125.483, 150.43, 72.4478,   -125.483, 150.43,
         144.8960, 0.0,      150.43, 72.4478,   125.483,  150.43,
         -72.4478, 125.483,  150.43, -144.8960, 0.0,      150.43};
-    DetectionResult const marks{findMarks(image)};
+    DetectionResult marks{findMarks(image)};
+    double const meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+                                               cameraMatrix.at<double>(1, 1))};
+    PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                    cameraMatrix.at<double>(1, 2)};
+    filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
+                          imageCenter, 32.0);
     IdentifiedHpMarks const identifiedMarks{marks};
 
     expect((identifiedMarks.allIdentified()) >> fatal);
@@ -53,7 +59,7 @@ auto main() -> int {
     SixDof const pose{effectorWorldPose(effectorPoseRelativeToCamera.value(),
                                         cameraWorldPose)};
 
-    auto constexpr EPS{0.31_d};
+    auto constexpr EPS{0.34_d};
     expect(abs(pose.x()) < EPS) << "translation X";
     expect(abs(pose.y()) < EPS) << "translation Y";
     expect(abs(pose.z()) < EPS) << "translation Z";

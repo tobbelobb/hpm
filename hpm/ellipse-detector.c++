@@ -48,9 +48,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
               "edCircles.png");
   }
 
-  // Size of a marker must be at least 1/100 of the image width
+  // Size of a marker must be at least 1/150 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};
-  double constexpr SIZE_THRESHOLD_DENOMINATOR{100.0};
+  double constexpr SIZE_THRESHOLD_DENOMINATOR{150.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
   std::vector<hpm::KeyPoint> bigEllipses{
@@ -136,36 +136,29 @@ auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
                        hpm::PixelPosition const &imageCenter,
                        double markerDiameter) -> hpm::CameraFramedPosition {
   PixelPosition const fromCenter = ellipse.m_center - imageCenter;
-  double const lengthFromOrigin = cv::norm(fromCenter);
-  PixelPosition const dirToOrigin = lengthFromOrigin == 0.0
-                                        ? PixelPosition{1.0, 0}
-                                        : -fromCenter / lengthFromOrigin;
-  double const majorAxis = ellipse.m_major;
-  double const semiMajorAxis = majorAxis / 2.0;
-  PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
-  PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
-  double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
-  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
-  if (lengthFromOrigin < semiMajorAxis) {
-    smallestAng = -smallestAng;
-  }
-  // facing disc's midpoint ang
-  double const alpha = std::midpoint(smallestAng, largestAng);
-  // facing disc's angular radius seen from the pinhole
-  double const gamma1 = std::midpoint(largestAng, -smallestAng);
+  double const lengthFromCenter = cv::norm(fromCenter);
 
-  // We know that
-  //   gamma1 = asin(r/d),
-  // where r is markerDiameter/2,
-  // and d is the marker's total distance from the pinhole
-  //
-  double const rot = atan2(fromCenter.y, fromCenter.x);
+  // ED is much better at finding the minor axis
+  // and the center
+  // than it is at finding the major axis.
+  // So let's use only the minor axis.
+  double const gamma1 =
+      atan((ellipse.m_minor / 2) / sqrt(focalLength * focalLength +
+                                        lengthFromCenter * lengthFromCenter));
+  double const theta = atan(lengthFromCenter / focalLength);
+
+  // EDCircle is also much better at finding the center
+  // than it is at finding the correct (azimuth) rotation
+  // That is, in theory,
+  //   phi = ellipse.m_rot
+  // should give the right result.
+  // In practice, it doesn't.
+  // So let's help ED a little bit here
+  double const phi = atan2(fromCenter.y, fromCenter.x);
 
   double const d = (markerDiameter / 2.0) / sin(gamma1);
-  double const dxy = sin(alpha) * d;
-  double const z = cos(alpha) * d;
-  double const x = dxy * cos(rot);
-  double const y = dxy * sin(rot);
 
-  return {x, y, z};
+  // We now have the spherical coordinates, and can transform them
+  // to Cartesian ones
+  return {d * sin(theta) * cos(phi), d * sin(theta) * sin(phi), d * cos(theta)};
 }

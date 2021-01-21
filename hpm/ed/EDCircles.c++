@@ -744,7 +744,7 @@ auto EDCircles::drawResult(const cv::Mat &background, ImageStyle style) const
     cvtColor(background, colorImage, COLOR_GRAY2BGR);
   } else {
     colorImage = background.clone();
-    lineThickness = 3;
+    lineThickness = 2;
   }
 
   // Circles will be indicated in green

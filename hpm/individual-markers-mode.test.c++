@@ -72,7 +72,7 @@ auto main() -> int {
         // This is what we want to test.
         // Given all of the above, are we able to get back the
         // values that we fed into OpenScad?
-        auto constexpr EPS{11.2_d};
+        auto constexpr EPS{5.0_d};
         // Check the absolute positions first.
         for (gsl::index i{0}; i < std::ssize(positions); ++i) {
           expect(
@@ -154,7 +154,7 @@ auto main() -> int {
                                  knownPositions[LEFTEST])) < EPS)
             << "The largest crossovers should have the correct length";
       };
-  skip / "filter marks by distance"_test = [&] {
+  "filter marks by distance"_test = [&] {
     // clang-format off
     cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                                0.0, 3000.0, 1000.0,
