@@ -87,15 +87,37 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     return {};
   }
 
-  // TODO: Pick out hue channel only
+  // At this point, the legit markers should make up the majority
+  // of the big circles in the vector, and their size should be similar
+  // So we should have 6 or more markers of the right size
+  // and several groups of less than 6 markers that are of the wrong size
+  std::sort(almostRoundEllipses.begin(), almostRoundEllipses.end(),
+            [&](auto const &lhv, auto const &rhv) {
+              return lhv.m_minor < rhv.m_minor;
+            });
+
+  std::vector<hpm::KeyPoint> rightSizedEllipses;
+  double const medianSize =
+      almostRoundEllipses.size() >= 4
+          ? almostRoundEllipses[almostRoundEllipses.size() - 4UL].m_minor
+          : almostRoundEllipses[0].m_minor;
+  for (auto const &e : almostRoundEllipses) {
+    if (e.m_minor / medianSize < 1.5 and e.m_minor / medianSize > 0.5) {
+      rightSizedEllipses.emplace_back(e);
+    }
+  }
+  if (showIntermediateImages) {
+    cv::Mat cpy = imageMat.clone();
+    drawKeyPoints(cpy, rightSizedEllipses, cv::Scalar(255, 255, 0));
+    showImage(cpy, "right-sized-ellipses.png");
+  }
+
   cv::Mat hsv{};
   cv::cvtColor(imageMat, hsv, cv::COLOR_BGR2HSV);
   cv::Mat hue = getHueChannelCopy(hsv);
-
   std::vector<HuedKeyPoint> huedEllipses;
-  for (auto const &ellipse : almostRoundEllipses) {
-    huedEllipses.emplace_back(ellipse,
-                              (hue.at<uint8_t>(ellipse.m_center) + 30) % 180);
+  for (auto const &e : rightSizedEllipses) {
+    huedEllipses.emplace_back(e, (hue.at<uint8_t>(e.m_center) + 30) % 180);
   }
 
   std::sort(
