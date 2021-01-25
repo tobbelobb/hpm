@@ -68,7 +68,7 @@ auto main() -> int {
   };
 
   "xy-offset sphere positions"_test = [&] {
-    for (double dxy{10.0}; dxy <= 1000.0; dxy = dxy + 10.0) {
+    for (double dxy{5.0}; dxy <= 1000.0; dxy = dxy + 10.0) {
       for (double ang{0.0}; ang < 2 * M_PI; ang += M_PI / 6.0) {
         double const xDist{dxy * cos(ang)};
         double const yDist{dxy * sin(ang)};
@@ -87,10 +87,10 @@ auto main() -> int {
         // TODO: Cannot for my life of it understand why precision
         // isn't better than 1e-1 with the current implementation
         // of ellipseToPosition
-        auto constexpr EPS2{0.02_d}; // 2e-2 precision
-        expect(std::abs(gotPosition.x - xDist) < EPS2);
-        expect(std::abs(gotPosition.y - yDist) < EPS2);
-        expect(std::abs(gotPosition.z - zDist) < EPS2);
+        auto constexpr EPS{0.0000000000115_d}; // 1.15e-11 precision
+        expect(std::abs(gotPosition.x - xDist) < EPS);
+        expect(std::abs(gotPosition.y - yDist) < EPS);
+        expect(std::abs(gotPosition.z - zDist) < EPS);
       }
     }
   };

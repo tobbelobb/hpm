@@ -150,78 +150,75 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   return result;
 }
 
-/*
-auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
-                       hpm::PixelPosition const &imageCenter,
-                       double markerDiameter) -> hpm::CameraFramedPosition {
-  PixelPosition const fromCenter = ellipse.m_center - imageCenter;
-  double const lengthFromCenter = cv::norm(fromCenter);
-
-  // ED is much better at finding the minor axis
-  // and the center
-  // than it is at finding the major axis.
-  // So let's use only the minor axis.
-  double const alpha = atan(lengthFromCenter / focalLength);
-  double const theta =
-      atan((ellipse.m_minor / 2) / sqrt(focalLength * focalLength +
-                                        lengthFromCenter * lengthFromCenter));
-  double const d = (markerDiameter / 2.0) / sin(theta);
-
-  // EDCircle is also much better at finding the center
-  // than it is at finding the correct (azimuth) rotation
-  // That is, in theory,
-  //   phi = ellipse.m_rot
-  // should give the right result.
-  // In practice, it doesn't.
-  // So let's help ED a little bit here
-  double const phi = atan2(fromCenter.y, fromCenter.x);
-  // We now have the spherical coordinates, and can transform them
-  // to Cartesian ones
-  return {d * sin(alpha) * cos(phi), d * sin(alpha) * sin(phi), d * cos(alpha)};
+static auto zFromSemiMinor(double markerR, double f, double semiMinor) {
+  double const rSmall = markerR * f / sqrt(semiMinor * semiMinor + f * f);
+  double const thetaZ = atan(semiMinor / f);
+  return rSmall * f / semiMinor + markerR * sin(thetaZ);
 }
-*/
+
+static auto centerRayFromZ(double c, double markerR, double z) {
+  return c * (z * z - markerR * markerR) / (z * z);
+}
+
+static auto angularRange(double f, double semiMinor, double c, double centerRay)
+    -> std::pair<double, double> {
+  double const semiMajor = semiMinor * sqrt(centerRay * c / (f * f) + 1);
+  double const closest = c - semiMajor;
+  double const farthest = c + semiMajor;
+  double const smallestAng = atan(closest / f);
+  double const largestAng = atan(farthest / f);
+  return {smallestAng, largestAng};
+}
 
 auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
                        hpm::PixelPosition const &imageCenter,
                        double markerDiameter) -> hpm::CameraFramedPosition {
-  PixelPosition const fromCenter = ellipse.m_center - imageCenter;
-  double const lengthFromOrigin = cv::norm(fromCenter);
-  PixelPosition const dirToOrigin = lengthFromOrigin == 0.0
-                                        ? PixelPosition{1.0, 0}
-                                        : -fromCenter / lengthFromOrigin;
+  // The ED ellipse detector is good at determining center and minor axes
+  // of an ellipse, but very bad at determining the major axis and the rotation.
+  // That made this function a bit hard to write.
+  double const markerR = markerDiameter / 2;
+  double const f = focalLength;
+  double const semiMinor = ellipse.m_minor / 2;
 
-  // std::cout << lengthFromOrigin / focalLength << '\t'
-  //          << ellipse.m_major / ellipse.m_minor << std::endl;
-  double const openAppr = atan(
-      ellipse.m_minor / 2 /
-      sqrt(focalLength * focalLength + lengthFromOrigin * lengthFromOrigin));
-  double const ang = atan((lengthFromOrigin * cos(openAppr)) / focalLength);
-  double const majorAxis = ellipse.m_minor / cos(ang);
-  double const semiMajorAxis = majorAxis / 2.0;
-  PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
-  PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
-  double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
-  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
-  if (lengthFromOrigin < semiMajorAxis) {
-    smallestAng = -smallestAng;
-  }
-  // facing disc's midpoint ang
-  double const alpha = std::midpoint(smallestAng, largestAng);
-  // facing disc's angular radius seen from the pinhole
-  double const gamma1 = std::midpoint(largestAng, -smallestAng);
+  // Luckily, the z position of the marker is determined by the
+  // minor axis alone, no need for the major axis or rotation.
+  double const z = zFromSemiMinor(markerR, f, semiMinor);
+
+  // The center of the ellipse is not a projection of the center of the marker.
+  // Rather, the center of the marker projects into a point slightly closer
+  // to the center of the image, like this
+  PixelPosition const imageCenterToEllipseCenter =
+      ellipse.m_center - imageCenter;
+  double const c = cv::norm(imageCenterToEllipseCenter);
+  double const centerRay = centerRayFromZ(c, markerR, z);
+
+  // The center ray and the ellipse center give us the scaling
+  // factor between minor and major axis, which lets
+  // us compute the angular width and angular position
+  // of the cone that gets projected through the pinhole
+  auto const [smallestAng, largestAng] =
+      angularRange(f, semiMinor, c, centerRay);
+
+  // The angle between the center ray and the image axis
+  double const alpha = std::midpoint(largestAng, smallestAng);
+  // facing disc's angular radius seen from the pinhole,
+  // or "half the cone's inner angle" if you will
+  double const theta = std::midpoint(largestAng, -smallestAng);
 
   // We know that
-  //   gamma1 = asin(r/d),
-  // where r is markerDiameter/2,
+  //   theta = asin(r/d),
+  // where r is markerR,
   // and d is the marker's total distance from the pinhole
-  //
-  double const rot = atan2(fromCenter.y, fromCenter.x);
+  double const d = markerR / sin(theta);
 
-  double const d = (markerDiameter / 2.0) / sin(gamma1);
+  // Extracting the xy-distance using the angle between the center ray
+  // and the image axis
   double const dxy = sin(alpha) * d;
-  double const z = cos(alpha) * d;
-  double const x = dxy * cos(rot);
-  double const y = dxy * sin(rot);
 
-  return {x, y, z};
+  // Since ed isn't good at finding m_rot, let's calculate the rotation
+  // based on the center point, which is more accurately detected by ed.
+  double const rot =
+      atan2(imageCenterToEllipseCenter.y, imageCenterToEllipseCenter.x);
+
+  return {dxy * cos(rot), dxy * sin(rot), z};
 }
