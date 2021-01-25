@@ -2,6 +2,7 @@
 #define PIPES_OPTIONAL_HPP
 
 #include <type_traits>
+#include <optional>
 
 namespace pipes
 {
