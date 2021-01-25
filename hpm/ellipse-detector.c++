@@ -150,6 +150,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   return result;
 }
 
+/*
 auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
                        hpm::PixelPosition const &imageCenter,
                        double markerDiameter) -> hpm::CameraFramedPosition {
@@ -160,10 +161,11 @@ auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
   // and the center
   // than it is at finding the major axis.
   // So let's use only the minor axis.
-  double const gamma1 =
+  double const alpha = atan(lengthFromCenter / focalLength);
+  double const theta =
       atan((ellipse.m_minor / 2) / sqrt(focalLength * focalLength +
                                         lengthFromCenter * lengthFromCenter));
-  double const theta = atan(lengthFromCenter / focalLength);
+  double const d = (markerDiameter / 2.0) / sin(theta);
 
   // EDCircle is also much better at finding the center
   // than it is at finding the correct (azimuth) rotation
@@ -173,10 +175,53 @@ auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
   // In practice, it doesn't.
   // So let's help ED a little bit here
   double const phi = atan2(fromCenter.y, fromCenter.x);
-
-  double const d = (markerDiameter / 2.0) / sin(gamma1);
-
   // We now have the spherical coordinates, and can transform them
   // to Cartesian ones
-  return {d * sin(theta) * cos(phi), d * sin(theta) * sin(phi), d * cos(theta)};
+  return {d * sin(alpha) * cos(phi), d * sin(alpha) * sin(phi), d * cos(alpha)};
+}
+*/
+
+auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
+                       hpm::PixelPosition const &imageCenter,
+                       double markerDiameter) -> hpm::CameraFramedPosition {
+  PixelPosition const fromCenter = ellipse.m_center - imageCenter;
+  double const lengthFromOrigin = cv::norm(fromCenter);
+  PixelPosition const dirToOrigin = lengthFromOrigin == 0.0
+                                        ? PixelPosition{1.0, 0}
+                                        : -fromCenter / lengthFromOrigin;
+
+  // std::cout << lengthFromOrigin / focalLength << '\t'
+  //          << ellipse.m_major / ellipse.m_minor << std::endl;
+  double const openAppr = atan(
+      ellipse.m_minor / 2 /
+      sqrt(focalLength * focalLength + lengthFromOrigin * lengthFromOrigin));
+  double const ang = atan((lengthFromOrigin * cos(openAppr)) / focalLength);
+  double const majorAxis = ellipse.m_minor / cos(ang);
+  double const semiMajorAxis = majorAxis / 2.0;
+  PixelPosition const closestPoint = fromCenter + semiMajorAxis * dirToOrigin;
+  PixelPosition const farthestPoint = fromCenter - semiMajorAxis * dirToOrigin;
+  double const largestAng = atan(cv::norm(farthestPoint) / focalLength);
+  double smallestAng = atan(cv::norm(closestPoint) / focalLength);
+  if (lengthFromOrigin < semiMajorAxis) {
+    smallestAng = -smallestAng;
+  }
+  // facing disc's midpoint ang
+  double const alpha = std::midpoint(smallestAng, largestAng);
+  // facing disc's angular radius seen from the pinhole
+  double const gamma1 = std::midpoint(largestAng, -smallestAng);
+
+  // We know that
+  //   gamma1 = asin(r/d),
+  // where r is markerDiameter/2,
+  // and d is the marker's total distance from the pinhole
+  //
+  double const rot = atan2(fromCenter.y, fromCenter.x);
+
+  double const d = (markerDiameter / 2.0) / sin(gamma1);
+  double const dxy = sin(alpha) * d;
+  double const z = cos(alpha) * d;
+  double const x = dxy * cos(rot);
+  double const y = dxy * sin(rot);
+
+  return {x, y, z};
 }

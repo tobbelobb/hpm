@@ -125,7 +125,7 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
 
   // We then do a translation of the implicit equation, to get the
   // translation equation, which is of the form
-  // ax^2 + 2b''xy + a'y^2 + a'''
+  // ax^2 + 2b''xy + a'y^2 + a''' = 0
   // We remove the linear terms in the implicit equation,
   // in exchange for having to compute the amount of translation (xt, yt),
   // which lets us compute a'''.

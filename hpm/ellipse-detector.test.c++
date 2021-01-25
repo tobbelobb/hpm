@@ -87,10 +87,10 @@ auto main() -> int {
         // TODO: Cannot for my life of it understand why precision
         // isn't better than 1e-1 with the current implementation
         // of ellipseToPosition
-        auto constexpr EPS1{0.1_d}; // 1e-1 precision
-        expect(std::abs(gotPosition.x - xDist) < EPS1);
-        expect(std::abs(gotPosition.y - yDist) < EPS1);
-        expect(std::abs(gotPosition.z - zDist) < EPS1);
+        auto constexpr EPS2{0.02_d}; // 2e-2 precision
+        expect(std::abs(gotPosition.x - xDist) < EPS2);
+        expect(std::abs(gotPosition.y - yDist) < EPS2);
+        expect(std::abs(gotPosition.z - zDist) < EPS2);
       }
     }
   };
