@@ -47,7 +47,8 @@ auto main() -> int {
                                     cameraMatrix.at<double>(1, 2)};
     filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
                           imageCenter, 32.0);
-    IdentifiedHpMarks const identifiedMarks{marks};
+    IdentifiedHpMarks const identifiedMarks{marks, 32.0 / 2.0, meanFocalLength,
+                                            imageCenter};
 
     expect((identifiedMarks.allIdentified()) >> fatal);
 

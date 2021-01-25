@@ -150,16 +150,6 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   return result;
 }
 
-static auto zFromSemiMinor(double markerR, double f, double semiMinor) {
-  double const rSmall = markerR * f / sqrt(semiMinor * semiMinor + f * f);
-  double const thetaZ = atan(semiMinor / f);
-  return rSmall * f / semiMinor + markerR * sin(thetaZ);
-}
-
-static auto centerRayFromZ(double c, double markerR, double z) {
-  return c * (z * z - markerR * markerR) / (z * z);
-}
-
 static auto angularRange(double f, double semiMinor, double c, double centerRay)
     -> std::pair<double, double> {
   double const semiMajor = semiMinor * sqrt(centerRay * c / (f * f) + 1);
@@ -182,7 +172,7 @@ auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
 
   // Luckily, the z position of the marker is determined by the
   // minor axis alone, no need for the major axis or rotation.
-  double const z = zFromSemiMinor(markerR, f, semiMinor);
+  double const z = hpm::zFromSemiMinor(markerR, f, semiMinor);
 
   // The center of the ellipse is not a projection of the center of the marker.
   // Rather, the center of the marker projects into a point slightly closer

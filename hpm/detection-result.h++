@@ -8,6 +8,10 @@
 
 namespace hpm {
 
+double zFromSemiMinor(double markerR, double f, double semiMinor);
+
+double centerRayFromZ(double c, double markerR, double z);
+
 struct KeyPoint {
   PixelPosition m_center{0, 0};
   double m_major{0.0};
@@ -57,6 +61,15 @@ struct KeyPoint {
   };
 
   bool operator==(KeyPoint const &) const = default;
+
+  PixelPosition getCenterRay(double const markerR, double const f,
+                             PixelPosition const &imageCenter) const {
+    double const z = zFromSemiMinor(markerR, f, m_minor / 2);
+    PixelPosition const imageCenterToEllipseCenter = m_center - imageCenter;
+    double const c = cv::norm(imageCenterToEllipseCenter);
+    double const centerRay = centerRayFromZ(c, markerR, z);
+    return imageCenter + centerRay * imageCenterToEllipseCenter / c;
+  }
 };
 
 struct DetectionResult {

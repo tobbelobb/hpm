@@ -176,7 +176,8 @@ auto main(int const argc, char **const argv) -> int {
     showImage(imageWithDetectionResult(undistortedImage, marks),
               "found-marks.png");
   }
-  IdentifiedHpMarks const identifiedMarks{marks};
+  IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2,
+                                          meanFocalLength, imageCenter};
 
   if (identifiedMarks.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{

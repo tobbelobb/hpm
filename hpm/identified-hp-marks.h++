@@ -49,7 +49,9 @@ struct IdentifiedHpMarks {
     std::fill(m_identified.begin(), m_identified.end(), true);
   }
 
-  explicit IdentifiedHpMarks(DetectionResult const &foundMarkers) {
+  explicit IdentifiedHpMarks(DetectionResult const &foundMarkers,
+                             double const markerR, double const f,
+                             PixelPosition const &imageCenter) {
     if (foundMarkers.red.size() != 2 or foundMarkers.green.size() != 2 or
         foundMarkers.blue.size() != 2) {
       return;
@@ -61,9 +63,10 @@ struct IdentifiedHpMarks {
     }
     fanSort(all);
 
-    m_pixelPositions = {all[0].m_center, all[1].m_center, all[2].m_center,
-                        all[3].m_center, all[4].m_center, all[5].m_center};
-    m_identified = {true, true, true, true, true, true};
+    for (size_t i{0}; i < m_pixelPositions.size() and i < all.size(); ++i) {
+      m_pixelPositions[i] = all[i].getCenterRay(markerR, f, imageCenter);
+      m_identified[i] = true;
+    }
   }
 
   // clang-format off
