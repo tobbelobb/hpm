@@ -175,7 +175,7 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
   DetectArcs(lines); // Detect all arcs
 
   // Try to join arcs that are almost perfectly circular.
-  // Use the distance between the arc end-points as a metric in choosing in
+  // Use the distance between the arc end-points as a metric in
   // choosing arcs to join
   edarcs2 = new EDArcs(maxNoOfCircles);
   JoinArcs1();
@@ -655,7 +655,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   DetectArcs(lines); // Detect all arcs
 
   // Try to join arcs that are almost perfectly circular.
-  // Use the distance between the arc end-points as a metric in choosing in
+  // Use the distance between the arc end-points as a metric in
   // choosing arcs to join
   edarcs2 = new EDArcs(maxNoOfCircles);
   JoinArcs1();
@@ -865,7 +865,6 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
     if (iter == 2) {
       MAX_ANGLE = PI / 1.9; // 95 degrees
     }
-    //    if (iter == 2) MAX_ANGLE = PI/2.25;  // 80 degrees
 
     for (int curSegmentNo = 0; curSegmentNo < segments.size(); curSegmentNo++) {
       int firstLine = segmentStartLines[curSegmentNo];
@@ -3450,7 +3449,7 @@ void EDCircles::sortArc(MyArc *arcs, int noArcs) {
 }
 
 //---------------------------------------------------------------------
-// Fits a circle to a given set of points. There must be at least 2 points
+// Fits a circle to a given set of points. There must be at least 3 points
 // The circle equation is of the form: (x-xc)^2 + (y-yc)^2 = r^2
 // Returns true if there is a fit, false in case no circles can be fit
 //
@@ -3495,7 +3494,7 @@ auto EDCircles::CircleFit(const double *x, const double *y, int N, double *pxc,
   // Now, we solve for the following linear system of equations
   // Av = b, where v = (uc, vc) is the center of the circle
   //
-  // |N    Suv| |uc| = |b1|
+  // |Suu  Suv| |uc| = |b1|
   // |Suv  Svv| |vc| = |b2|
   //
   // where b1 = 0.5*(Suuu+Suvv) and b2 = 0.5*(Svvv+Svuu)

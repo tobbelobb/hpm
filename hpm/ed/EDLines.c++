@@ -1239,7 +1239,7 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
         break;
       }
 
-      // Coose increment 1 for accuracy, or 2 for speed
+      // Choose increment 1 for accuracy, or 2 for speed
       int constexpr increment{1};
       noPixels -= increment;
       x += increment;
