@@ -162,18 +162,16 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  DetectionResult const marks{
-      findMarks(undistortedImage, providedMarkerPositions, meanFocalLength,
-                imageCenter, markerDiameter, showIntermediateImages, verbose)};
-
-  IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2,
-                                          meanFocalLength, imageCenter};
-  if (showResultImage) {
-    showImage(imageWith(undistortedImage, identifiedMarks),
-              "identified-marks.png");
-  }
+  auto const [identifiedMarks, marks] =
+      find(undistortedImage, providedMarkerPositions, meanFocalLength,
+           imageCenter, markerDiameter, showIntermediateImages, verbose);
 
   if (identifiedMarks.allIdentified()) {
+    if (showResultImage) {
+      showImage(imageWith(undistortedImage, identifiedMarks),
+                "identified-marks.png");
+    }
+
     std::optional<SixDof> const effectorPoseRelativeToCamera{
         solvePnp(cameraMatrix, providedMarkerPositions, identifiedMarks)};
 
@@ -208,7 +206,6 @@ auto main(int const argc, char **const argv) -> int {
   if (not identifiedMarks.allIdentified()) {
     std::string delimeter{};
     for (auto const &cameraFramedPosition : cameraFramedPositions) {
-      // std::cout << Position{cameraFramePosition} << "mm\n";
       std::cout << delimeter << cameraFramedPosition;
       delimeter = ",\n";
     }

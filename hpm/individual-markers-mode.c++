@@ -17,6 +17,19 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
+auto find(cv::InputArray undistortedImage,
+          hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
+          hpm::PixelPosition const &imageCenter, double const markerDiameter,
+          bool showIntermediateImages, bool verbose)
+    -> std::pair<hpm::IdentifiedHpMarks, hpm::DetectionResult> {
+  DetectionResult const marks{findMarks(undistortedImage, markPos, focalLength,
+                                        imageCenter, markerDiameter,
+                                        showIntermediateImages, verbose)};
+  IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2.0,
+                                          focalLength, imageCenter};
+  return {identifiedMarks, marks};
+}
+
 auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
