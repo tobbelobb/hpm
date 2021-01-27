@@ -164,13 +164,7 @@ auto main(int const argc, char **const argv) -> int {
 
   DetectionResult const marks{
       findMarks(undistortedImage, providedMarkerPositions, meanFocalLength,
-                imageCenter, markerDiameter, showIntermediateImages)};
-
-  if (verbose) {
-    std::cout << "Found " << marks.red.size() << " red markers, "
-              << marks.green.size() << " green markers, and "
-              << marks.blue.size() << " blue markers\n";
-  }
+                imageCenter, markerDiameter, showIntermediateImages, verbose)};
 
   IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2,
                                           meanFocalLength, imageCenter};

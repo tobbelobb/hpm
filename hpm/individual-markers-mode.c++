@@ -20,77 +20,27 @@ using namespace hpm;
 auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
-               double const markerDiameter, bool showIntermediateImages)
-    -> DetectionResult {
+               double const markerDiameter, bool showIntermediateImages,
+               bool verbose) -> DetectionResult {
 
-  auto foundMarks{ellipseDetect(undistortedImage, showIntermediateImages)};
+  auto marks{ellipseDetect(undistortedImage, showIntermediateImages)};
 
   if (showIntermediateImages) {
-    showImage(imageWith(undistortedImage, foundMarks),
+    showImage(imageWith(undistortedImage, marks),
               "found-marks-before-filtering-by-distance.png");
   }
-  filterMarksByDistance(foundMarks, markPos, focalLength, imageCenter,
-                        markerDiameter);
+  marks.filterByDistance(markPos, focalLength, imageCenter, markerDiameter);
   if (showIntermediateImages) {
-    showImage(imageWith(undistortedImage, foundMarks),
+    showImage(imageWith(undistortedImage, marks),
               "found-marks-after-filtering-by-distance.png");
   }
+  if (verbose) {
+    std::cout << "Found " << marks.red.size() << " red markers, "
+              << marks.green.size() << " green markers, and "
+              << marks.blue.size() << " blue markers\n";
+  }
 
-  return foundMarks;
-}
-
-void filterMarksByDistance(DetectionResult &marks,
-                           hpm::ProvidedMarkerPositions const &markPos,
-                           double const focalLength,
-                           PixelPosition const &imageCenter,
-                           double const markerDiameter) {
-  auto filterSingleColor = [&](std::vector<KeyPoint> &marksOfOneColor,
-                               double expectedDistance) {
-    size_t const sz{marksOfOneColor.size()};
-    if (sz > 2) {
-
-      std::vector<CameraFramedPosition> allPositions{};
-      for (auto const &mark : marksOfOneColor) {
-        allPositions.emplace_back(
-            blobToPosition(mark, focalLength, imageCenter, markerDiameter));
-      }
-
-      std::vector<std::pair<size_t, size_t>> allPairs{};
-      for (size_t i{0}; i < sz; ++i) {
-        for (size_t j{i + 1}; j < sz; ++j) {
-          allPairs.emplace_back(i, j);
-        }
-      }
-
-      std::vector<double> allDistances{};
-      for (auto const &pair : allPairs) {
-        allDistances.emplace_back(
-            cv::norm(allPositions[pair.first] - allPositions[pair.second]));
-      }
-
-      auto const winnerPair = allPairs[static_cast<size_t>(std::distance(
-          allDistances.begin(),
-          std::min_element(
-              allDistances.begin(), allDistances.end(),
-              [expectedDistance](double distanceLeft, double distanceRight) {
-                return abs(distanceLeft - expectedDistance) <
-                       abs(distanceRight - expectedDistance);
-              })))];
-
-      auto const first{marksOfOneColor[winnerPair.first]};
-      auto const second{marksOfOneColor[winnerPair.second]};
-      marksOfOneColor.clear();
-      marksOfOneColor.push_back(first);
-      marksOfOneColor.push_back(second);
-    }
-  };
-
-  double const redDistance = cv::norm(markPos.row(0) - markPos.row(1));
-  double const greenDistance = cv::norm(markPos.row(2) - markPos.row(3));
-  double const blueDistance = cv::norm(markPos.row(4) - markPos.row(5));
-  filterSingleColor(marks.red, redDistance);
-  filterSingleColor(marks.green, greenDistance);
-  filterSingleColor(marks.blue, blueDistance);
+  return marks;
 }
 
 auto findIndividualMarkerPositions(DetectionResult const &detectionResult,
