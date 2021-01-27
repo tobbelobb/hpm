@@ -21,8 +21,8 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
   // clang-format off
-  cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 3377.17,    0.00, 1280.0,
-                                                                     0.00, 3378.36,  671.5,
+  cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 3375.85,    0.00, 1280.0,
+                                                                     0.00, 3375.85,  671.5,
                                                                      0.00,    0.00,    1.0);
   // clang-format on
 
@@ -60,7 +60,7 @@ auto main() -> int {
     SixDof const pose{effectorWorldPose(effectorPoseRelativeToCamera.value(),
                                         cameraWorldPose)};
 
-    auto constexpr EPS{0.34_d};
+    auto constexpr EPS{0.25_d};
     expect(abs(pose.x()) < EPS) << "translation X";
     expect(abs(pose.y()) < EPS) << "translation Y";
     expect(abs(pose.z()) < EPS) << "translation Z";

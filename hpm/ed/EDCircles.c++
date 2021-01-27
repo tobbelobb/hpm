@@ -860,10 +860,12 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
   double MIN_ANGLE = PI / 30; // 6 degrees
   double MAX_ANGLE = PI / 3;  // 60 degrees
+  // double MAX_ANGLE = PI / 6;  // 30 degrees finds one more billiard ball
 
   for (int iter = 1; iter <= 2; iter++) {
     if (iter == 2) {
       MAX_ANGLE = PI / 1.9; // 95 degrees
+      // MAX_ANGLE = PI / 3; // 60 degrees finds one more billiard ball
     }
 
     for (int curSegmentNo = 0; curSegmentNo < segments.size(); curSegmentNo++) {
