@@ -1,13 +1,13 @@
 #pragma once
 
+#include <hpm/detection-result.h++>
+#include <hpm/simple-types.h++>
+
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 ENABLE_WARNINGS
-
-#include <hpm/detection-result.h++>
-#include <hpm/simple-types.h++>
 
 void showImage(cv::InputArray image, std::string const &name);
 

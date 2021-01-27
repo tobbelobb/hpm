@@ -1,16 +1,16 @@
 #pragma once
 
-#include <cmath>
-#include <iostream>
-#include <numeric>
-#include <vector>
+#include <hpm/ed/EDCircles.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/ed/EDCircles.h++>
+#include <cmath>
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 namespace hpm {
 using PixelPosition = cv::Point2d;

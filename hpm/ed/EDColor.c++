@@ -1,8 +1,8 @@
-#include <numeric>
-
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/EDCommon.h++>
+
+#include <numeric>
 
 using namespace cv;
 using namespace std;

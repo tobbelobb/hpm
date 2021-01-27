@@ -1,8 +1,8 @@
-#include <numeric>
-
 #include <hpm/ed/EDCommon.h++>
 #include <hpm/ed/EDPF.h++>
 #include <hpm/ed/EDTypes.h++>
+
+#include <numeric>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"

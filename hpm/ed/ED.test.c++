@@ -1,10 +1,9 @@
-#include <iostream>
+#include <hpm/ed/EDLib.h++>
+#include <hpm/test-util.h++> // getPath
 
 #include <boost/ut.hpp> //import boost.ut;
 
-#include <hpm/test-util.h++> // getPath
-
-#include <hpm/ed/EDLib.h++>
+#include <iostream>
 
 auto main() -> int {
   using namespace hpm;

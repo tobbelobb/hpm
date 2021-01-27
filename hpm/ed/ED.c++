@@ -1,8 +1,8 @@
-#include <fstream>
-#include <utility>
-
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
+
+#include <fstream>
+#include <utility>
 
 using namespace cv;
 using namespace std;

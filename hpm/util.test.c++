@@ -1,7 +1,7 @@
 
-#include <boost/ut.hpp> //import boost.ut;
-
 #include <hpm/util.h++>
+
+#include <boost/ut.hpp> //import boost.ut;
 
 auto main() -> int {
   using namespace hpm;

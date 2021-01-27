@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include <hpm/ed/EDTypes.h++>
+
+#include <vector>
 
 auto NFA(double prob, int len, int numberOfSegmentPieces) -> double;
 

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/opencv.hpp>
 ENABLE_WARNINGS
+
+#include <vector>
 
 using Segment = std::vector<cv::Point>;
 using GradPix = short;

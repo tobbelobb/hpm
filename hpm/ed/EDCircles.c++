@@ -1,7 +1,7 @@
+#include <hpm/ed/EDCircles.h++>
+
 #include <cmath>
 #include <limits>
-
-#include <hpm/ed/EDCircles.h++>
 
 using namespace cv;
 using namespace std;

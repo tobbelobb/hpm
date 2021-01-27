@@ -1,5 +1,5 @@
-#include <numeric>
-#include <vector>
+#include <hpm/blob-detector.h++>
+#include <hpm/test-util.h++> // getPath
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -10,8 +10,8 @@ ENABLE_WARNINGS
 
 #include <boost/ut.hpp> //import boost.ut;
 
-#include <hpm/blob-detector.h++>
-#include <hpm/test-util.h++> // getPath
+#include <numeric>
+#include <vector>
 
 using namespace hpm;
 

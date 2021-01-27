@@ -1,4 +1,4 @@
-#include <cmath>
+#include <hpm/util.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -7,7 +7,7 @@ DISABLE_WARNINGS
 #include <opencv2/imgproc.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/util.h++>
+#include <cmath>
 
 using namespace hpm;
 

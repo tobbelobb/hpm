@@ -1,11 +1,11 @@
 #pragma once
 
+#include <hpm/detection-result.h++>
+#include <hpm/simple-types.h++>
+
 #include <algorithm>
 #include <array>
 #include <functional>
-
-#include <hpm/detection-result.h++>
-#include <hpm/simple-types.h++>
 
 namespace hpm {
 

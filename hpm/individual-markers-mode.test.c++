@@ -1,7 +1,6 @@
-#include <cmath>
-#include <iostream>
-#include <numeric>
-#include <vector>
+#include <hpm/individual-markers-mode.h++>
+#include <hpm/test-util.h++> // getPath
+#include <hpm/util.h++>
 
 #include <gsl/span_ext>
 
@@ -13,9 +12,10 @@ ENABLE_WARNINGS
 
 #include <boost/ut.hpp> //import boost.ut;
 
-#include <hpm/individual-markers-mode.h++>
-#include <hpm/test-util.h++> // getPath
-#include <hpm/util.h++>
+#include <cmath>
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 using namespace hpm;
 

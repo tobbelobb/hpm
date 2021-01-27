@@ -1,12 +1,12 @@
 #pragma once
 
+#include <hpm/ed/EDColor.h++>
+#include <hpm/ed/EDTypes.h++>
+
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/opencv.hpp>
 ENABLE_WARNINGS
-
-#include <hpm/ed/EDColor.h++>
-#include <hpm/ed/EDTypes.h++>
 
 enum class Direction { LEFT, RIGHT, UP, DOWN, NONE };
 

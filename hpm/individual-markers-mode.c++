@@ -1,7 +1,7 @@
-#include <algorithm>
-#include <cmath> // atan
-#include <ranges>
-#include <string>
+#include <hpm/blob-detector.h++>
+#include <hpm/ellipse-detector.h++>
+#include <hpm/individual-markers-mode.h++>
+#include <hpm/util.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -10,10 +10,10 @@ DISABLE_WARNINGS
 #include <opencv2/imgproc.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/blob-detector.h++>
-#include <hpm/ellipse-detector.h++>
-#include <hpm/individual-markers-mode.h++>
-#include <hpm/util.h++>
+#include <algorithm>
+#include <cmath> // atan
+#include <ranges>
+#include <string>
 
 using namespace hpm;
 

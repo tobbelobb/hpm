@@ -1,11 +1,11 @@
-#include <vector>
+#include <hpm/solve-pnp.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/calib3d.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/solve-pnp.h++>
+#include <vector>
 
 using namespace hpm;
 

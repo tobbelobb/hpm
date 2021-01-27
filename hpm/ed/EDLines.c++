@@ -1,10 +1,10 @@
-#include <cmath>
-#include <limits>
-#include <utility>
-
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/EDLines.h++>
 #include <hpm/ed/NFA.h++>
+
+#include <cmath>
+#include <limits>
+#include <utility>
 
 using namespace cv;
 using namespace std;

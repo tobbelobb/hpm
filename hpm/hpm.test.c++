@@ -1,6 +1,8 @@
-#include <iostream>
-#include <numeric>
-#include <vector>
+#include <hpm/hpm.h++>
+#include <hpm/identified-hp-marks.h++>
+#include <hpm/individual-markers-mode.h++>
+#include <hpm/solve-pnp.h++>
+#include <hpm/test-util.h++> // getPath
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -11,11 +13,9 @@ ENABLE_WARNINGS
 
 #include <boost/ut.hpp> //import boost.ut;
 
-#include <hpm/hpm.h++>
-#include <hpm/identified-hp-marks.h++>
-#include <hpm/individual-markers-mode.h++>
-#include <hpm/solve-pnp.h++>
-#include <hpm/test-util.h++> // getPath
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 auto main() -> int {
   using namespace hpm;

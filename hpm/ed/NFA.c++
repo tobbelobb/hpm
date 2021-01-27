@@ -1,8 +1,8 @@
+#include <hpm/ed/NFA.h++>
+
 #include <cfloat>
 #include <cmath>
 #include <limits>
-
-#include <hpm/ed/NFA.h++>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"

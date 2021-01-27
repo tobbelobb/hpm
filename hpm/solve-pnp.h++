@@ -1,15 +1,15 @@
 #pragma once
 
-#include <optional>
+#include <hpm/identified-hp-marks.h++>
+#include <hpm/simple-types.h++>
+#include <hpm/six-dof.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/identified-hp-marks.h++>
-#include <hpm/simple-types.h++>
-#include <hpm/six-dof.h++>
+#include <optional>
 
 /* We want to use OpenCV's implementation of an IPPE PnP solver
  * as long as the points are co-planar.

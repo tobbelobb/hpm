@@ -1,8 +1,7 @@
-
-#include <boost/ut.hpp> //import boost.ut;
-
 #include <hpm/ellipse-detector.h++>
 #include <hpm/util.h++>
+
+#include <boost/ut.hpp> //import boost.ut;
 
 using namespace hpm;
 

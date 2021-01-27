@@ -1,13 +1,13 @@
 #pragma once
 
-#include <span>
+#include <hpm/ed/EDTypes.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/opencv.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/ed/EDTypes.h++>
+#include <span>
 
 using LabPixSingle = uint8_t;
 auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};

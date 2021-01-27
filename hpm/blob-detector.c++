@@ -1,6 +1,6 @@
-#include <cmath>
-#include <numeric>
-#include <vector>
+#include <hpm/blob-detector.h++>
+#include <hpm/detection-result.h++>
+#include <hpm/util.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -9,9 +9,9 @@ DISABLE_WARNINGS
 #include <opencv2/imgproc.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/blob-detector.h++>
-#include <hpm/detection-result.h++>
-#include <hpm/util.h++>
+#include <cmath>
+#include <numeric>
+#include <vector>
 
 using namespace hpm;
 

@@ -1,10 +1,9 @@
+#include <hpm/hpm.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/calib3d.hpp> // Rodrigues
 ENABLE_WARNINGS
-
-#include <hpm/hpm.h++>
 
 using namespace hpm;
 

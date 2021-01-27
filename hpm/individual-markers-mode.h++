@@ -1,13 +1,13 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-
-#include <opencv2/core.hpp>
-
 #include <hpm/blob-detector.h++>
 #include <hpm/detection-result.h++>
 #include <hpm/simple-types.h++>
+
+#include <opencv2/core.hpp>
+
+#include <iostream>
+#include <vector>
 
 // function : findMarks
 //

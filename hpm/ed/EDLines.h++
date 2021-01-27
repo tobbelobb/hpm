@@ -1,10 +1,10 @@
 #pragma once
 
-#include <utility>
-
 #include <hpm/ed/ED.h++>
 #include <hpm/ed/EDColor.h++>
 #include <hpm/ed/NFA.h++>
+
+#include <utility>
 
 #define SS 0
 #define SE 1

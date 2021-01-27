@@ -1,6 +1,8 @@
-#include <cmath>
-#include <iostream>
-#include <numeric>
+#include <hpm/command-line.h++>
+#include <hpm/hpm.h++>
+#include <hpm/individual-markers-mode.h++>
+#include <hpm/solve-pnp.h++>
+#include <hpm/util.h++>
 
 #include <gsl/span_ext>
 
@@ -12,11 +14,9 @@ DISABLE_WARNINGS
 #include <opencv2/imgcodecs.hpp>
 ENABLE_WARNINGS
 
-#include <hpm/command-line.h++>
-#include <hpm/hpm.h++>
-#include <hpm/individual-markers-mode.h++>
-#include <hpm/solve-pnp.h++>
-#include <hpm/util.h++>
+#include <cmath>
+#include <iostream>
+#include <numeric>
 
 using namespace hpm;
 

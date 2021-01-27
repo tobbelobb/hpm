@@ -1,7 +1,7 @@
+#include <hpm/command-line.h++>
+
 #include <algorithm>
 #include <iomanip>
-
-#include <hpm/command-line.h++>
 
 CommandLine::CommandLine(std::string description)
     : mDescription(std::move(description)) {}

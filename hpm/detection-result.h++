@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
+#include <hpm/simple-types.h++>
 
 #include <pipes/pipes.hpp>
 
-#include <hpm/simple-types.h++>
+#include <vector>
 
 namespace hpm {
 

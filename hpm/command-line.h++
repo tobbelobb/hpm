@@ -1,11 +1,11 @@
 #pragma once
 
+#include <gsl/span_ext>
+
 #include <iostream>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include <gsl/span_ext>
 
 // This class is a simple and effective class to parse command line arguments.
 // For each possible argument it stores a pointer to a variable. When the

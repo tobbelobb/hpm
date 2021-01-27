@@ -1,8 +1,8 @@
-#include <hpm/ed/EDLib.h++>
-
 #include <hpm/detection-result.h++>
 #include <hpm/ellipse-detector.h++>
 #include <hpm/util.h++>
+
+#include <hpm/ed/EDLib.h++>
 
 using namespace hpm;
 

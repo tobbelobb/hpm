@@ -1,10 +1,10 @@
 #pragma once
 
-#include <utility>
-#include <vector>
-
 #include <hpm/ed/EDLines.h++>
 #include <hpm/ed/EDPF.h++>
+
+#include <utility>
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
