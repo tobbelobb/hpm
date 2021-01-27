@@ -1,5 +1,6 @@
 #include <hpm/command-line.h++>
 #include <hpm/hpm.h++>
+#include <hpm/identified-hp-marks.h++>
 #include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/util.h++>
@@ -171,12 +172,12 @@ auto main(int const argc, char **const argv) -> int {
               << marks.blue.size() << " blue markers\n";
   }
 
-  if (showResultImage) {
-    showImage(imageWithDetectionResult(undistortedImage, marks),
-              "found-marks.png");
-  }
   IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2,
                                           meanFocalLength, imageCenter};
+  if (showResultImage) {
+    showImage(imageWith(undistortedImage, identifiedMarks),
+              "identified-marks.png");
+  }
 
   if (identifiedMarks.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{

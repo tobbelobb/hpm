@@ -8,6 +8,7 @@ DISABLE_WARNINGS
 ENABLE_WARNINGS
 
 #include <cmath>
+#include <string>
 
 using namespace hpm;
 
@@ -24,8 +25,7 @@ void drawKeyPoints(cv::InputOutputArray image,
   }
 }
 
-void drawDetectionResult(cv::InputOutputArray image,
-                         DetectionResult const &markers) {
+void draw(cv::InputOutputArray image, DetectionResult const &markers) {
   const auto AQUA{cv::Scalar(255, 255, 0)};
   const auto FUCHSIA{cv::Scalar(255, 0, 255)};
   const auto YELLOW{cv::Scalar(0, 255, 255)};
@@ -33,13 +33,32 @@ void drawDetectionResult(cv::InputOutputArray image,
   drawKeyPoints(image, markers.green, FUCHSIA);
   drawKeyPoints(image, markers.blue, YELLOW);
 }
+void draw(cv::InputOutputArray image, IdentifiedHpMarks const &markers) {
+  const auto WHITE{cv::Scalar(255, 255, 255)};
+  int constexpr LINE_WIDTH{2};
+  double constexpr TEXT_OFFSET{5.0};
+  for (size_t i{0}; i < markers.m_pixelPositions.size(); ++i) {
+    auto const pos{markers.getPixelPosition(i)};
+    cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH);
+    cv::putText(image, std::to_string(i + 1),
+                pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                cv::FONT_HERSHEY_PLAIN, 10.0, WHITE, LINE_WIDTH);
+  }
+}
 
-auto imageWithDetectionResult(cv::InputArray image,
-                              DetectionResult const &detectionResult)
+auto imageWith(cv::InputArray image, DetectionResult const &detectionResult)
     -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
-  drawDetectionResult(imageCopy, detectionResult);
+  draw(imageCopy, detectionResult);
+  return imageCopy;
+}
+
+auto imageWith(cv::InputArray image, IdentifiedHpMarks const &identifiedHpMarks)
+    -> cv::Mat {
+  cv::Mat imageCopy{};
+  image.copyTo(imageCopy);
+  draw(imageCopy, identifiedHpMarks);
   return imageCopy;
 }
 

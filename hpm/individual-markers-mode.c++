@@ -26,13 +26,13 @@ auto findMarks(cv::InputArray undistortedImage,
   auto foundMarks{ellipseDetect(undistortedImage, showIntermediateImages)};
 
   if (showIntermediateImages) {
-    showImage(imageWithDetectionResult(undistortedImage, foundMarks),
+    showImage(imageWith(undistortedImage, foundMarks),
               "found-marks-before-filtering-by-distance.png");
   }
   filterMarksByDistance(foundMarks, markPos, focalLength, imageCenter,
                         markerDiameter);
   if (showIntermediateImages) {
-    showImage(imageWithDetectionResult(undistortedImage, foundMarks),
+    showImage(imageWith(undistortedImage, foundMarks),
               "found-marks-after-filtering-by-distance.png");
   }
 

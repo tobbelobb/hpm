@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hpm/detection-result.h++>
+#include <hpm/identified-hp-marks.h++>
 #include <hpm/simple-types.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
@@ -15,11 +16,13 @@ void drawKeyPoints(cv::InputOutputArray image,
                    std::vector<hpm::KeyPoint> const &keyPoints,
                    cv::Scalar const &color);
 
-void drawDetectionResult(cv::InputOutputArray image,
-                         hpm::DetectionResult const &markers);
+void draw(cv::InputOutputArray image, hpm::DetectionResult const &markers);
+void draw(cv::InputOutputArray image, hpm::IdentifiedHpMarks const &markers);
 
-cv::Mat imageWithDetectionResult(cv::InputArray image,
-                                 hpm::DetectionResult const &detectionResult);
+cv::Mat imageWith(cv::InputArray image,
+                  hpm::IdentifiedHpMarks const &identifiedHpMarks);
+cv::Mat imageWith(cv::InputArray image,
+                  hpm::DetectionResult const &detectionResult);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
 
