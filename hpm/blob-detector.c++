@@ -46,12 +46,12 @@ static auto getBlobDetector() {
 }
 
 static auto detect(cv::InputArray image, cv::Ptr<cv::Feature2D> const &detector)
-    -> std::vector<hpm::KeyPoint> {
+    -> std::vector<hpm::Mark> {
   std::vector<cv::KeyPoint> blobs_{};
   detector->detect(image, blobs_);
-  std::vector<hpm::KeyPoint> blobs{};
+  std::vector<hpm::Mark> blobs{};
   std::transform(blobs_.begin(), blobs_.end(), std::back_inserter(blobs),
-                 [](cv::KeyPoint const &kp) { return hpm::KeyPoint(kp); });
+                 [](cv::KeyPoint const &kp) { return hpm::Mark(kp); });
   return blobs;
 }
 
@@ -135,7 +135,7 @@ auto blobDetect(cv::InputArray image) -> Marks {
   return blobDetect(image, false);
 }
 
-auto blobToPosition(hpm::KeyPoint const &blob, double const focalLength,
+auto blobToPosition(hpm::Mark const &blob, double const focalLength,
                     PixelPosition const &imageCenter,
                     double const markerDiameter) -> CameraFramedPosition {
   // Step 1: We have an ellipsis within an xy-direced square with a given

@@ -64,16 +64,16 @@ auto findIndividualMarkerPositions(Marks const &marks,
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
   for (auto const &detected : marks.red) {
-    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
-                                             knownMarkerDiameter));
+    positions.emplace_back(
+        detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
   for (auto const &detected : marks.green) {
-    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
-                                             knownMarkerDiameter));
+    positions.emplace_back(
+        detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
   for (auto const &detected : marks.blue) {
-    positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
-                                             knownMarkerDiameter));
+    positions.emplace_back(
+        detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
 
   return positions;

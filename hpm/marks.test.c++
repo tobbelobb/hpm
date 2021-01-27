@@ -38,10 +38,10 @@ auto main() -> int {
             .width};
 
     // Random false positive red detection result
-    hpm::KeyPoint const falsePositiveRed{PixelPosition{200, 500}, 40.0};
+    hpm::Mark const falsePositiveRed{PixelPosition{200, 500}, 40.0};
     // A bit harder to sort out false positive blue detection
-    hpm::KeyPoint const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
-                                          MARKER_SIZE_STRAIGHT * 1.08};
+    hpm::Mark const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
+                                      MARKER_SIZE_STRAIGHT * 1.08};
 
     Marks marks{{{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
                  {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},

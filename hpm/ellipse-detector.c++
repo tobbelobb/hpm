@@ -6,16 +6,15 @@
 
 using namespace hpm;
 
-struct HuedKeyPoint {
-  hpm::KeyPoint keyPoint;
+struct HuedEllipse {
+  hpm::Ellipse ellipse;
   uint8_t hue;
-  HuedKeyPoint(hpm::KeyPoint const kp, uint8_t hue_in)
-      : keyPoint(kp), hue(hue_in) {}
+  HuedEllipse(hpm::Ellipse const e, uint8_t hue_in) : ellipse(e), hue(hue_in) {}
 };
 
 static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
-    -> std::vector<hpm::KeyPoint> {
-  std::vector<hpm::KeyPoint> bigEllipses{};
+    -> std::vector<hpm::Ellipse> {
+  std::vector<hpm::Ellipse> bigEllipses{};
   for (auto const &circle : edCircles.getCirclesRef()) {
     if (circle.r > sizeThreshold) {
       bigEllipses.emplace_back(circle);
@@ -30,7 +29,7 @@ static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
   return bigEllipses;
 }
 
-auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
+auto hpm::ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> hpm::Marks {
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
@@ -55,16 +54,16 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   double constexpr SIZE_THRESHOLD_DENOMINATOR{200.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
-  std::vector<hpm::KeyPoint> bigEllipses{
+  std::vector<hpm::Ellipse> bigEllipses{
       getBigEllipses(edCircles, sizeThreshold)};
 
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawKeyPoints(cpy, bigEllipses, cv::Scalar(255, 255, 0));
+    drawMarks(cpy, bigEllipses, cv::Scalar(255, 255, 0));
     showImage(cpy, "big-ellipses.png");
   }
 
-  std::vector<hpm::KeyPoint> almostRoundEllipses;
+  std::vector<hpm::Ellipse> almostRoundEllipses;
   for (auto const &e : bigEllipses) {
     PixelPosition const center{static_cast<double>(imageMat.cols) / 2.0,
                                static_cast<double>(imageMat.rows) / 2.0};
@@ -81,7 +80,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   }
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawKeyPoints(cpy, almostRoundEllipses, cv::Scalar(255, 255, 0));
+    drawMarks(cpy, almostRoundEllipses, cv::Scalar(255, 255, 0));
     showImage(cpy, "almost-round-ellipses.png");
   }
 
@@ -98,7 +97,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
               return lhv.m_minor < rhv.m_minor;
             });
 
-  std::vector<hpm::KeyPoint> rightSizedEllipses;
+  std::vector<hpm::Ellipse> rightSizedEllipses;
   double const medianSize =
       almostRoundEllipses.size() >= 4
           ? almostRoundEllipses[almostRoundEllipses.size() - 4UL].m_minor
@@ -110,14 +109,14 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   }
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawKeyPoints(cpy, rightSizedEllipses, cv::Scalar(255, 255, 0));
+    drawMarks(cpy, rightSizedEllipses, cv::Scalar(255, 255, 0));
     showImage(cpy, "right-sized-ellipses.png");
   }
 
   cv::Mat hsv{};
   cv::cvtColor(imageMat, hsv, cv::COLOR_BGR2HSV);
   cv::Mat hue = getHueChannelCopy(hsv);
-  std::vector<HuedKeyPoint> huedEllipses;
+  std::vector<HuedEllipse> huedEllipses;
   for (auto const &e : rightSizedEllipses) {
     huedEllipses.emplace_back(e, (hue.at<uint8_t>(e.m_center) + 30) % 180);
   }
@@ -140,77 +139,14 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     double colorDistanceBlue = std::abs(static_cast<double>(he.hue) - blueMid);
     if (colorDistanceRed < colorDistanceGreen and
         colorDistanceRed < colorDistanceBlue) {
-      result.red.emplace_back(he.keyPoint);
+      result.red.emplace_back(he.ellipse);
     } else if (colorDistanceGreen < colorDistanceRed and
                colorDistanceGreen < colorDistanceBlue) {
-      result.green.emplace_back(he.keyPoint);
+      result.green.emplace_back(he.ellipse);
     } else {
-      result.blue.emplace_back(he.keyPoint);
+      result.blue.emplace_back(he.ellipse);
     }
   }
 
   return result;
-}
-
-static auto angularRange(double f, double semiMinor, double c, double centerRay)
-    -> std::pair<double, double> {
-  double const semiMajor = semiMinor * sqrt(centerRay * c / (f * f) + 1);
-  double const closest = c - semiMajor;
-  double const farthest = c + semiMajor;
-  double const smallestAng = atan(closest / f);
-  double const largestAng = atan(farthest / f);
-  return {smallestAng, largestAng};
-}
-
-auto ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
-                       hpm::PixelPosition const &imageCenter,
-                       double markerDiameter) -> hpm::CameraFramedPosition {
-  // The ED ellipse detector is good at determining center and minor axes
-  // of an ellipse, but very bad at determining the major axis and the rotation.
-  // That made this function a bit hard to write.
-  double const markerR = markerDiameter / 2;
-  double const f = focalLength;
-  double const semiMinor = ellipse.m_minor / 2;
-
-  // Luckily, the z position of the marker is determined by the
-  // minor axis alone, no need for the major axis or rotation.
-  double const z = hpm::zFromSemiMinor(markerR, f, semiMinor);
-
-  // The center of the ellipse is not a projection of the center of the marker.
-  // Rather, the center of the marker projects into a point slightly closer
-  // to the center of the image, like this
-  PixelPosition const imageCenterToEllipseCenter =
-      ellipse.m_center - imageCenter;
-  double const c = cv::norm(imageCenterToEllipseCenter);
-  double const centerRay = centerRayFromZ(c, markerR, z);
-
-  // The center ray and the ellipse center give us the scaling
-  // factor between minor and major axis, which lets
-  // us compute the angular width and angular position
-  // of the cone that gets projected through the pinhole
-  auto const [smallestAng, largestAng] =
-      angularRange(f, semiMinor, c, centerRay);
-
-  // The angle between the center ray and the image axis
-  double const alpha = std::midpoint(largestAng, smallestAng);
-  // facing disc's angular radius seen from the pinhole,
-  // or "half the cone's inner angle" if you will
-  double const theta = std::midpoint(largestAng, -smallestAng);
-
-  // We know that
-  //   theta = asin(r/d),
-  // where r is markerR,
-  // and d is the marker's total distance from the pinhole
-  double const d = markerR / sin(theta);
-
-  // Extracting the xy-distance using the angle between the center ray
-  // and the image axis
-  double const dxy = sin(alpha) * d;
-
-  // Since ed isn't good at finding m_rot, let's calculate the rotation
-  // based on the center point, which is more accurately detected by ed.
-  double const rot =
-      atan2(imageCenterToEllipseCenter.y, imageCenterToEllipseCenter.x);
-
-  return {dxy * cos(rot), dxy * sin(rot), z};
 }

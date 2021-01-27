@@ -8,10 +8,8 @@ DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-hpm::Marks ellipseDetect(cv::InputArray image, bool showIntermediateImages);
+namespace hpm {
 
-hpm::Marks ellipseDetect(cv::InputArray image);
+Marks ellipseDetect(cv::InputArray image, bool showIntermediateImages = false);
 
-hpm::CameraFramedPosition
-ellipseToPosition(hpm::KeyPoint const &ellipse, double focalLength,
-                  hpm::PixelPosition const &imageCenter, double markerDiameter);
+} // namespace hpm

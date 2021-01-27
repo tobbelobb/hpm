@@ -23,125 +23,123 @@ auto main() -> int {
                                                                         0.00,        0.00,        1.0);
   // clang-format on
   double constexpr knownMarkerDiameter{32.0};
-  auto interpret6xOpenScad =
-      [&openScadCamParams6x](std::vector<hpm::KeyPoint> const &detectedBlobs) {
-        auto const &cameraMatrix = openScadCamParams6x;
-        double const meanFocalLength{std::midpoint(
-            cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
-        PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
-                                        cameraMatrix.at<double>(1, 2)};
-        std::vector<CameraFramedPosition> const knownPositions{
-            {700, 300, 2000},   {600, 300, 2000},   {500, 300, 2000},
-            {400, 300, 2000},   {300, 300, 2000},   {200, 300, 2000},
-            {100, 300, 2000},   {0, 300, 2000},     {-100, 300, 2000},
-            {-200, 300, 2000},  {-300, 300, 2000},  {-400, 300, 2000},
-            {-500, 300, 2000},  {-600, 300, 2000},  {-700, 300, 2000},
-            {700, 200, 2000},   {600, 200, 2000},   {500, 200, 2000},
-            {400, 200, 2000},   {300, 200, 2000},   {200, 200, 2000},
-            {100, 200, 2000},   {0, 200, 2000},     {-100, 200, 2000},
-            {-200, 200, 2000},  {-300, 200, 2000},  {-400, 200, 2000},
-            {-500, 200, 2000},  {-600, 200, 2000},  {-700, 200, 2000},
-            {700, 100, 2000},   {600, 100, 2000},   {500, 100, 2000},
-            {400, 100, 2000},   {300, 100, 2000},   {200, 100, 2000},
-            {100, 100, 2000},   {0, 100, 2000},     {-100, 100, 2000},
-            {-200, 100, 2000},  {-300, 100, 2000},  {-400, 100, 2000},
-            {-500, 100, 2000},  {-600, 100, 2000},  {-700, 100, 2000},
-            {700, 0, 2000},     {600, 0, 2000},     {500, 0, 2000},
-            {400, 0, 2000},     {300, 0, 2000},     {200, 0, 2000},
-            {100, 0, 2000},     {0, 0, 2000},       {-100, 0, 2000},
-            {-200, 0, 2000},    {-300, 0, 2000},    {-400, 0, 2000},
-            {-500, 0, 2000},    {-600, 0, 2000},    {-700, 0, 2000},
-            {700, -100, 2000},  {600, -100, 2000},  {500, -100, 2000},
-            {400, -100, 2000},  {300, -100, 2000},  {200, -100, 2000},
-            {100, -100, 2000},  {0, -100, 2000},    {-100, -100, 2000},
-            {-200, -100, 2000}, {-300, -100, 2000}, {-400, -100, 2000},
-            {-500, -100, 2000}, {-600, -100, 2000}, {-700, -100, 2000},
-            {700, -200, 2000},  {600, -200, 2000},  {500, -200, 2000},
-            {400, -200, 2000},  {300, -200, 2000},  {200, -200, 2000},
-            {100, -200, 2000},  {0, -200, 2000},    {-100, -200, 2000},
-            {-200, -200, 2000}, {-300, -200, 2000}, {-400, -200, 2000},
-            {-500, -200, 2000}, {-600, -200, 2000}, {-700, -200, 2000},
-            {700, -300, 2000},  {600, -300, 2000},  {500, -300, 2000},
-            {400, -300, 2000},  {300, -300, 2000},  {200, -300, 2000},
-            {100, -300, 2000},  {0, -300, 2000},    {-100, -300, 2000},
-            {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
-            {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
+  auto interpret6xOpenScad = [&openScadCamParams6x](
+                                 std::vector<hpm::Mark> const &detectedBlobs) {
+    auto const &cameraMatrix = openScadCamParams6x;
+    double const meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
+                                               cameraMatrix.at<double>(1, 1))};
+    PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                    cameraMatrix.at<double>(1, 2)};
+    std::vector<CameraFramedPosition> const knownPositions{
+        {700, 300, 2000},   {600, 300, 2000},   {500, 300, 2000},
+        {400, 300, 2000},   {300, 300, 2000},   {200, 300, 2000},
+        {100, 300, 2000},   {0, 300, 2000},     {-100, 300, 2000},
+        {-200, 300, 2000},  {-300, 300, 2000},  {-400, 300, 2000},
+        {-500, 300, 2000},  {-600, 300, 2000},  {-700, 300, 2000},
+        {700, 200, 2000},   {600, 200, 2000},   {500, 200, 2000},
+        {400, 200, 2000},   {300, 200, 2000},   {200, 200, 2000},
+        {100, 200, 2000},   {0, 200, 2000},     {-100, 200, 2000},
+        {-200, 200, 2000},  {-300, 200, 2000},  {-400, 200, 2000},
+        {-500, 200, 2000},  {-600, 200, 2000},  {-700, 200, 2000},
+        {700, 100, 2000},   {600, 100, 2000},   {500, 100, 2000},
+        {400, 100, 2000},   {300, 100, 2000},   {200, 100, 2000},
+        {100, 100, 2000},   {0, 100, 2000},     {-100, 100, 2000},
+        {-200, 100, 2000},  {-300, 100, 2000},  {-400, 100, 2000},
+        {-500, 100, 2000},  {-600, 100, 2000},  {-700, 100, 2000},
+        {700, 0, 2000},     {600, 0, 2000},     {500, 0, 2000},
+        {400, 0, 2000},     {300, 0, 2000},     {200, 0, 2000},
+        {100, 0, 2000},     {0, 0, 2000},       {-100, 0, 2000},
+        {-200, 0, 2000},    {-300, 0, 2000},    {-400, 0, 2000},
+        {-500, 0, 2000},    {-600, 0, 2000},    {-700, 0, 2000},
+        {700, -100, 2000},  {600, -100, 2000},  {500, -100, 2000},
+        {400, -100, 2000},  {300, -100, 2000},  {200, -100, 2000},
+        {100, -100, 2000},  {0, -100, 2000},    {-100, -100, 2000},
+        {-200, -100, 2000}, {-300, -100, 2000}, {-400, -100, 2000},
+        {-500, -100, 2000}, {-600, -100, 2000}, {-700, -100, 2000},
+        {700, -200, 2000},  {600, -200, 2000},  {500, -200, 2000},
+        {400, -200, 2000},  {300, -200, 2000},  {200, -200, 2000},
+        {100, -200, 2000},  {0, -200, 2000},    {-100, -200, 2000},
+        {-200, -200, 2000}, {-300, -200, 2000}, {-400, -200, 2000},
+        {-500, -200, 2000}, {-600, -200, 2000}, {-700, -200, 2000},
+        {700, -300, 2000},  {600, -300, 2000},  {500, -300, 2000},
+        {400, -300, 2000},  {300, -300, 2000},  {200, -300, 2000},
+        {100, -300, 2000},  {0, -300, 2000},    {-100, -300, 2000},
+        {-200, -300, 2000}, {-300, -300, 2000}, {-400, -300, 2000},
+        {-500, -300, 2000}, {-600, -300, 2000}, {-700, -300, 2000}};
 
-        expect(detectedBlobs.size() ==
-               knownPositions.size() >> fatal); // NOLINT
+    expect(detectedBlobs.size() == knownPositions.size() >> fatal); // NOLINT
 
-        std::vector<CameraFramedPosition> positions{};
-        std::transform(
-            detectedBlobs.begin(), detectedBlobs.end(),
-            std::back_inserter(positions), [&](hpm::KeyPoint const &blob) {
-              return blobToPosition(blob, meanFocalLength, imageCenter,
-                                    knownMarkerDiameter);
-            });
+    std::vector<CameraFramedPosition> positions{};
+    std::transform(detectedBlobs.begin(), detectedBlobs.end(),
+                   std::back_inserter(positions), [&](hpm::Mark const &blob) {
+                     return blobToPosition(blob, meanFocalLength, imageCenter,
+                                           knownMarkerDiameter);
+                   });
 
-        auto constexpr EPS_JUMBO{3.0_d};
-        auto constexpr EPS_PERFECT{1.0_d};
-        auto jumbos{0};
-        auto perfects{0};
-        for (size_t i{0}; i < positions.size(); ++i) {
-          if (cv::norm(positions[i] - knownPositions[i]) > EPS_JUMBO) {
-            jumbos = jumbos + 1;
-          }
-          if (cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT) {
-            perfects = perfects + 1;
-          }
-        }
+    auto constexpr EPS_JUMBO{3.0_d};
+    auto constexpr EPS_PERFECT{1.0_d};
+    auto jumbos{0};
+    auto perfects{0};
+    for (size_t i{0}; i < positions.size(); ++i) {
+      if (cv::norm(positions[i] - knownPositions[i]) > EPS_JUMBO) {
+        jumbos = jumbos + 1;
+      }
+      if (cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT) {
+        perfects = perfects + 1;
+      }
+    }
 
-        // Allow a maximum fraction of jumbos
-        auto percentJumbos{static_cast<double>(jumbos) /
-                           static_cast<double>(std::ssize(positions))};
-        auto constexpr ALLOWED_JUMBOS_FRACTION{0.03_d};
-        expect(percentJumbos < ALLOWED_JUMBOS_FRACTION) << "Too many jumbos";
-        if (not(percentJumbos < ALLOWED_JUMBOS_FRACTION)) {
-          for (size_t i{0}; i < positions.size(); ++i) {
-            expect(cv::norm(positions[i] - knownPositions[i]) < EPS_JUMBO)
-                << positions[i];
-            expect(abs(positions[i].x - knownPositions[i].x) < EPS_JUMBO)
-                << positions[i] << knownPositions[i] << " x too"
-                << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                                 : "small");
-            expect(abs(positions[i].y - knownPositions[i].y) < EPS_JUMBO)
-                << positions[i] << knownPositions[i] << " y too"
-                << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                                 : "small");
-            expect(abs(positions[i].z - knownPositions[i].z) < EPS_JUMBO)
-                << positions[i] << knownPositions[i] << " z too"
-                << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                                 : "small");
-          }
-        }
+    // Allow a maximum fraction of jumbos
+    auto percentJumbos{static_cast<double>(jumbos) /
+                       static_cast<double>(std::ssize(positions))};
+    auto constexpr ALLOWED_JUMBOS_FRACTION{0.03_d};
+    expect(percentJumbos < ALLOWED_JUMBOS_FRACTION) << "Too many jumbos";
+    if (not(percentJumbos < ALLOWED_JUMBOS_FRACTION)) {
+      for (size_t i{0}; i < positions.size(); ++i) {
+        expect(cv::norm(positions[i] - knownPositions[i]) < EPS_JUMBO)
+            << positions[i];
+        expect(abs(positions[i].x - knownPositions[i].x) < EPS_JUMBO)
+            << positions[i] << knownPositions[i] << " x too"
+            << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
+                                                             : "small");
+        expect(abs(positions[i].y - knownPositions[i].y) < EPS_JUMBO)
+            << positions[i] << knownPositions[i] << " y too"
+            << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
+                                                             : "small");
+        expect(abs(positions[i].z - knownPositions[i].z) < EPS_JUMBO)
+            << positions[i] << knownPositions[i] << " z too"
+            << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
+                                                             : "small");
+      }
+    }
 
-        // Require some fraction of perfects
-        auto percentPerfects{static_cast<double>(perfects) /
-                             static_cast<double>(std::ssize(positions))};
-        auto constexpr EXPECTED_PERFECTS_FRACTION{0.76_d};
-        expect(percentPerfects >= EXPECTED_PERFECTS_FRACTION)
-            << "Not enough perfects";
-        if (not(percentPerfects >= EXPECTED_PERFECTS_FRACTION)) {
-          for (size_t i{0}; i < positions.size(); ++i) {
-            expect(cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT)
-                << positions[i];
-            expect(abs(positions[i].x - knownPositions[i].x) < EPS_PERFECT)
-                << positions[i] << knownPositions[i] << " x too"
-                << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
-                                                                 : "small");
-            expect(abs(positions[i].y - knownPositions[i].y) < EPS_PERFECT)
-                << positions[i] << knownPositions[i] << " y too"
-                << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
-                                                                 : "small");
-            expect(abs(positions[i].z - knownPositions[i].z) < EPS_PERFECT)
-                << positions[i] << knownPositions[i] << " z too"
-                << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
-                                                                 : "small");
-          }
-        }
-      };
+    // Require some fraction of perfects
+    auto percentPerfects{static_cast<double>(perfects) /
+                         static_cast<double>(std::ssize(positions))};
+    auto constexpr EXPECTED_PERFECTS_FRACTION{0.76_d};
+    expect(percentPerfects >= EXPECTED_PERFECTS_FRACTION)
+        << "Not enough perfects";
+    if (not(percentPerfects >= EXPECTED_PERFECTS_FRACTION)) {
+      for (size_t i{0}; i < positions.size(); ++i) {
+        expect(cv::norm(positions[i] - knownPositions[i]) < EPS_PERFECT)
+            << positions[i];
+        expect(abs(positions[i].x - knownPositions[i].x) < EPS_PERFECT)
+            << positions[i] << knownPositions[i] << " x too"
+            << ((positions[i].x - knownPositions[i].x) > 0.0 ? "large"
+                                                             : "small");
+        expect(abs(positions[i].y - knownPositions[i].y) < EPS_PERFECT)
+            << positions[i] << knownPositions[i] << " y too"
+            << ((positions[i].y - knownPositions[i].y) > 0.0 ? "large"
+                                                             : "small");
+        expect(abs(positions[i].z - knownPositions[i].z) < EPS_PERFECT)
+            << positions[i] << knownPositions[i] << " z too"
+            << ((positions[i].z - knownPositions[i].z) > 0.0 ? "large"
+                                                             : "small");
+      }
+    }
+  };
 
-  std::vector<hpm::KeyPoint> const detectedRedBlobs{
+  std::vector<hpm::Mark> const detectedRedBlobs{
       {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
       {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
       {{10718.0, 7066.96}, 328.151}, {{9705.1, 7066.96}, 326.976},
@@ -196,7 +194,7 @@ auto main() -> int {
       {{2615.39, 990.025}, 330.735}, {{1602.57, 990.037}, 332.911},
       {{589.769, 990.02}, 335.57}};
 
-  std::vector<hpm::KeyPoint> const detectedGreenBlobs{
+  std::vector<hpm::Mark> const detectedGreenBlobs{
       {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
       {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
       {{10718.0, 7066.96}, 328.151}, {{9705.1, 7066.96}, 326.976},
@@ -250,7 +248,7 @@ auto main() -> int {
       {{4641.02, 990.023}, 328.159}, {{3628.18, 990.037}, 329.301},
       {{2615.39, 990.025}, 330.735}, {{1602.57, 990.037}, 332.911},
       {{589.769, 990.02}, 335.57}};
-  std::vector<hpm::KeyPoint> const detectedBlueBlobs{
+  std::vector<hpm::Mark> const detectedBlueBlobs{
       {{14769.3, 7066.97}, 335.594}, {{13756.4, 7066.96}, 333.101},
       {{12743.6, 7066.98}, 330.987}, {{11730.8, 7066.99}, 329.263},
       {{10718.0, 7066.96}, 328.151}, {{9705.1, 7066.96}, 326.976},

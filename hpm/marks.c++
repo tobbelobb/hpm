@@ -1,46 +1,9 @@
-#include <hpm/ellipse-detector.h++>
 #include <hpm/marks.h++>
 
 using namespace hpm;
 
-auto hpm::zFromSemiMinor(double markerR, double f, double semiMinor) -> double {
-  double const rSmall = markerR * f / sqrt(semiMinor * semiMinor + f * f);
-  double const thetaZ = atan(semiMinor / f);
-  return rSmall * f / semiMinor + markerR * sin(thetaZ);
-}
-
-auto hpm::centerRayFromZ(double c, double markerR, double z) -> double {
-  return c * (z * z - markerR * markerR) / (z * z);
-}
-
-auto hpm::KeyPoint::getCenterRay(double const markerR, double const f,
-                                 PixelPosition const &imageCenter) const
-    -> PixelPosition {
-  double const z = zFromSemiMinor(markerR, f, m_minor / 2);
-  PixelPosition const imageCenterToEllipseCenter = m_center - imageCenter;
-  double const c = cv::norm(imageCenterToEllipseCenter);
-  double const centerRay = centerRayFromZ(c, markerR, z);
-  return imageCenter + centerRay * imageCenterToEllipseCenter / c;
-}
-
-hpm::KeyPoint::KeyPoint(mEllipse const &ellipse) : m_center(ellipse.center) {
-  if (ellipse.axes.width >= ellipse.axes.height) {
-    m_major = 2.0 * ellipse.axes.width;
-    m_minor = 2.0 * ellipse.axes.height;
-    m_rot = ellipse.theta;
-  } else {
-    m_major = 2.0 * ellipse.axes.height;
-    m_minor = 2.0 * ellipse.axes.width;
-    if (ellipse.theta > 0.0) {
-      m_rot = ellipse.theta - M_PI / 2.0;
-    } else {
-      m_rot = ellipse.theta + M_PI / 2.0;
-    }
-  }
-}
-
-std::vector<hpm::KeyPoint> Marks::getFlatCopy() const {
-  std::vector<hpm::KeyPoint> all{};
+std::vector<Mark> Marks::getFlatCopy() const {
+  std::vector<Mark> all{};
   all.reserve(size());
   all.insert(all.end(), red.begin(), red.end());
   all.insert(all.end(), green.begin(), green.end());
@@ -52,7 +15,7 @@ void Marks::filterByDistance(ProvidedMarkerPositions const &markPos,
                              double const focalLength,
                              PixelPosition const &imageCenter,
                              double const markerDiameter) {
-  auto filterSingleColor = [&](std::vector<KeyPoint> &marksOfOneColor,
+  auto filterSingleColor = [&](std::vector<Mark> &marksOfOneColor,
                                double expectedDistance) {
     size_t const sz{marksOfOneColor.size()};
     if (sz > 2) {
@@ -60,7 +23,7 @@ void Marks::filterByDistance(ProvidedMarkerPositions const &markPos,
       std::vector<CameraFramedPosition> allPositions{};
       for (auto const &mark : marksOfOneColor) {
         allPositions.emplace_back(
-            ellipseToPosition(mark, focalLength, imageCenter, markerDiameter));
+            mark.toPosition(focalLength, imageCenter, markerDiameter));
       }
 
       std::vector<std::pair<size_t, size_t>> allPairs{};

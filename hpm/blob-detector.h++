@@ -12,7 +12,7 @@ hpm::Marks blobDetect(cv::InputArray image, bool showIntermediateImages);
 
 hpm::Marks blobDetect(cv::InputArray image);
 
-hpm::CameraFramedPosition blobToPosition(hpm::KeyPoint const &blob,
+hpm::CameraFramedPosition blobToPosition(hpm::Mark const &blob,
                                          double focalLength,
                                          hpm::PixelPosition const &imageCenter,
                                          double markerDiameter);

@@ -12,9 +12,9 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
-void drawKeyPoints(cv::InputOutputArray image,
-                   std::vector<hpm::KeyPoint> const &keyPoints,
-                   cv::Scalar const &color) {
+void drawMarks(cv::InputOutputArray image,
+               std::vector<hpm::Mark> const &keyPoints,
+               cv::Scalar const &color) {
   int constexpr LINE_WIDTH{2};
   for (auto const &keyPoint : keyPoints) {
     cv::ellipse(image, keyPoint.m_center,
@@ -29,9 +29,9 @@ void draw(cv::InputOutputArray image, Marks const &marks) {
   const auto AQUA{cv::Scalar(255, 255, 0)};
   const auto FUCHSIA{cv::Scalar(255, 0, 255)};
   const auto YELLOW{cv::Scalar(0, 255, 255)};
-  drawKeyPoints(image, marks.red, AQUA);
-  drawKeyPoints(image, marks.green, FUCHSIA);
-  drawKeyPoints(image, marks.blue, YELLOW);
+  drawMarks(image, marks.red, AQUA);
+  drawMarks(image, marks.green, FUCHSIA);
+  drawMarks(image, marks.blue, YELLOW);
 }
 void draw(cv::InputOutputArray image, IdentifiedMarks const &identifiedMarks) {
   const auto WHITE{cv::Scalar(255, 255, 255)};

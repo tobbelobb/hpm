@@ -12,9 +12,9 @@ ENABLE_WARNINGS
 
 void showImage(cv::InputArray image, std::string const &name);
 
-void drawKeyPoints(cv::InputOutputArray image,
-                   std::vector<hpm::KeyPoint> const &keyPoints,
-                   cv::Scalar const &color);
+void drawMarks(cv::InputOutputArray image,
+               std::vector<hpm::Mark> const &keyPoints,
+               cv::Scalar const &color);
 
 void draw(cv::InputOutputArray image, hpm::Marks const &markers);
 void draw(cv::InputOutputArray image, hpm::IdentifiedMarks const &markers);

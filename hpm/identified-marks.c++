@@ -14,13 +14,12 @@ static inline auto isRight(PixelPosition const &v0, PixelPosition const &v1,
   return signed2DCross(v0, v1, v2) <= 0.0;
 }
 
-static void fanSort(std::vector<hpm::KeyPoint> &fan) {
+static void fanSort(std::vector<hpm::Mark> &fan) {
   const auto &pivot = fan[0];
-  std::sort(
-      std::next(fan.begin()), fan.end(),
-      [&pivot](hpm::KeyPoint const &lhs, hpm::KeyPoint const &rhs) -> bool {
-        return isRight(pivot.m_center, lhs.m_center, rhs.m_center);
-      });
+  std::sort(std::next(fan.begin()), fan.end(),
+            [&pivot](hpm::Mark const &lhs, hpm::Mark const &rhs) -> bool {
+              return isRight(pivot.m_center, lhs.m_center, rhs.m_center);
+            });
 }
 
 IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
@@ -31,7 +30,7 @@ IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
     return;
   }
 
-  std::vector<hpm::KeyPoint> all{marks.getFlatCopy()};
+  std::vector<hpm::Mark> all{marks.getFlatCopy()};
   if (not(isRight(all[0].m_center, all[1].m_center, all[2].m_center))) {
     std::swap(all[0], all[1]);
   }
