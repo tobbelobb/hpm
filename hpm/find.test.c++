@@ -1,4 +1,4 @@
-#include <hpm/individual-markers-mode.h++>
+#include <hpm/find.h++>
 #include <hpm/test-util.h++> // getPath
 #include <hpm/util.h++>
 

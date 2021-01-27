@@ -1,6 +1,6 @@
+#include <hpm/find.h++>
 #include <hpm/hpm.h++>
 #include <hpm/identified-hp-marks.h++>
-#include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
 
@@ -45,11 +45,9 @@ auto main() -> int {
                                                cameraMatrix.at<double>(1, 1))};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
-    DetectionResult marks{findMarks(image, providedMarkerPositions,
-                                    meanFocalLength, imageCenter,
-                                    markerDiameter)};
-    IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2.0,
-                                            meanFocalLength, imageCenter};
+    auto const [identifiedMarks, marks] =
+        find(image, providedMarkerPositions, meanFocalLength, imageCenter,
+             markerDiameter);
 
     expect((identifiedMarks.allIdentified()) >> fatal);
 

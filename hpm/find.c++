@@ -1,6 +1,6 @@
 #include <hpm/blob-detector.h++>
 #include <hpm/ellipse-detector.h++>
-#include <hpm/individual-markers-mode.h++>
+#include <hpm/find.h++>
 #include <hpm/util.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>

@@ -1,7 +1,6 @@
 #include <hpm/command-line.h++>
+#include <hpm/find.h++>
 #include <hpm/hpm.h++>
-#include <hpm/identified-hp-marks.h++>
-#include <hpm/individual-markers-mode.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/util.h++>
 
