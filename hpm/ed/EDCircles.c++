@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 
 #include <hpm/ed/EDCircles.h++>
 
@@ -9,7 +10,9 @@ using namespace std;
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wconversion"
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+#endif
 EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
   edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
@@ -217,10 +220,10 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
   for (int i = 0; i < noCircles3; i++) {
     if (circles3[i].isEllipse) {
       EllipseEquation eq = circles3[i].eq;
-      double xc = NAN;
-      double yc = NAN;
-      double a = NAN;
-      double b = NAN;
+      double xc = std::numeric_limits<double>::quiet_NaN();
+      double yc = std::numeric_limits<double>::quiet_NaN();
+      double a = std::numeric_limits<double>::quiet_NaN();
+      double b = std::numeric_limits<double>::quiet_NaN();
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
@@ -304,9 +307,9 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
 
       // If almost closed loop, then try to fit a circle/ellipse
       if (d <= maxDistanceBetweenEndPoints) {
-        double xc = NAN;
-        double yc = NAN;
-        double r = NAN;
+        double xc = std::numeric_limits<double>::quiet_NaN();
+        double yc = std::numeric_limits<double>::quiet_NaN();
+        double r = std::numeric_limits<double>::quiet_NaN();
         double circleFitError = 1e10;
 
         CircleFit(x, y, noPixels, &xc, &yc, &r, &circleFitError);
@@ -328,8 +331,8 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
           continue;
         }
         if (ellipseFitError <= ELLIPSE_ERROR) {
-          double major = NAN;
-          double minor = NAN;
+          double major = std::numeric_limits<double>::quiet_NaN();
+          double minor = std::numeric_limits<double>::quiet_NaN();
           ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &major, &minor);
 
           // Assume major is longer. Otherwise, swap
@@ -457,10 +460,10 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
   for (int i = 0; i < noCircles3; i++) {
     if (circles3[i].isEllipse) {
       EllipseEquation eq = circles3[i].eq;
-      double xc = NAN;
-      double yc = NAN;
-      double a = NAN;
-      double b = NAN;
+      double xc = std::numeric_limits<double>::quiet_NaN();
+      double yc = std::numeric_limits<double>::quiet_NaN();
+      double a = std::numeric_limits<double>::quiet_NaN();
+      double b = std::numeric_limits<double>::quiet_NaN();
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
@@ -544,9 +547,9 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
 
       // If almost closed loop, then try to fit a circle/ellipse
       if (d <= maxDistanceBetweenEndPoints) {
-        double xc = NAN;
-        double yc = NAN;
-        double r = NAN;
+        double xc = std::numeric_limits<double>::quiet_NaN();
+        double yc = std::numeric_limits<double>::quiet_NaN();
+        double r = std::numeric_limits<double>::quiet_NaN();
         double circleFitError = 1e10;
 
         CircleFit(x, y, noPixels, &xc, &yc, &r, &circleFitError);
@@ -568,8 +571,8 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
           continue;
         }
         if (ellipseFitError <= ELLIPSE_ERROR) {
-          double major = NAN;
-          double minor = NAN;
+          double major = std::numeric_limits<double>::quiet_NaN();
+          double minor = std::numeric_limits<double>::quiet_NaN();
           ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &major, &minor);
 
           // Assume major is longer. Otherwise, swap
@@ -700,10 +703,10 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   for (int i = 0; i < noCircles1; i++) {
     if (circles1[i].isEllipse) {
       EllipseEquation eq = circles1[i].eq;
-      double xc = NAN;
-      double yc = NAN;
-      double a = NAN;
-      double b = NAN;
+      double xc = std::numeric_limits<double>::quiet_NaN();
+      double yc = std::numeric_limits<double>::quiet_NaN();
+      double a = std::numeric_limits<double>::quiet_NaN();
+      double b = std::numeric_limits<double>::quiet_NaN();
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
@@ -1017,9 +1020,9 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
         // Try to fit a circle to the entire arc of lines
         double radius = 0.0;
-        double xc = NAN;
-        double yc = NAN;
-        double circleFitError = NAN;
+        double xc = std::numeric_limits<double>::quiet_NaN();
+        double yc = std::numeric_limits<double>::quiet_NaN();
+        double circleFitError = std::numeric_limits<double>::quiet_NaN();
         CircleFit(x, y, noPixels, &xc, &yc, &radius, &circleFitError);
 
         double coverage = noPixels / (TWOPI * radius);
@@ -1054,8 +1057,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                       y, noPixels);
 
           } else {
-            double sTheta = NAN;
-            double eTheta = NAN;
+            double sTheta = std::numeric_limits<double>::quiet_NaN();
+            double eTheta = std::numeric_limits<double>::quiet_NaN();
             ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels, &sTheta,
                                      &eTheta);
 
@@ -1114,8 +1117,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
                         noPixels); // Add an ellipse for validation
 
             } else {
-              double sTheta = NAN;
-              double eTheta = NAN;
+              double sTheta = std::numeric_limits<double>::quiet_NaN();
+              double eTheta = std::numeric_limits<double>::quiet_NaN();
               ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels, &sTheta,
                                        &eTheta);
 
@@ -1147,9 +1150,9 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
           // Fit a circle to the pixels of these lines and see if the error is
           // less than a threshold
-          double XC = NAN;
-          double YC = NAN;
-          double R = NAN;
+          double XC = std::numeric_limits<double>::quiet_NaN();
+          double YC = std::numeric_limits<double>::quiet_NaN();
+          double R = std::numeric_limits<double>::quiet_NaN();
           double Error = 1e10;
           bool found = false;
 
@@ -1190,10 +1193,10 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
             noPixels += lines[curLine].len;
 
-            double xc = NAN;
-            double yc = NAN;
-            double r = NAN;
-            double error = NAN;
+            double xc = std::numeric_limits<double>::quiet_NaN();
+            double yc = std::numeric_limits<double>::quiet_NaN();
+            double r = std::numeric_limits<double>::quiet_NaN();
+            double error = std::numeric_limits<double>::quiet_NaN();
             CircleFit(x, y, noPixels, &xc, &yc, &r, &error);
             if (error > LONG_ARC_ERROR) {
               noPixels = noPixelsSave;
@@ -1218,8 +1221,8 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
           } else {
             // Add this to the list of arcs
-            double sTheta = NAN;
-            double eTheta = NAN;
+            double sTheta = std::numeric_limits<double>::quiet_NaN();
+            double eTheta = std::numeric_limits<double>::quiet_NaN();
             ComputeStartAndEndAngles(XC, YC, R, x, y, noPixels, &sTheta,
                                      &eTheta);
 
@@ -1467,8 +1470,8 @@ void EDCircles::ValidateCircles() {
       double pixelAngle =
           NFALUT::myAtan2(static_cast<double>(gx), static_cast<double>(-gy));
 
-      double derivX = NAN;
-      double derivY = NAN;
+      double derivX = std::numeric_limits<double>::quiet_NaN();
+      double derivY = std::numeric_limits<double>::quiet_NaN();
       if (circle->isEllipse) {
         // Ellipse
         derivX = 2 * circle->eq.A() * c + circle->eq.B() * r + circle->eq.D();
@@ -1554,8 +1557,8 @@ void EDCircles::JoinCircles() {
     }
 
     // Current arc
-    double majorAxisLength = NAN;
-    double minorAxisLength = NAN;
+    double majorAxisLength = std::numeric_limits<double>::quiet_NaN();
+    double minorAxisLength = std::numeric_limits<double>::quiet_NaN();
 
     if (circles[i].isEllipse) {
       majorAxisLength = circles[i].majorAxisLength;
@@ -1585,8 +1588,8 @@ void EDCircles::JoinCircles() {
         continue;
       }
 
-      double diff1 = NAN;
-      double diff2 = NAN;
+      double diff1 = std::numeric_limits<double>::quiet_NaN();
+      double diff2 = std::numeric_limits<double>::quiet_NaN();
       if (circles[j].isEllipse) {
         diff1 = fabs(majorAxisLength - circles[j].majorAxisLength);
         diff2 = fabs(minorAxisLength - circles[j].minorAxisLength);
@@ -1640,9 +1643,9 @@ void EDCircles::JoinCircles() {
         bool circleFitOK = false;
         if (!EllipseFitValid && !circles[i].isEllipse &&
             !circles[CandidateArcNo].isEllipse) {
-          double xc = NAN;
-          double yc = NAN;
-          double r = NAN;
+          double xc = std::numeric_limits<double>::quiet_NaN();
+          double yc = std::numeric_limits<double>::quiet_NaN();
+          double r = std::numeric_limits<double>::quiet_NaN();
           double error = 1e10;
           CircleFit(x, y, noPixels, &xc, &yc, &r, &error);
 
@@ -1878,10 +1881,10 @@ void EDCircles::JoinArcs1() {
                  arcs[CandidateArcNo].noPixels * sizeof(double));
           noPixels += arcs[CandidateArcNo].noPixels;
 
-          double xc = NAN;
-          double yc = NAN;
-          double r = NAN;
-          double circleFitError = NAN;
+          double xc = std::numeric_limits<double>::quiet_NaN();
+          double yc = std::numeric_limits<double>::quiet_NaN();
+          double r = std::numeric_limits<double>::quiet_NaN();
+          double circleFitError = std::numeric_limits<double>::quiet_NaN();
           CircleFit(x, y, noPixels, &xc, &yc, &r, &circleFitError);
 
           if (circleFitError > LONG_ARC_ERROR) {
@@ -1959,8 +1962,8 @@ void EDCircles::JoinArcs1() {
 
     } else {
       // Add the current OR the extended arc to the new arcs
-      double sTheta = NAN;
-      double eTheta = NAN;
+      double sTheta = std::numeric_limits<double>::quiet_NaN();
+      double eTheta = std::numeric_limits<double>::quiet_NaN();
       angles.computeStartEndTheta(sTheta, eTheta);
 
       double coverage = ArcLength(sTheta, eTheta) / TWOPI;
@@ -2014,7 +2017,7 @@ void EDCircles::JoinArcs2() {
     // Current arc
     bool EllipseEqValid = false;
     EllipseEquation Eq;
-    double EllipseFitError = NAN;
+    double EllipseFitError = std::numeric_limits<double>::quiet_NaN();
 
     double R = arcs[i].r;
     int Turn = arcs[i].turn;
@@ -2221,14 +2224,14 @@ void EDCircles::JoinArcs2() {
 
     } else {
       // Add the current OR the extended arc to the new arcs
-      double sTheta = NAN;
-      double eTheta = NAN;
+      double sTheta = std::numeric_limits<double>::quiet_NaN();
+      double eTheta = std::numeric_limits<double>::quiet_NaN();
       angles.computeStartEndTheta(sTheta, eTheta);
 
-      double XC = NAN;
-      double YC = NAN;
-      double R = NAN;
-      double CircleFitError = NAN;
+      double XC = std::numeric_limits<double>::quiet_NaN();
+      double YC = std::numeric_limits<double>::quiet_NaN();
+      double R = std::numeric_limits<double>::quiet_NaN();
+      double CircleFitError = std::numeric_limits<double>::quiet_NaN();
       CircleFit(x, y, NoPixels, &XC, &YC, &R, &CircleFitError);
 
       double coverage = ArcLength(sTheta, eTheta) / TWOPI;
@@ -2283,7 +2286,7 @@ void EDCircles::JoinArcs3() {
     // Current arc
     bool EllipseEqValid = false;
     EllipseEquation Eq;
-    double EllipseFitError = NAN;
+    double EllipseFitError = std::numeric_limits<double>::quiet_NaN();
 
     double R = arcs[i].r;
     int Turn = arcs[i].turn;
@@ -2513,14 +2516,14 @@ void EDCircles::JoinArcs3() {
 
     } else {
       // Add the current OR the extended arc to the new arcs
-      double sTheta = NAN;
-      double eTheta = NAN;
+      double sTheta = std::numeric_limits<double>::quiet_NaN();
+      double eTheta = std::numeric_limits<double>::quiet_NaN();
       angles.computeStartEndTheta(sTheta, eTheta);
 
-      double XC = NAN;
-      double YC = NAN;
-      double R = NAN;
-      double CircleFitError = NAN;
+      double XC = std::numeric_limits<double>::quiet_NaN();
+      double YC = std::numeric_limits<double>::quiet_NaN();
+      double R = std::numeric_limits<double>::quiet_NaN();
+      double CircleFitError = std::numeric_limits<double>::quiet_NaN();
       CircleFit(x, y, NoPixels, &XC, &YC, &R, &CircleFitError);
 
       double coverage = ArcLength(sTheta, eTheta) / TWOPI;
@@ -2615,20 +2618,24 @@ auto EDCircles::computeEllipsePerimeter(EllipseEquation *eq) -> double {
   double E = eq->E() * mult;
   double F = eq->F() * mult;
 
-  double A2 = NAN;
-  double C2 = NAN;
-  double D2 = NAN;
-  double E2 = NAN;
-  double F2 = NAN;
-  double theta = NAN; // rotated coefficients
-  double D3 = NAN;
-  double E3 = NAN;
-  double F3 = NAN; // ellipse form coefficients
-  double cX = NAN;
-  double cY = NAN;
-  double a = NAN;
-  double b = NAN; //(cX,cY) center, a & b: semimajor & semiminor axes
-  double h = NAN; // h = (a-b)^2 / (a+b)^2
+  double A2 = std::numeric_limits<double>::quiet_NaN();
+  double C2 = std::numeric_limits<double>::quiet_NaN();
+  double D2 = std::numeric_limits<double>::quiet_NaN();
+  double E2 = std::numeric_limits<double>::quiet_NaN();
+  double F2 = std::numeric_limits<double>::quiet_NaN();
+  double theta =
+      std::numeric_limits<double>::quiet_NaN(); // rotated coefficients
+  double D3 = std::numeric_limits<double>::quiet_NaN();
+  double E3 = std::numeric_limits<double>::quiet_NaN();
+  double F3 =
+      std::numeric_limits<double>::quiet_NaN(); // ellipse form coefficients
+  double cX = std::numeric_limits<double>::quiet_NaN();
+  double cY = std::numeric_limits<double>::quiet_NaN();
+  double a = std::numeric_limits<double>::quiet_NaN();
+  double b =
+      std::numeric_limits<double>::quiet_NaN(); //(cX,cY) center, a & b:
+                                                // semimajor & semiminor axes
+  double h = std::numeric_limits<double>::quiet_NaN(); // h = (a-b)^2 / (a+b)^2
   bool rotation = false;
 
 #define pi 3.14159265
@@ -2727,18 +2734,18 @@ auto EDCircles::ComputeEllipseError(EllipseEquation *eq, const double *px,
   double E = eq->E();
   double F = eq->F();
 
-  double xc = NAN;
-  double yc = NAN;
-  double major = NAN;
-  double minor = NAN;
+  double xc = std::numeric_limits<double>::quiet_NaN();
+  double yc = std::numeric_limits<double>::quiet_NaN();
+  double major = std::numeric_limits<double>::quiet_NaN();
+  double minor = std::numeric_limits<double>::quiet_NaN();
   ComputeEllipseCenterAndAxisLengths(eq, &xc, &yc, &major, &minor);
 
   for (int i = 0; i < noPoints; i++) {
     double dx = px[i] - xc;
     double dy = py[i] - yc;
 
-    double min = NAN;
-    double xs = NAN;
+    double min = std::numeric_limits<double>::quiet_NaN();
+    double xs = std::numeric_limits<double>::quiet_NaN();
 
     if (fabs(dx) > fabs(dy)) {
       // The line equation is of the form: y = mx+n
@@ -2899,18 +2906,21 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
   double F = eq->F() * mult;
 
   double theta = 0.0;
-  double A2 = NAN;
-  double C2 = NAN;
-  double D2 = NAN;
-  double E2 = NAN;
-  double F2 = NAN; // rotated coefficients
-  double D3 = NAN;
-  double E3 = NAN;
-  double F3 = NAN; // ellipse form coefficients
-  double cX = NAN;
-  double cY = NAN;
-  double a = NAN;
-  double b = NAN; //(cX,cY) center, a & b: semimajor & semiminor axes
+  double A2 = std::numeric_limits<double>::quiet_NaN();
+  double C2 = std::numeric_limits<double>::quiet_NaN();
+  double D2 = std::numeric_limits<double>::quiet_NaN();
+  double E2 = std::numeric_limits<double>::quiet_NaN();
+  double F2 = std::numeric_limits<double>::quiet_NaN(); // rotated coefficients
+  double D3 = std::numeric_limits<double>::quiet_NaN();
+  double E3 = std::numeric_limits<double>::quiet_NaN();
+  double F3 =
+      std::numeric_limits<double>::quiet_NaN(); // ellipse form coefficients
+  double cX = std::numeric_limits<double>::quiet_NaN();
+  double cY = std::numeric_limits<double>::quiet_NaN();
+  double a = std::numeric_limits<double>::quiet_NaN();
+  double b =
+      std::numeric_limits<double>::quiet_NaN(); //(cX,cY) center, a & b:
+                                                // semimajor & semiminor axes
   bool rotation = false;
 
 #define pi 3.14159265
@@ -3030,10 +3040,10 @@ void EDCircles::ComputeEllipsePoints(const double *pvec, double *px, double *py,
   double Axy{};
 
   double pi = 3.14781;
-  double theta = NAN;
+  double theta = std::numeric_limits<double>::quiet_NaN();
   int i = 0;
   int j = 0;
-  double kk = NAN;
+  double kk = std::numeric_limits<double>::quiet_NaN();
 
   memset(lambda, 0, sizeof(double) * (npts + 1));
 
@@ -3174,10 +3184,10 @@ void EDCircles::joinLastTwoArcs(MyArc *arcs, int &noArcs) {
   // Try join
   int noPixels = arcs[prev].noPixels + arcs[last].noPixels;
 
-  double xc = NAN;
-  double yc = NAN;
-  double r = NAN;
-  double circleFitError = NAN;
+  double xc = std::numeric_limits<double>::quiet_NaN();
+  double yc = std::numeric_limits<double>::quiet_NaN();
+  double r = std::numeric_limits<double>::quiet_NaN();
+  double circleFitError = std::numeric_limits<double>::quiet_NaN();
   CircleFit(arcs[prev].x, arcs[prev].y, noPixels, &xc, &yc, &r,
             &circleFitError);
 
@@ -3308,7 +3318,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
   }
   double theta1 = acos(d);
 
-  double sTheta = NAN;
+  double sTheta = std::numeric_limits<double>::quiet_NaN();
   if (sx >= xc) {
     if (sy >= yc) {
       // I. quadrant
@@ -3335,7 +3345,7 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
   }
   theta1 = acos(d);
 
-  double eTheta = NAN;
+  double eTheta = std::numeric_limits<double>::quiet_NaN();
   if (ex >= xc) {
     if (ey >= yc) {
       // I. quadrant
@@ -3359,8 +3369,8 @@ void EDCircles::ComputeStartAndEndAngles(double xc, double yc, double r,
   double ratio = len / circumference;
 
   if (ratio <= 0.25 || ratio >= 0.75) {
-    double angle1 = NAN;
-    double angle2 = NAN;
+    double angle1 = std::numeric_limits<double>::quiet_NaN();
+    double angle2 = std::numeric_limits<double>::quiet_NaN();
 
     if (eTheta > sTheta) {
       angle1 = eTheta - sTheta;
@@ -3587,8 +3597,8 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
   auto *d = new double[7];
   double **V = AllocateMatrix(7, 7);
   double **sol = AllocateMatrix(7, 7);
-  double tx = NAN;
-  double ty = NAN;
+  double tx = std::numeric_limits<double>::quiet_NaN();
+  double ty = std::numeric_limits<double>::quiet_NaN();
   int nrot = 0;
 
   memset(d, 0, sizeof(double) * 7);
@@ -3747,7 +3757,7 @@ void EDCircles::choldc(double **a, int n, double **l) {
   int i = 0;
   int j = 0;
   int k = 0;
-  double sum = NAN;
+  double sum = std::numeric_limits<double>::quiet_NaN();
   auto *p = new double[n + 1];
   memset(p, 0, sizeof(double) * (n + 1));
 
@@ -3788,10 +3798,10 @@ auto EDCircles::inverse(double **TB, double **InvB, int N) -> int {
   int j = 0;
   int p = 0;
   int q = 0;
-  double mult = NAN;
-  double D = NAN;
-  double temp = NAN;
-  double maxpivot = NAN;
+  double mult = std::numeric_limits<double>::quiet_NaN();
+  double D = std::numeric_limits<double>::quiet_NaN();
+  double temp = std::numeric_limits<double>::quiet_NaN();
+  double maxpivot = std::numeric_limits<double>::quiet_NaN();
   int npivot = 0;
   double **B = AllocateMatrix(N + 1, N + 2);
   double **A = AllocateMatrix(N + 1, 2 * N + 2);
@@ -3906,15 +3916,15 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot) {
   int iq = 0;
   int ip = 0;
   int i = 0;
-  double tresh = NAN;
-  double theta = NAN;
-  double tau = NAN;
-  double t = NAN;
-  double sm = NAN;
-  double s = NAN;
-  double h = NAN;
-  double g = NAN;
-  double c = NAN;
+  double tresh = std::numeric_limits<double>::quiet_NaN();
+  double theta = std::numeric_limits<double>::quiet_NaN();
+  double tau = std::numeric_limits<double>::quiet_NaN();
+  double t = std::numeric_limits<double>::quiet_NaN();
+  double sm = std::numeric_limits<double>::quiet_NaN();
+  double s = std::numeric_limits<double>::quiet_NaN();
+  double h = std::numeric_limits<double>::quiet_NaN();
+  double g = std::numeric_limits<double>::quiet_NaN();
+  double c = std::numeric_limits<double>::quiet_NaN();
 
   auto *b = new double[n + 1];
   auto *z = new double[n + 1];
@@ -4007,8 +4017,8 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot) {
 
 void EDCircles::ROTATE(double **a, int i, int j, int k, int l, double tau,
                        double s) {
-  double g = NAN;
-  double h = NAN;
+  double g = std::numeric_limits<double>::quiet_NaN();
+  double h = std::numeric_limits<double>::quiet_NaN();
   g = a[i][j];
   h = a[k][l];
   a[i][j] = g - s * (h + g * tau);
@@ -4131,7 +4141,7 @@ auto AngleSet::_overlap(double sTheta, double eTheta) -> double {
 }
 
 auto AngleSet::overlap(double sTheta, double eTheta) -> double {
-  double o = NAN;
+  double o = std::numeric_limits<double>::quiet_NaN();
 
   if (eTheta > sTheta) {
     o = _overlap(sTheta, eTheta);

@@ -1,7 +1,16 @@
 #include <cfloat>
 #include <cmath>
+#include <limits>
 
 #include <hpm/ed/NFA.h++>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wconversion"
+#ifndef __clang__
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+#endif
 
 NFALUT::NFALUT(int size, double _prob, double _logNT) {
   LUTSize = size;
@@ -64,7 +73,7 @@ auto NFALUT::myAtan2(double yy, double xx) -> double {
     invert = true;
   }
 
-  double ratio = NAN;
+  double ratio = std::numeric_limits<double>::quiet_NaN();
   if (x == 0) { // avoid division error
     x = 0.000001;
   }
@@ -112,13 +121,13 @@ auto NFALUT::myAtan2(double yy, double xx) -> double {
 auto NFALUT::nfa(int n, int k) const -> double {
   static double inv[TABSIZE]; /* table to keep computed inverse values */
   double tolerance = 0.1;     /* an error of 10% in the result is accepted */
-  double log1term = NAN;
-  double term = NAN;
-  double bin_term = NAN;
-  double mult_term = NAN;
-  double bin_tail = NAN;
-  double err = NAN;
-  double p_term = NAN;
+  double log1term = std::numeric_limits<double>::quiet_NaN();
+  double term = std::numeric_limits<double>::quiet_NaN();
+  double bin_term = std::numeric_limits<double>::quiet_NaN();
+  double mult_term = std::numeric_limits<double>::quiet_NaN();
+  double bin_tail = std::numeric_limits<double>::quiet_NaN();
+  double err = std::numeric_limits<double>::quiet_NaN();
+  double p_term = std::numeric_limits<double>::quiet_NaN();
   int i = 0;
 
   /* check parameters */
@@ -260,3 +269,4 @@ auto NFALUT::double_equal(double a, double b) -> int {
   return static_cast<int>((abs_diff / abs_max) <=
                           (RELATIVE_ERROR_FACTOR * DBL_EPSILON));
 }
+#pragma GCC diagnostic pop

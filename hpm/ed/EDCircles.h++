@@ -6,6 +6,14 @@
 #include <hpm/ed/EDLines.h++>
 #include <hpm/ed/EDPF.h++>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wconversion"
+#ifndef __clang__
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+#endif
+
 #define PI 3.141592653589793238462
 #define TWOPI (2 * PI)
 
@@ -338,3 +346,4 @@ private:
 
   static void sortArc(MyArc *arcs, int noArcs);
 };
+#pragma GCC diagnostic pop

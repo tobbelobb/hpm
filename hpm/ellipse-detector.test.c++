@@ -21,12 +21,9 @@ auto main() -> int {
     double const closerR{sphereRadius * cos(gamma1)};
     double const projectionHeight{focalLength * 2 * closerR / closerZ};
 
-    auto const gotPosition =
-        ellipseToPosition(hpm::KeyPoint{.m_center = imageCenter,
-                                        .m_major = projectionHeight,
-                                        .m_minor = projectionHeight,
-                                        .m_rot = 0.0},
-                          focalLength, imageCenter, sphereRadius * 2);
+    auto const gotPosition = ellipseToPosition(
+        hpm::KeyPoint{imageCenter, projectionHeight, projectionHeight, 0.0},
+        focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 0.0_d);
     expect(gotPosition.y == 0.0_d);
@@ -39,10 +36,7 @@ auto main() -> int {
         sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
     auto const gotPosition = ellipseToPosition(
-        hpm::KeyPoint{.m_center = imageCenter + PixelPosition{xt, yt},
-                      .m_major = width,
-                      .m_minor = height,
-                      .m_rot = 0.0},
+        hpm::KeyPoint{imageCenter + PixelPosition{xt, yt}, width, height, 0.0},
         focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 10.0_d);
@@ -55,12 +49,10 @@ auto main() -> int {
     auto const [width, height, xt, yt] =
         sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
-    auto const gotPosition = ellipseToPosition(
-        hpm::KeyPoint{.m_center = imageCenter + PixelPosition{xt, yt},
-                      .m_major = width,
-                      .m_minor = height,
-                      .m_rot = M_PI / 2},
-        focalLength, imageCenter, sphereRadius * 2);
+    auto const gotPosition =
+        ellipseToPosition(hpm::KeyPoint{imageCenter + PixelPosition{xt, yt},
+                                        width, height, M_PI / 2},
+                          focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 0.0_d);
     expect(gotPosition.y == 10.0_d);
@@ -77,16 +69,11 @@ auto main() -> int {
         auto const [width, height, xt, yt] =
             sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
-        auto const gotPosition = ellipseToPosition(
-            hpm::KeyPoint{.m_center = imageCenter + PixelPosition{xt, yt},
-                          .m_major = width,
-                          .m_minor = height,
-                          .m_rot = ang},
-            focalLength, imageCenter, sphereRadius * 2);
+        auto const gotPosition =
+            ellipseToPosition(hpm::KeyPoint{imageCenter + PixelPosition{xt, yt},
+                                            width, height, ang},
+                              focalLength, imageCenter, sphereRadius * 2);
 
-        // TODO: Cannot for my life of it understand why precision
-        // isn't better than 1e-1 with the current implementation
-        // of ellipseToPosition
         auto constexpr EPS{0.0000000000115_d}; // 1.15e-11 precision
         expect(std::abs(gotPosition.x - xDist) < EPS);
         expect(std::abs(gotPosition.y - yDist) < EPS);

@@ -9,6 +9,8 @@ using namespace hpm;
 struct HuedKeyPoint {
   hpm::KeyPoint keyPoint;
   uint8_t hue;
+  HuedKeyPoint(hpm::KeyPoint const kp, uint8_t hue_in)
+      : keyPoint(kp), hue(hue_in) {}
 };
 
 static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)

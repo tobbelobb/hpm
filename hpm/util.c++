@@ -105,11 +105,11 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
                                 double const focalLength,
                                 double const sphereRadius)
     -> EllipseProjection {
-  long double const x{sphereCenter.x};
-  long double const y{sphereCenter.y};
-  long double const z{sphereCenter.z};
-  long double const r{sphereRadius};
-  long double const f{focalLength};
+  long double const x{static_cast<long double>(sphereCenter.x)};
+  long double const y{static_cast<long double>(sphereCenter.y)};
+  long double const z{static_cast<long double>(sphereCenter.z)};
+  long double const r{static_cast<long double>(sphereRadius)};
+  long double const f{static_cast<long double>(focalLength)};
 
   // Implicit equation for the searched after ellipse is
   // ax^2 + 2b''xy + a'y^2 + 2b'x + 2by + a'' = 0
@@ -132,8 +132,8 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
   // which lets us compute a'''.
   long double const yt{(-b + bpp * bp / a) / (ap - sq(bpp) / a)};
   long double const xt{(-bp - bpp * yt) / a};
-  long double const appp{(a * sq(xt) + 2 * bpp * xt * yt + ap * sq(yt) +
-                          2 * bp * xt + 2 * b * yt) +
+  long double const appp{(a * sq(xt) + 2.0L * bpp * xt * yt + ap * sq(yt) +
+                          2.0L * bp * xt + 2.0L * b * yt) +
                          app};
 
   // After translation, we do a rotation which brings the equation into the form
@@ -142,15 +142,15 @@ auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
   // | a   b''|
   // | b'' a' |
   long double const delta{a * ap - sq(bpp)};
-  long double const discrepand{sqrtl(sq((a + ap) / 2) - delta)};
-  long double const r0{(a + ap) / 2.0 + discrepand};
-  long double const r1{(a + ap) / 2.0 - discrepand};
+  long double const discrepand{sqrtl(sq((a + ap) / 2.0L) - delta)};
+  long double const r0{(a + ap) / 2.0L + discrepand};
+  long double const r1{(a + ap) / 2.0L - discrepand};
 
   // From this form, it's quite straightforward to rewrite into the canonical
   // form (x/w)^2 + (y/h)^2 = 1, where w is the half width of the ellipse, and h
   // is the half height of the ellipse
-  long double const width{2.0 * sqrtl(abs(appp / r0))};
-  long double const height{2.0 * sqrtl(abs(appp / r1))};
+  long double const width{2.0L * sqrtl(abs(appp / r0))};
+  long double const height{2.0L * sqrtl(abs(appp / r1))};
 
   return {static_cast<double>(width), static_cast<double>(height),
           static_cast<double>(xt), static_cast<double>(yt)};
@@ -161,19 +161,19 @@ auto sphereToEllipseWidthHeight2(CameraFramedPosition const &sphereCenter,
                                  double const focalLength,
                                  double const sphereRadius)
     -> std::pair<double, double> {
-  long double const x{sphereCenter.x};
-  long double const y{sphereCenter.y};
-  long double const z{sphereCenter.z};
-  long double const dist{cv::norm(sphereCenter)};
-  long double const r{sphereRadius};
-  long double const f{focalLength};
+  long double const x{static_cast<long double>(sphereCenter.x)};
+  long double const y{static_cast<long double>(sphereCenter.y)};
+  long double const z{static_cast<long double>(sphereCenter.z)};
+  long double const dist{static_cast<long double>(cv::norm(sphereCenter))};
+  long double const r{static_cast<long double>(sphereRadius)};
+  long double const f{static_cast<long double>(focalLength)};
 
   // The height only depends on z,
   // not on x or y
   long double const gammaC{asinl(r / z)};
   long double const closerRC{r * cosl(gammaC)};
   long double const closerZC{z - r * sinl(gammaC)};
-  long double const height{f * 2 * closerRC / closerZC};
+  long double const height{f * 2.0L * closerRC / closerZC};
 
   // The angle between the focal line and the
   // line between the pinhole and the sphere center

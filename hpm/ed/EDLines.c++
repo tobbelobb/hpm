@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <utility>
 
 #include <hpm/ed/EDColor.h++>
@@ -276,9 +277,9 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
   while (noPixels >= min_line_len) {
     // Start by fitting a line to MIN_LINE_LEN pixels
     bool valid = false;
-    double lastA = NAN;
-    double lastB = NAN;
-    double error = NAN;
+    double lastA = std::numeric_limits<double>::quiet_NaN();
+    double lastB = std::numeric_limits<double>::quiet_NaN();
+    double error = std::numeric_limits<double>::quiet_NaN();
     int lastInvert = 0;
 
     while (noPixels >= min_line_len) {
@@ -336,10 +337,10 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
 
       if (goodPixelCount < 2 || index >= noPixels) {
         // End of a line segment. Compute the end points
-        double sx = NAN;
-        double sy = NAN;
-        double ex = NAN;
-        double ey = NAN;
+        double sx = std::numeric_limits<double>::quiet_NaN();
+        double sy = std::numeric_limits<double>::quiet_NaN();
+        double ex = std::numeric_limits<double>::quiet_NaN();
+        double ey = std::numeric_limits<double>::quiet_NaN();
 
         int index = 0;
         while (ComputeMinDistance(x[index], y[index], lastA, lastB,
@@ -435,7 +436,7 @@ void EDLines::ValidateLineSegments() {
     LineSegment *ls = &lines[i];
 
     // Compute Line's angle
-    double lineAngle = NAN;
+    double lineAngle = std::numeric_limits<double>::quiet_NaN();
 
     if (ls->invert == 0) {
       // y = a + bx
@@ -545,7 +546,7 @@ void EDLines::ValidateLineSegments() {
 auto EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) -> bool {
 
   // Compute Line's angle
-  double lineAngle = NAN;
+  double lineAngle = std::numeric_limits<double>::quiet_NaN();
 
   if (ls->invert == 0) {
     // y = a + bx
@@ -619,8 +620,8 @@ auto EDLines::ValidateLineSegmentRect(int *x, int *y, LineSegment *ls) -> bool {
 
 auto EDLines::ComputeMinDistance(double x1, double y1, double a, double b,
                                  int invert) -> double {
-  double x2 = NAN;
-  double y2 = NAN;
+  double x2 = std::numeric_limits<double>::quiet_NaN();
+  double y2 = std::numeric_limits<double>::quiet_NaN();
 
   if (invert == 0) {
     if (b == 0) {
@@ -663,8 +664,8 @@ auto EDLines::ComputeMinDistance(double x1, double y1, double a, double b,
 //
 void EDLines::ComputeClosestPoint(double x1, double y1, double a, double b,
                                   int invert, double &xOut, double &yOut) {
-  double x2 = NAN;
-  double y2 = NAN;
+  double x2 = std::numeric_limits<double>::quiet_NaN();
+  double y2 = std::numeric_limits<double>::quiet_NaN();
 
   if (invert == 0) {
     if (b == 0) {
@@ -1227,9 +1228,9 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
   while (noPixels >= min_line_len) {
     // Start by fitting a line to MIN_LINE_LEN pixels
     bool valid = false;
-    double lastA = NAN;
-    double lastB = NAN;
-    double error = NAN;
+    double lastA = std::numeric_limits<double>::quiet_NaN();
+    double lastB = std::numeric_limits<double>::quiet_NaN();
+    double error = std::numeric_limits<double>::quiet_NaN();
     int lastInvert = 0;
 
     while (noPixels >= min_line_len) {
@@ -1287,10 +1288,10 @@ void EDLines::SplitSegment2Lines(double *x, double *y, int noPixels,
 
       if (goodPixelCount < 2 || index >= noPixels) {
         // End of a line segment. Compute the end points
-        double sx = NAN;
-        double sy = NAN;
-        double ex = NAN;
-        double ey = NAN;
+        double sx = std::numeric_limits<double>::quiet_NaN();
+        double sy = std::numeric_limits<double>::quiet_NaN();
+        double ex = std::numeric_limits<double>::quiet_NaN();
+        double ey = std::numeric_limits<double>::quiet_NaN();
 
         int index = 0;
         while (ComputeMinDistance(x[index], y[index], lastA, lastB,
