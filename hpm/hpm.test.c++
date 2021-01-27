@@ -25,6 +25,7 @@ auto main() -> int {
                                                                      0.00, 3375.85,  671.5,
                                                                      0.00,    0.00,    1.0);
   // clang-format on
+  double constexpr markerDiameter{32.0};
 
   "Mover pose from OpenScad generated image"_test = [&openScadCameraMatrix] {
     std::string const imageFileName{hpm::getPath(
@@ -40,15 +41,15 @@ auto main() -> int {
         -72.4478, -125.483, 150.43, 72.4478,   -125.483, 150.43,
         144.8960, 0.0,      150.43, 72.4478,   125.483,  150.43,
         -72.4478, 125.483,  150.43, -144.8960, 0.0,      150.43};
-    DetectionResult marks{findMarks(image)};
     double const meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
                                                cameraMatrix.at<double>(1, 1))};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
-    filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
-                          imageCenter, 32.0);
-    IdentifiedHpMarks const identifiedMarks{marks, 32.0 / 2.0, meanFocalLength,
-                                            imageCenter};
+    DetectionResult marks{findMarks(image, providedMarkerPositions,
+                                    meanFocalLength, imageCenter,
+                                    markerDiameter)};
+    IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2.0,
+                                            meanFocalLength, imageCenter};
 
     expect((identifiedMarks.allIdentified()) >> fatal);
 

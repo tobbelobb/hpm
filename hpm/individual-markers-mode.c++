@@ -17,15 +17,25 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
-auto findMarks(cv::InputArray undistortedImage, bool showIntermediateImages)
+auto findMarks(cv::InputArray undistortedImage,
+               hpm::ProvidedMarkerPositions const &markPos,
+               double const focalLength, PixelPosition const &imageCenter,
+               double const markerDiameter, bool showIntermediateImages)
     -> DetectionResult {
 
-  auto const foundMarks{
-      ellipseDetect(undistortedImage, showIntermediateImages)};
+  auto foundMarks{ellipseDetect(undistortedImage, showIntermediateImages)};
+
   if (showIntermediateImages) {
     showImage(imageWithDetectionResult(undistortedImage, foundMarks),
               "found-marks-before-filtering-by-distance.png");
   }
+  filterMarksByDistance(foundMarks, markPos, focalLength, imageCenter,
+                        markerDiameter);
+  if (showIntermediateImages) {
+    showImage(imageWithDetectionResult(undistortedImage, foundMarks),
+              "found-marks-after-filtering-by-distance.png");
+  }
+
   return foundMarks;
 }
 
@@ -81,10 +91,6 @@ void filterMarksByDistance(DetectionResult &marks,
   filterSingleColor(marks.red, redDistance);
   filterSingleColor(marks.green, greenDistance);
   filterSingleColor(marks.blue, blueDistance);
-}
-
-auto findMarks(cv::InputArray undistortedImage) -> DetectionResult {
-  return findMarks(undistortedImage, false);
 }
 
 auto findIndividualMarkerPositions(DetectionResult const &detectionResult,

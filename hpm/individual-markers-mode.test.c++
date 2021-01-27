@@ -125,9 +125,8 @@ auto main() -> int {
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
 
-    auto marks{findMarks(image)};
-    filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
-                          imageCenter, knownMarkerDiameter);
+    auto marks{findMarks(image, providedMarkerPositions, meanFocalLength,
+                         imageCenter, knownMarkerDiameter)};
     std::vector<CameraFramedPosition> const positions{
         findIndividualMarkerPositions(marks, knownMarkerDiameter,
                                       meanFocalLength, imageCenter)};

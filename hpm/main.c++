@@ -161,10 +161,9 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage{
       undistort(distortedImage, cameraMatrix, distortionCoefficients)};
 
-  DetectionResult marks{findMarks(undistortedImage, showIntermediateImages)};
-
-  filterMarksByDistance(marks, providedMarkerPositions, meanFocalLength,
-                        imageCenter, markerDiameter);
+  DetectionResult const marks{
+      findMarks(undistortedImage, providedMarkerPositions, meanFocalLength,
+                imageCenter, markerDiameter, showIntermediateImages)};
 
   if (verbose) {
     std::cout << "Found " << marks.red.size() << " red markers, "

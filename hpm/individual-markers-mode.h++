@@ -17,9 +17,11 @@
 //               The colors are defined to be any color within the
 //               specified bounds.
 hpm::DetectionResult findMarks(cv::InputArray undistortedImage,
-                               bool showIntermediateImages);
-
-hpm::DetectionResult findMarks(cv::InputArray undistortedImage);
+                               hpm::ProvidedMarkerPositions const &markPos,
+                               double const focalLength,
+                               hpm::PixelPosition const &imageCenter,
+                               double const markerDiameter,
+                               bool showIntermediateImages = false);
 
 // function : findIndividualMarkerPositions
 //
