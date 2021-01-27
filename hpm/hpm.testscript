@@ -22,26 +22,26 @@ EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
 Could not identify markers
 /\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
 
 : Non-existent-calibration-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* 'nonfile' $src_base/example-marker-params/marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+$* 'nonfile' $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
 Failed to load cam params file: nonfile
 EOE
 
 : Non-existent-image-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml 'noimage' 2>>EOE != 0
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml 'noimage' 2>>EOE != 0
 Could not read the image: noimage
 EOE
 
 : Swaps-image-file-and-camera-parameters
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png $src_base/example-marker-params/marker-params.xml $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
+$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png $src_base/example-marker-params/my-marker-params.xml $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
 %Could not read camera parameters from file .+/test-images/ball_25_84_dist_1001_08_Z.png%
 %.+Input file is invalid.+%
 %%
@@ -74,7 +74,7 @@ EOE
 
 : Large-reprojection-error-warning
 : Checks that hpm warns user about a big reprojection error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png >>~/END/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\]/
 /Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
 END
