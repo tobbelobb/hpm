@@ -7,12 +7,11 @@ DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-namespace hpm {
-
 double zFromSemiMinor(double markerR, double f, double semiMinor);
 
 double centerRayFromZ(double c, double markerR, double z);
 
+namespace hpm {
 struct Ellipse {
   PixelPosition m_center{0, 0};
   double m_major{0.0};

@@ -2,13 +2,13 @@
 
 using namespace hpm;
 
-auto hpm::zFromSemiMinor(double markerR, double f, double semiMinor) -> double {
+auto zFromSemiMinor(double markerR, double f, double semiMinor) -> double {
   double const rSmall = markerR * f / sqrt(semiMinor * semiMinor + f * f);
   double const thetaZ = atan(semiMinor / f);
   return rSmall * f / semiMinor + markerR * sin(thetaZ);
 }
 
-auto hpm::centerRayFromZ(double c, double markerR, double z) -> double {
+auto centerRayFromZ(double c, double markerR, double z) -> double {
   return c * (z * z - markerR * markerR) / (z * z);
 }
 
@@ -61,7 +61,7 @@ auto hpm::Ellipse::toPosition(double focalLength,
 
   // Luckily, the z position of the marker is determined by the
   // minor axis alone, no need for the major axis or rotation.
-  double const z = hpm::zFromSemiMinor(markerR, f, semiMinor);
+  double const z = zFromSemiMinor(markerR, f, semiMinor);
 
   // The center of the ellipse is not a projection of the center of the marker.
   // Rather, the center of the marker projects into a point slightly closer

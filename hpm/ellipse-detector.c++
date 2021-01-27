@@ -29,7 +29,7 @@ static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
   return bigEllipses;
 }
 
-auto hpm::ellipseDetect(cv::InputArray image, bool showIntermediateImages)
+auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> hpm::Marks {
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{

@@ -122,7 +122,7 @@ static inline auto sq(auto num) { return num * num; }
 auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,
                                 double const focalLength,
                                 double const sphereRadius)
-    -> EllipseProjection {
+    -> hpm::util::EllipseProjection {
   long double const x{static_cast<long double>(sphereCenter.x)};
   long double const y{static_cast<long double>(sphereCenter.y)};
   long double const z{static_cast<long double>(sphereCenter.z)};
