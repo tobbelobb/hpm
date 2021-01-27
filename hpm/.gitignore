@@ -3,3 +3,4 @@ test-hpm
 
 # test binaries
 *.test
+*.test.manual
