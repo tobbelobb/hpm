@@ -1520,8 +1520,8 @@ void EDCircles::ValidateCircles() {
 
   noCircles2 = count;
 
-  delete px;
-  delete py;
+  delete[] px;
+  delete[] py;
   delete nfa;
 }
 
@@ -1701,8 +1701,8 @@ void EDCircles::JoinCircles() {
     }
   }
 
-  delete taken;
-  delete candidateCircles;
+  delete[] taken;
+  delete[] candidateCircles;
 }
 
 void EDCircles::JoinArcs1() {
@@ -1977,8 +1977,8 @@ void EDCircles::JoinArcs1() {
     }
   }
 
-  delete taken;
-  delete candidateArcs;
+  delete[] taken;
+  delete[] candidateArcs;
 }
 
 void EDCircles::JoinArcs2() {
@@ -2246,8 +2246,8 @@ void EDCircles::JoinArcs2() {
     }
   }
 
-  delete taken;
-  delete candidateArcs;
+  delete[] taken;
+  delete[] candidateArcs;
 }
 
 void EDCircles::JoinArcs3() {
@@ -2537,8 +2537,8 @@ void EDCircles::JoinArcs3() {
     }
   }
 
-  delete taken;
-  delete candidateArcs;
+  delete[] taken;
+  delete[] candidateArcs;
 }
 
 auto EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double yc,
@@ -3119,7 +3119,7 @@ void EDCircles::ComputeEllipsePoints(const double *pvec, double *px, double *py,
   DeallocateMatrix(Xneg, 3);
   DeallocateMatrix(ss1, 3);
   DeallocateMatrix(ss2, 3);
-  delete lambda;
+  delete[] lambda;
   DeallocateMatrix(uAiu, 3);
   DeallocateMatrix(A, 3);
   DeallocateMatrix(Ai, 3);
@@ -3699,7 +3699,7 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
   DeallocateMatrix(L, 7);
   DeallocateMatrix(C, 7);
   DeallocateMatrix(invL, 7);
-  delete d;
+  delete[] d;
   DeallocateMatrix(V, 7);
   DeallocateMatrix(sol, 7);
 
@@ -3779,7 +3779,7 @@ void EDCircles::choldc(double **a, int n, double **l) {
     }
   }
 
-  delete p;
+  delete[] p;
 }
 
 auto EDCircles::inverse(double **TB, double **InvB, int N) -> int {
@@ -3940,8 +3940,8 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot) {
       }
     }
     if (sm == 0.0) {
-      delete b;
-      delete z;
+      delete[] b;
+      delete[] z;
       return;
     }
     if (i < 4) {
@@ -4001,8 +4001,8 @@ void EDCircles::jacobi(double **a, int n, double d[], double **v, int nrot) {
     }
   }
   // printf("Too many iterations in routine JACOBI");
-  delete b;
-  delete z;
+  delete[] b;
+  delete[] z;
 }
 
 void EDCircles::ROTATE(double **a, int i, int j, int k, int l, double tau,
