@@ -14,12 +14,13 @@ using namespace hpm;
 void drawKeyPoints(cv::InputOutputArray image,
                    std::vector<hpm::KeyPoint> const &keyPoints,
                    cv::Scalar const &color) {
+  int constexpr LINE_WIDTH{2};
   for (auto const &keyPoint : keyPoints) {
     cv::ellipse(image, keyPoint.m_center,
                 cv::Size{static_cast<int>(keyPoint.m_major / 2.0),
                          static_cast<int>(keyPoint.m_minor / 2.0)},
-                keyPoint.m_rot * 180.0 / M_PI, 0.0, 360.0, color, 2);
-    cv::circle(image, keyPoint.m_center, 2, color, 2);
+                keyPoint.m_rot * 180.0 / M_PI, 0.0, 360.0, color, LINE_WIDTH);
+    cv::circle(image, keyPoint.m_center, LINE_WIDTH, color, LINE_WIDTH);
   }
 }
 
