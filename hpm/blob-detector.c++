@@ -1,5 +1,5 @@
 #include <hpm/blob-detector.h++>
-#include <hpm/detection-result.h++>
+#include <hpm/marks.h++>
 #include <hpm/util.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
@@ -65,8 +65,7 @@ static auto bellCurve(double const x, double const center,
 // https://docs.opencv.org/4.4.0/d0/d7a/classcv_1_1SimpleBlobDetector.html#details
 // and also
 // https://www.learnopencv.com/blob-detection-using-opencv-python-c/
-auto blobDetect(cv::InputArray image, bool showIntermediateImages)
-    -> DetectionResult {
+auto blobDetect(cv::InputArray image, bool showIntermediateImages) -> Marks {
   auto const detector = getBlobDetector();
 
   cv::Mat imageMat{image.getMat()};
@@ -132,7 +131,7 @@ auto blobDetect(cv::InputArray image, bool showIntermediateImages)
           detect(antiBlue, detector)};
 }
 
-auto blobDetect(cv::InputArray image) -> DetectionResult {
+auto blobDetect(cv::InputArray image) -> Marks {
   return blobDetect(image, false);
 }
 

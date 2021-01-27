@@ -1,4 +1,4 @@
-#include <hpm/detection-result.h++>
+#include <hpm/marks.h++>
 #include <hpm/util.h++>
 
 #include <boost/ut.hpp> //import boost.ut;
@@ -43,24 +43,23 @@ auto main() -> int {
     hpm::KeyPoint const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
                                           MARKER_SIZE_STRAIGHT * 1.08};
 
-    DetectionResult detectionResult{
-        {{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
-         {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
-         falsePositiveRed},
-        {{{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT},
-         {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MARKER_SIZE_DIAG}},
-        {{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
-         falsePositiveBlue,
-         {{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT}}};
+    Marks marks{{{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
+                 {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
+                 falsePositiveRed},
+                {{{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT},
+                 {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MARKER_SIZE_DIAG}},
+                {{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
+                 falsePositiveBlue,
+                 {{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT}}};
 
-    detectionResult.filterByDistance(providedPositions, focalLength,
-                                     imageCenter, knownMarkerDiameter);
-    expect(detectionResult.red.size() == 2_ul);
-    expect(detectionResult.red[0] != falsePositiveRed);
-    expect(detectionResult.red[1] != falsePositiveRed);
-    expect(detectionResult.blue.size() == 2_ul);
-    expect(detectionResult.blue[0] != falsePositiveBlue);
-    expect(detectionResult.blue[1] != falsePositiveBlue);
+    marks.filterByDistance(providedPositions, focalLength, imageCenter,
+                           knownMarkerDiameter);
+    expect(marks.red.size() == 2_ul);
+    expect(marks.red[0] != falsePositiveRed);
+    expect(marks.red[1] != falsePositiveRed);
+    expect(marks.blue.size() == 2_ul);
+    expect(marks.blue[0] != falsePositiveBlue);
+    expect(marks.blue[1] != falsePositiveBlue);
   };
 
   return 0;

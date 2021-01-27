@@ -11,7 +11,7 @@ using namespace hpm;
 
 auto solvePnp(cv::InputArray cameraMatrix,
               cv::InputArray providedPositionsRelativeToNozzle,
-              IdentifiedHpMarks const &marks) -> std::optional<SixDof> {
+              IdentifiedMarks const &marks) -> std::optional<SixDof> {
 
   cv::Mat providedPositionsMatrix = providedPositionsRelativeToNozzle.getMat();
   size_t const numMarkers{static_cast<size_t>(providedPositionsMatrix.rows *

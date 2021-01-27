@@ -1,5 +1,5 @@
 
-#include <hpm/identified-hp-marks.h++>
+#include <hpm/identified-marks.h++>
 
 using namespace hpm;
 
@@ -23,15 +23,15 @@ static void fanSort(std::vector<hpm::KeyPoint> &fan) {
       });
 }
 
-IdentifiedHpMarks::IdentifiedHpMarks(DetectionResult const &foundMarkers,
-                                     double const markerR, double const f,
-                                     PixelPosition const &imageCenter) {
-  if (foundMarkers.red.size() != 2 or foundMarkers.green.size() != 2 or
-      foundMarkers.blue.size() != 2) {
+IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
+                                 double const f,
+                                 PixelPosition const &imageCenter) {
+  if (marks.red.size() != 2 or marks.green.size() != 2 or
+      marks.blue.size() != 2) {
     return;
   }
 
-  std::vector<hpm::KeyPoint> all{foundMarkers.getFlatCopy()};
+  std::vector<hpm::KeyPoint> all{marks.getFlatCopy()};
   if (not(isRight(all[0].m_center, all[1].m_center, all[2].m_center))) {
     std::swap(all[0], all[1]);
   }
@@ -43,23 +43,23 @@ IdentifiedHpMarks::IdentifiedHpMarks(DetectionResult const &foundMarkers,
   }
 }
 
-bool IdentifiedHpMarks::isIdentified(size_t idx) const {
+bool IdentifiedMarks::isIdentified(size_t idx) const {
   return idx < m_identified.size() and m_identified[idx];
 }
 
-PixelPosition IdentifiedHpMarks::getPixelPosition(size_t idx) const {
+PixelPosition IdentifiedMarks::getPixelPosition(size_t idx) const {
   return m_pixelPositions[idx];
 }
 
-bool IdentifiedHpMarks::allIdentified() const {
+bool IdentifiedMarks::allIdentified() const {
   return std::all_of(m_identified.begin(), m_identified.end(), std::identity());
 }
 
 std::ostream &operator<<(std::ostream &out,
-                         IdentifiedHpMarks const &identifiedHpMarks) {
-  for (size_t i{0}; i < identifiedHpMarks.m_pixelPositions.size(); ++i) {
-    if (identifiedHpMarks.isIdentified(i)) {
-      out << identifiedHpMarks.m_pixelPositions[i];
+                         IdentifiedMarks const &identifiedMarks) {
+  for (size_t i{0}; i < identifiedMarks.m_pixelPositions.size(); ++i) {
+    if (identifiedMarks.isIdentified(i)) {
+      out << identifiedMarks.m_pixelPositions[i];
     } else {
       out << '?';
     }

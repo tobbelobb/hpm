@@ -1,5 +1,5 @@
-#include <hpm/detection-result.h++>
 #include <hpm/ellipse-detector.h++>
+#include <hpm/marks.h++>
 #include <hpm/util.h++>
 
 #include <hpm/ed/EDLib.h++>
@@ -31,7 +31,7 @@ static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
 }
 
 auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
-    -> hpm::DetectionResult {
+    -> hpm::Marks {
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
       imageMat,
@@ -132,7 +132,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   double greenMid = huedEllipses[huedEllipses.size() / 2].hue;
   double blueMid = max;
 
-  DetectionResult result{};
+  Marks result{};
   for (auto const &he : huedEllipses) {
     double colorDistanceRed = std::abs(static_cast<double>(he.hue) - redMid);
     double colorDistanceGreen =

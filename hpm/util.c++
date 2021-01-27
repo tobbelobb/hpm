@@ -25,20 +25,20 @@ void drawKeyPoints(cv::InputOutputArray image,
   }
 }
 
-void draw(cv::InputOutputArray image, DetectionResult const &markers) {
+void draw(cv::InputOutputArray image, Marks const &marks) {
   const auto AQUA{cv::Scalar(255, 255, 0)};
   const auto FUCHSIA{cv::Scalar(255, 0, 255)};
   const auto YELLOW{cv::Scalar(0, 255, 255)};
-  drawKeyPoints(image, markers.red, AQUA);
-  drawKeyPoints(image, markers.green, FUCHSIA);
-  drawKeyPoints(image, markers.blue, YELLOW);
+  drawKeyPoints(image, marks.red, AQUA);
+  drawKeyPoints(image, marks.green, FUCHSIA);
+  drawKeyPoints(image, marks.blue, YELLOW);
 }
-void draw(cv::InputOutputArray image, IdentifiedHpMarks const &markers) {
+void draw(cv::InputOutputArray image, IdentifiedMarks const &identifiedMarks) {
   const auto WHITE{cv::Scalar(255, 255, 255)};
   int constexpr LINE_WIDTH{2};
   double constexpr TEXT_OFFSET{5.0};
-  for (size_t i{0}; i < markers.m_pixelPositions.size(); ++i) {
-    auto const pos{markers.getPixelPosition(i)};
+  for (size_t i{0}; i < identifiedMarks.m_pixelPositions.size(); ++i) {
+    auto const pos{identifiedMarks.getPixelPosition(i)};
     cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH);
     cv::putText(image, std::to_string(i + 1),
                 pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
@@ -46,19 +46,18 @@ void draw(cv::InputOutputArray image, IdentifiedHpMarks const &markers) {
   }
 }
 
-auto imageWith(cv::InputArray image, DetectionResult const &detectionResult)
-    -> cv::Mat {
+auto imageWith(cv::InputArray image, Marks const &marks) -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
-  draw(imageCopy, detectionResult);
+  draw(imageCopy, marks);
   return imageCopy;
 }
 
-auto imageWith(cv::InputArray image, IdentifiedHpMarks const &identifiedHpMarks)
+auto imageWith(cv::InputArray image, IdentifiedMarks const &identifiedMarks)
     -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
-  draw(imageCopy, identifiedHpMarks);
+  draw(imageCopy, identifiedMarks);
   return imageCopy;
 }
 

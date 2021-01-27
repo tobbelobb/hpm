@@ -1,6 +1,6 @@
 #include <hpm/find.h++>
 #include <hpm/hpm.h++>
-#include <hpm/identified-hp-marks.h++>
+#include <hpm/identified-marks.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
 

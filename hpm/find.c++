@@ -21,12 +21,12 @@ auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
           bool showIntermediateImages, bool verbose)
-    -> std::pair<hpm::IdentifiedHpMarks, hpm::DetectionResult> {
-  DetectionResult const marks{findMarks(undistortedImage, markPos, focalLength,
-                                        imageCenter, markerDiameter,
-                                        showIntermediateImages, verbose)};
-  IdentifiedHpMarks const identifiedMarks{marks, markerDiameter / 2.0,
-                                          focalLength, imageCenter};
+    -> std::pair<hpm::IdentifiedMarks, hpm::Marks> {
+  Marks const marks{findMarks(undistortedImage, markPos, focalLength,
+                              imageCenter, markerDiameter,
+                              showIntermediateImages, verbose)};
+  IdentifiedMarks const identifiedMarks{marks, markerDiameter / 2.0,
+                                        focalLength, imageCenter};
   return {identifiedMarks, marks};
 }
 
@@ -34,7 +34,7 @@ auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
                double const markerDiameter, bool showIntermediateImages,
-               bool verbose) -> DetectionResult {
+               bool verbose) -> Marks {
 
   auto marks{ellipseDetect(undistortedImage, showIntermediateImages)};
 
@@ -56,22 +56,22 @@ auto findMarks(cv::InputArray undistortedImage,
   return marks;
 }
 
-auto findIndividualMarkerPositions(DetectionResult const &detectionResult,
+auto findIndividualMarkerPositions(Marks const &marks,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
                                    PixelPosition const &imageCenter)
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
-  positions.reserve(detectionResult.size());
-  for (auto const &detected : detectionResult.red) {
+  positions.reserve(marks.size());
+  for (auto const &detected : marks.red) {
     positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
                                              knownMarkerDiameter));
   }
-  for (auto const &detected : detectionResult.green) {
+  for (auto const &detected : marks.green) {
     positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
                                              knownMarkerDiameter));
   }
-  for (auto const &detected : detectionResult.blue) {
+  for (auto const &detected : marks.blue) {
     positions.emplace_back(ellipseToPosition(detected, focalLength, imageCenter,
                                              knownMarkerDiameter));
   }

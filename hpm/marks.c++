@@ -1,5 +1,5 @@
-#include <hpm/detection-result.h++>
 #include <hpm/ellipse-detector.h++>
+#include <hpm/marks.h++>
 
 using namespace hpm;
 
@@ -39,7 +39,7 @@ hpm::KeyPoint::KeyPoint(mEllipse const &ellipse) : m_center(ellipse.center) {
   }
 }
 
-std::vector<hpm::KeyPoint> DetectionResult::getFlatCopy() const {
+std::vector<hpm::KeyPoint> Marks::getFlatCopy() const {
   std::vector<hpm::KeyPoint> all{};
   all.reserve(size());
   all.insert(all.end(), red.begin(), red.end());
@@ -48,10 +48,10 @@ std::vector<hpm::KeyPoint> DetectionResult::getFlatCopy() const {
   return all;
 }
 
-void DetectionResult::filterByDistance(ProvidedMarkerPositions const &markPos,
-                                       double const focalLength,
-                                       PixelPosition const &imageCenter,
-                                       double const markerDiameter) {
+void Marks::filterByDistance(ProvidedMarkerPositions const &markPos,
+                             double const focalLength,
+                             PixelPosition const &imageCenter,
+                             double const markerDiameter) {
   auto filterSingleColor = [&](std::vector<KeyPoint> &marksOfOneColor,
                                double expectedDistance) {
     size_t const sz{marksOfOneColor.size()};

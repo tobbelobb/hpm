@@ -52,7 +52,7 @@ struct KeyPoint {
                              PixelPosition const &imageCenter) const;
 };
 
-struct DetectionResult {
+struct Marks {
   std::vector<hpm::KeyPoint> red;
   std::vector<hpm::KeyPoint> green;
   std::vector<hpm::KeyPoint> blue;

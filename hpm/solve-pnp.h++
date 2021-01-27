@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hpm/identified-hp-marks.h++>
+#include <hpm/identified-marks.h++>
 #include <hpm/simple-types.h++>
 #include <hpm/six-dof.h++>
 
@@ -20,4 +20,4 @@ ENABLE_WARNINGS
 std::optional<hpm::SixDof>
 solvePnp(cv::InputArray cameraMatrix,
          cv::InputArray markerPositionsRelativeToNozzle,
-         hpm::IdentifiedHpMarks const &marks);
+         hpm::IdentifiedMarks const &marks);
