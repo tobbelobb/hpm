@@ -72,7 +72,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     PixelPosition const distCoord = e.m_center - center;
     double const dist =
         sqrt(distCoord.x * distCoord.x + distCoord.y * distCoord.y);
-    double const maxDist{0.5 * static_cast<double>(imageMat.rows)};
+    double const maxDist{0.6 * static_cast<double>(imageMat.rows)};
     if (dist < maxDist and e.m_major == e.m_minor) {
       // a circle near middle of image
       almostRoundEllipses.emplace_back(e);
