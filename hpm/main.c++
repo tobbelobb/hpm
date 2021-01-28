@@ -1,6 +1,7 @@
 #include <hpm/command-line.h++>
 #include <hpm/find.h++>
 #include <hpm/hpm.h++>
+#include <hpm/simple-types.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/util.h++>
 
@@ -19,14 +20,6 @@ ENABLE_WARNINGS
 #include <numeric>
 
 using namespace hpm;
-
-static auto undistort(cv::InputArray image, cv::InputArray cameraMatrix,
-                      cv::InputArray distortionCoefficients) -> cv::Mat {
-  cv::Mat undistortedImage =
-      cv::Mat::zeros(image.rows(), image.cols(), image.type());
-  cv::undistort(image, undistortedImage, cameraMatrix, distortionCoefficients);
-  return undistortedImage;
-}
 
 auto main(int const argc, char **const argv) -> int {
   std::stringstream usage;
@@ -82,8 +75,12 @@ auto main(int const argc, char **const argv) -> int {
     return 0;
   }
 
-  auto const [cameraMatrix, distortionCoefficients, cameraWorldPose] =
-      [&camParamsFileName]() -> std::tuple<cv::Mat, cv::Mat, SixDof> {
+  struct Cam {
+    cv::Mat const matrix;
+    cv::Mat const distortion;
+    hpm::SixDof const worldPose;
+  };
+  auto const cam = [&camParamsFileName]() -> Cam {
     try {
       cv::FileStorage const camParamsFile(camParamsFileName,
                                           cv::FileStorage::READ);
@@ -141,10 +138,10 @@ auto main(int const argc, char **const argv) -> int {
     }
   }();
 
-  const double meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
-                                             cameraMatrix.at<double>(1, 1))};
-  PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
-                                  cameraMatrix.at<double>(1, 2)};
+  const double meanFocalLength{
+      std::midpoint(cam.matrix.at<double>(0, 0), cam.matrix.at<double>(1, 1))};
+  PixelPosition const imageCenter{cam.matrix.at<double>(0, 2),
+                                  cam.matrix.at<double>(1, 2)};
 
   if (markerDiameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "
@@ -158,8 +155,9 @@ auto main(int const argc, char **const argv) -> int {
     return 1;
   }
 
-  cv::Mat undistortedImage{
-      undistort(distortedImage, cameraMatrix, distortionCoefficients)};
+  cv::Mat undistortedImage(distortedImage.rows, distortedImage.cols,
+                           distortedImage.type());
+  cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
   auto const [identifiedMarks, marks] =
       find(undistortedImage, providedMarkerPositions, meanFocalLength,
@@ -172,11 +170,11 @@ auto main(int const argc, char **const argv) -> int {
     }
 
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cameraMatrix, providedMarkerPositions, identifiedMarks)};
+        solvePnp(cam.matrix, providedMarkerPositions, identifiedMarks)};
 
     if (effectorPoseRelativeToCamera.has_value()) {
       SixDof const worldPose{effectorWorldPose(
-          effectorPoseRelativeToCamera.value(), cameraWorldPose)};
+          effectorPoseRelativeToCamera.value(), cam.worldPose)};
       if (verbose) {
         std::cout << worldPose;
       } else {
