@@ -4,6 +4,8 @@
 
 #include <hpm/ed/EDLib.h++>
 
+#include <algorithm>
+
 using namespace hpm;
 
 struct HuedEllipse {
@@ -118,7 +120,12 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   cv::Mat hue = getHueChannelCopy(hsv);
   std::vector<HuedEllipse> huedEllipses;
   for (auto const &e : rightSizedEllipses) {
-    huedEllipses.emplace_back(e, (hue.at<uint8_t>(e.m_center) + 30) % 180);
+    // The ellipse center might be outside of picture frame
+    int const row{
+        std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
+    int const col{
+        std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
+    huedEllipses.emplace_back(e, (hue.at<uint8_t>(row, col) + 30) % 180);
   }
 
   std::sort(
