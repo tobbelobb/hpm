@@ -3476,8 +3476,8 @@ auto EDCircles::CircleFit(const double *x, const double *y, int N, double *pxc,
   double yAvg = 0;
 
   for (int i = 0; i < N; i++) {
-    xAvg += x[i];
-    yAvg += y[i];
+    xAvg += x[i] + 0.5;
+    yAvg += y[i] + 0.5;
   }
 
   xAvg /= N;
@@ -3491,8 +3491,8 @@ auto EDCircles::CircleFit(const double *x, const double *y, int N, double *pxc,
   double Svvv = 0;
   double Svuu = 0;
   for (int i = 0; i < N; i++) {
-    double u = x[i] - xAvg;
-    double v = y[i] - yAvg;
+    double const u = x[i] + 0.5 - xAvg;
+    double const v = y[i] + 0.5 - yAvg;
 
     Suu += u * u;
     Suv += u * v;
@@ -3530,13 +3530,13 @@ auto EDCircles::CircleFit(const double *x, const double *y, int N, double *pxc,
   // Compute mean square error
   double error = 0;
   for (int i = 0; i < N; i++) {
-    double dx = x[i] - *pxc;
-    double dy = y[i] - *pyc;
+    double dx = x[i] + 0.5 - *pxc;
+    double dy = y[i] + 0.5 - *pyc;
     double d = sqrt(dx * dx + dy * dy) - R;
     error += d * d;
   }
 
-  *pr = R;
+  *pr = R + 0.33333;
   *pe = sqrt(error / N);
 
   return true;
