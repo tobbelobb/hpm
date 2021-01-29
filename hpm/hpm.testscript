@@ -10,14 +10,16 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-filter-by-distance]
 
--s, --show     <result|intermediate|all|none>. none is the default. During any
-               pop up you may press s to write the image, or any other key to
-               continue without saving.
--h, --help     Print this help.
--v, --verbose  Print rotation, translation, and reprojection_error of the found
-               pose. The default is to only print the translation.
+-h, --help                   Print this help.
+-v, --verbose                Print rotation, translation, and reprojection_error of the found
+                             pose. The default is to only print the translation.
+-s, --show                   <result|intermediate|all|none>. none is the default. During any
+                             pop up you may press s to write the image, or any other key to
+                             continue without saving.
+-n, --no-filter-by-distance  Don't filter the mark detection results by the marks' internal
+                             distance to each other.
 EOE
 
 : End-as-expected

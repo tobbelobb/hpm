@@ -20,11 +20,11 @@ using namespace hpm;
 auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
-          bool showIntermediateImages, bool verbose)
+          bool showIntermediateImages, bool verbose, bool filterByDistance)
     -> std::pair<hpm::IdentifiedMarks, hpm::Marks> {
-  Marks const marks{findMarks(undistortedImage, markPos, focalLength,
-                              imageCenter, markerDiameter,
-                              showIntermediateImages, verbose)};
+  Marks const marks{findMarks(
+      undistortedImage, markPos, focalLength, imageCenter, markerDiameter,
+      showIntermediateImages, verbose, filterByDistance)};
   IdentifiedMarks const identifiedMarks{marks, markerDiameter / 2.0,
                                         focalLength, imageCenter};
   return {identifiedMarks, marks};
@@ -34,7 +34,7 @@ auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
                double const markerDiameter, bool showIntermediateImages,
-               bool verbose) -> Marks {
+               bool verbose, bool filterByDistance) -> Marks {
 
   auto marks{ellipseDetect(undistortedImage, showIntermediateImages)};
 
@@ -42,10 +42,12 @@ auto findMarks(cv::InputArray undistortedImage,
     showImage(imageWith(undistortedImage, marks),
               "found-marks-before-filtering-by-distance.png");
   }
-  marks.filterByDistance(markPos, focalLength, imageCenter, markerDiameter);
-  if (showIntermediateImages) {
-    showImage(imageWith(undistortedImage, marks),
-              "found-marks-after-filtering-by-distance.png");
+  if (filterByDistance) {
+    marks.filterByDistance(markPos, focalLength, imageCenter, markerDiameter);
+    if (showIntermediateImages) {
+      showImage(imageWith(undistortedImage, marks),
+                "found-marks-after-filtering-by-distance.png");
+    }
   }
   if (verbose) {
     std::cout << "Found " << marks.red.size() << " red markers, "

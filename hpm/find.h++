@@ -14,14 +14,16 @@ std::pair<hpm::IdentifiedMarks, hpm::Marks>
 find(cv::InputArray undistortedImage,
      hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
      hpm::PixelPosition const &imageCenter, double const markerDiameter,
-     bool showIntermediateImages = false, bool verbose = false);
+     bool showIntermediateImages = false, bool verbose = false,
+     bool noFilterByDistance = false);
 
 hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::ProvidedMarkerPositions const &markPos,
                      double const focalLength,
                      hpm::PixelPosition const &imageCenter,
                      double const markerDiameter,
-                     bool showIntermediateImages = false, bool verbose = false);
+                     bool showIntermediateImages = false, bool verbose = false,
+                     bool noFilterByDistance = false);
 
 std::vector<hpm::CameraFramedPosition>
 findIndividualMarkerPositions(hpm::Marks const &marks,
