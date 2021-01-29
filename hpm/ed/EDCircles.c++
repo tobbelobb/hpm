@@ -3623,8 +3623,8 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
 
   // Now first fill design matrix
   for (int i = 1; i <= noPoints; i++) {
-    tx = x[i - 1];
-    ty = y[i - 1];
+    tx = x[i - 1] + 0.5;
+    ty = y[i - 1] + 0.5;
 
     D[i][1] = tx * tx;
     D[i][2] = tx * ty;
