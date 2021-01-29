@@ -2974,9 +2974,9 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
   F3 = A2 * pow(cX, 2.0) + C2 * pow(cY, 2.0) - F2;
 
   // semimajor axis
-  a = sqrt(F3 / A2);
+  a = sqrt(F3 / A2) + 1.0;
   // semiminor axis
-  b = sqrt(F3 / C2);
+  b = sqrt(F3 / C2) + 1.0;
 
   // Center coordinates have to be re-transformed if rotation is applied!
   if (rotation) {
