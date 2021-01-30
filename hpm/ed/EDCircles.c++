@@ -3536,7 +3536,7 @@ auto EDCircles::CircleFit(const double *x, const double *y, int N, double *pxc,
     error += d * d;
   }
 
-  *pr = R + 0.33333;
+  *pr = R + 0.5;
   *pe = sqrt(error / N);
 
   return true;
