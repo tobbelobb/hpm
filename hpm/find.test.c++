@@ -85,7 +85,7 @@ auto main() -> int {
     // This is what we want to test.
     // Given all of the above, are we able to get back the
     // values that we fed into OpenScad?
-    auto constexpr EPS{5.0_d};
+    auto constexpr EPS{1.4_d};
     // Check the absolute positions first.
     for (gsl::index i{0}; i < std::ssize(positions); ++i) {
       expect((i < std::ssize(knownPositions) and i < std::ssize(idxNames)) >>

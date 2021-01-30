@@ -31,8 +31,9 @@ struct Ellipse {
       : m_center(center_), m_major(size_), m_minor(size_), m_rot(0.0) {}
 
   Ellipse(mCircle const &circle)
-      : m_center(circle.center), m_major(2.0 * circle.r), m_minor(m_major),
-        m_rot(0.0) {}
+      : m_center(circle.center),
+        m_major(2.0 * (circle.r + (sqrt(3) * circle.err) + 0.5)),
+        m_minor(2.0 * (circle.r - (sqrt(3) * circle.err) + 0.5)), m_rot(0.0) {}
 
   Ellipse(mEllipse const &ellipse);
 

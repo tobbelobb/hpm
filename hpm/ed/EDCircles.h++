@@ -57,7 +57,9 @@ enum ImageStyle { NONE = 0, CIRCLES, ELLIPSES, BOTH };
 struct mCircle {
   cv::Point2d center;
   double r;
-  mCircle(cv::Point2d _center, double _r) : center(std::move(_center)), r(_r) {}
+  double err;
+  mCircle(cv::Point2d _center, double _r, double _err)
+      : center(std::move(_center)), r(_r), err(_err) {}
 };
 
 // Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
@@ -233,9 +235,6 @@ public:
   EDCircles(const EDColor &obj);
 
   auto drawResult(const cv::Mat &, ImageStyle) const -> cv::Mat;
-
-  auto getCircles() -> std::vector<mCircle>;
-  auto getEllipses() -> std::vector<mEllipse>;
 
   [[nodiscard]] auto getCircles() const -> std::vector<mCircle> {
     return circles;

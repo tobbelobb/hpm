@@ -233,8 +233,9 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
       double r = circles3[i].r;
       double xc = circles3[i].xc;
       double yc = circles3[i].yc;
+      double err = circles3[i].circleFitError;
 
-      circles.emplace_back(Point2d(xc, yc), r);
+      circles.emplace_back(Point2d(xc, yc), r, err);
     }
   }
 
@@ -473,8 +474,9 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
       double r = circles3[i].r;
       double xc = circles3[i].xc;
       double yc = circles3[i].yc;
+      double err = circles3[i].circleFitError;
 
-      circles.emplace_back(Point2d(xc, yc), r);
+      circles.emplace_back(Point2d(xc, yc), r, err);
     }
   }
 
@@ -716,8 +718,9 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
       double r = circles1[i].r;
       double xc = circles1[i].xc;
       double yc = circles1[i].yc;
+      double err = circles1[i].circleFitError;
 
-      circles.emplace_back(Point2d(xc, yc), r);
+      circles.emplace_back(Point2d(xc, yc), r, err);
     }
   }
 
