@@ -3605,13 +3605,11 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
 
   switch (mode) {
   case (FPF):
-    // fprintf(stderr, "EllipseFit: FPF mode");
     Const[1][3] = -2;
     Const[2][2] = 1;
     Const[3][1] = -2;
     break;
   case (BOOKSTEIN):
-    // fprintf(stderr, "EllipseFit: BOOKSTEIN mode");
     Const[1][1] = 2;
     Const[2][2] = 1;
     Const[3][3] = 2;
@@ -3634,27 +3632,16 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
     D[i][6] = 1.0;
   }
 
-  // pm(Const,"Constraint");
   // Now compute scatter matrix  S
   A_TperB(D, D, S, noPoints, 6, 6);
-  // pm(S,"Scatter");
-
   choldc(S, 6, L);
-  // pm(L,"Cholesky");
 
   inverse(L, invL, 6);
-  // pm(invL,"inverse");
-
   AperB_T(Const, invL, temp, 6, 6, 6);
   AperB(invL, temp, C, 6, 6, 6);
-  // pm(C,"The C matrix");
 
   jacobi(C, 6, d, V, nrot);
-  // pm(V,"The Eigenvectors");  /* OK */
-  // pv(d,"The eigevalues");
-
   A_TperB(invL, V, sol, 6, 6, 6);
-  // pm(sol,"The GEV solution unnormalized");  /* SOl */
 
   // Now normalize them
   for (int j = 1; j <= 6; j++) /* Scan columns */
@@ -3667,8 +3654,6 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
       sol[i][j] /= sqrt(mod);
     }
   }
-
-  // pm(sol,"The GEV solution");  /* SOl */
 
   double zero = 10e-20;
   double minev = 10e+20;
