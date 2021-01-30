@@ -1,4 +1,5 @@
 #include <hpm/find.h++>
+#include <hpm/marks.h++>
 #include <hpm/test-util.h++> // getPath
 #include <hpm/util.h++>
 
@@ -24,8 +25,8 @@ auto main() -> int {
   "individual markers positions OpenScad generated image"_test = [] {
     // clang-format off
     cv::Mat const openScadCameraMatrix2x =
-      (cv::Mat_<double>(3, 3) << 2 * 3377.17,        0.00, 2 * 1280.0,
-                                        0.00, 2 * 3378.36, 2 *  671.5,
+      (cv::Mat_<double>(3, 3) << 2 * 3375.85,        0.00, 2 * 1280.0,
+                                        0.00, 2 * 3375.85, 2 *  671.5,
                                         0.00,        0.00,        1.0);
     // clang-format on
     double constexpr knownMarkerDiameter{32.0};
@@ -40,26 +41,26 @@ auto main() -> int {
         72.4478,  125.483,  0.0, -72.4478, 125.483,  0.0, -144.8960, 0.0, 0.0};
 
     std::vector<CameraFramedPosition> const knownPositions{
-        {72.4478, 125.483, 755}, {-72.4478, 125.483, 755},
-        {144.896, 0, 755},       {72.4478, -125.483, 755},
-        {-144.896, 0, 755},      {-72.4478, -125.483, 755}};
+        {-72.4478, 125.483, 755},  {72.4478, 125.483, 755},
+        {144.896, 0, 755},         {72.4478, -125.483, 755},
+        {-72.4478, -125.483, 755}, {-144.896, 0, 755}};
 
     enum IDX : size_t {
-      BOTTOMRIGHT = 0,
-      BOTTOMLEFT = 1,
+      BOTTOMLEFT = 0,
+      BOTTOMRIGHT = 1,
       RIGHTEST = 2,
       TOPRIGHT = 3,
-      LEFTEST = 4,
-      TOPLEFT = 5,
+      TOPLEFT = 4,
+      LEFTEST = 5,
     };
     constexpr size_t NUM_MARKERS{6};
     std::array<std::string, NUM_MARKERS> idxNames{};
-    idxNames[BOTTOMRIGHT] = "Bottomright";
     idxNames[BOTTOMLEFT] = "Bottomleft";
+    idxNames[BOTTOMRIGHT] = "Bottomright";
     idxNames[RIGHTEST] = "Rightest";
     idxNames[TOPRIGHT] = "Topright";
-    idxNames[LEFTEST] = "Leftest";
     idxNames[TOPLEFT] = "Topleft";
+    idxNames[LEFTEST] = "Leftest";
 
     auto const &cameraMatrix = openScadCameraMatrix2x;
 
@@ -68,11 +69,18 @@ auto main() -> int {
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
 
-    auto marks{findMarks(image, providedMarkerPositions, meanFocalLength,
-                         imageCenter, knownMarkerDiameter)};
+    auto [identifiedMarks, marks] =
+        find(image, providedMarkerPositions, meanFocalLength, imageCenter,
+             knownMarkerDiameter, false, false, true);
+    expect((identifiedMarks.allIdentified()) >> fatal);
+    std::vector<hpm::Mark> sorted = marks.getFlatCopy();
+    sortCcw(sorted);
     std::vector<CameraFramedPosition> const positions{
-        findIndividualMarkerPositions(marks, knownMarkerDiameter,
-                                      meanFocalLength, imageCenter)};
+        findIndividualMarkerPositions({{sorted[0], sorted[1]},
+                                       {sorted[2], sorted[3]},
+                                       {sorted[4], sorted[5]}},
+                                      knownMarkerDiameter, meanFocalLength,
+                                      imageCenter)};
 
     // This is what we want to test.
     // Given all of the above, are we able to get back the

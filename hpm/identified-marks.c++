@@ -22,6 +22,13 @@ static void fanSort(std::vector<hpm::Mark> &fan) {
             });
 }
 
+void sortCcw(std::vector<hpm::Mark> &marks) {
+  if (not(isRight(marks[0].m_center, marks[1].m_center, marks[2].m_center))) {
+    std::swap(marks[0], marks[1]);
+  }
+  fanSort(marks);
+}
+
 IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
                                  double const f,
                                  PixelPosition const &imageCenter) {
@@ -31,10 +38,7 @@ IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
   }
 
   std::vector<hpm::Mark> all{marks.getFlatCopy()};
-  if (not(isRight(all[0].m_center, all[1].m_center, all[2].m_center))) {
-    std::swap(all[0], all[1]);
-  }
-  fanSort(all);
+  sortCcw(all);
 
   for (size_t i{0}; i < m_pixelPositions.size() and i < all.size(); ++i) {
     m_pixelPositions[i] = all[i].getCenterRay(markerR, f, imageCenter);
