@@ -47,7 +47,7 @@ auto main() -> int {
                                     cameraMatrix.at<double>(1, 2)};
     auto const [identifiedMarks, marks] =
         find(image, providedMarkerPositions, meanFocalLength, imageCenter,
-             markerDiameter);
+             markerDiameter, false, false, true);
 
     expect((identifiedMarks.allIdentified()) >> fatal);
 
