@@ -31,6 +31,7 @@ public:
 };
 
 using Vector3d = cv::Vec3d;
-using ProvidedMarkerPositions = cv::Matx<double, 6, 3>;
+size_t constexpr NUMBER_OF_MARKERS{6};
+using ProvidedMarkerPositions = cv::Matx<double, NUMBER_OF_MARKERS, 3>;
 
 } // namespace hpm

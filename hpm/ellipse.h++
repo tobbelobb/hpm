@@ -18,6 +18,8 @@ struct Ellipse {
   double m_minor{0.0};
   double m_rot{0.0};
 
+  Ellipse(Ellipse const &ellipse) = default;
+
   explicit Ellipse(PixelPosition const center, double major, double minor,
                    double rot)
       : m_center(center), m_major(major), m_minor(minor), m_rot(rot) {}

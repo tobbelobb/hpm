@@ -38,7 +38,6 @@ IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
   }
 
   std::vector<hpm::Mark> all{marks.getFlatCopy()};
-  sortCcw(all);
 
   for (size_t i{0}; i < m_pixelPositions.size() and i < all.size(); ++i) {
     m_pixelPositions[i] = all[i].getCenterRay(markerR, f, imageCenter);

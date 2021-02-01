@@ -22,5 +22,9 @@ struct Marks {
                         double const focalLength,
                         hpm::PixelPosition const &imageCenter,
                         double const markerDiameter);
+  void filterAndSortByDistance(hpm::ProvidedMarkerPositions const &markPos,
+                               double const focalLength,
+                               hpm::PixelPosition const &imageCenter,
+                               double const markerDiameter);
 };
 } // namespace hpm

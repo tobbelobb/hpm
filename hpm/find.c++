@@ -43,7 +43,8 @@ auto findMarks(cv::InputArray undistortedImage,
               "found-marks-before-filtering-by-distance.png");
   }
   if (filterByDistance) {
-    marks.filterByDistance(markPos, focalLength, imageCenter, markerDiameter);
+    marks.filterAndSortByDistance(markPos, focalLength, imageCenter,
+                                  markerDiameter);
     if (showIntermediateImages) {
       showImage(imageWith(undistortedImage, marks),
                 "found-marks-after-filtering-by-distance.png");
