@@ -5,14 +5,9 @@
 #include <hpm/ed/EDLib.h++>
 
 #include <algorithm>
+#include <cmath>
 
 using namespace hpm;
-
-struct HuedEllipse {
-  hpm::Ellipse ellipse;
-  uint8_t hue;
-  HuedEllipse(hpm::Ellipse const e, uint8_t hue_in) : ellipse(e), hue(hue_in) {}
-};
 
 static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
     -> std::vector<hpm::Ellipse> {
@@ -31,6 +26,33 @@ static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
   return bigEllipses;
 }
 
+static auto bgr2skewedHue(cv::Point3_<uint8_t> bgr) -> double {
+  auto smallHue = [](std::array<double, 3> const &rgb) -> double {
+    auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
+    if (max == std::begin(rgb)) {
+      return (rgb[1] - rgb[2]) / (*max - *min);
+    }
+    if (max == std::next(std::begin(rgb))) {
+      return 2.0 + (rgb[2] - rgb[0]) / (*max - *min);
+    }
+    return 4.0 + (rgb[0] - rgb[1]) / (*max - *min);
+  };
+  std::array<double, 3> const rgb = {static_cast<double>(bgr.z) / 255.0,
+                                     static_cast<double>(bgr.y) / 255.0,
+                                     static_cast<double>(bgr.x) / 255.0};
+  constexpr double MAX_DEG{360.0};
+  double hue = smallHue(rgb);
+  hue *= 60.0;
+  if (hue < 0.0) {
+    hue += MAX_DEG;
+  }
+  assert(hue < MAX_DEG);
+  assert(hue >= 0.0);
+  double const ret = std::fmod(hue + 60.0, MAX_DEG);
+  // skew hue so all red colors end up closer to 0 than to MAX_DEG.
+  return ret;
+}
+
 auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> hpm::Marks {
   cv::Mat imageMat{image.getMat()};
@@ -41,6 +63,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
        .anchorThresh = 4,
        .blurSize = 1.5,
        .filterSegments = true}};
+  const auto AQUA{cv::Scalar(255, 255, 0)};
   if (showIntermediateImages) {
     showImage(edColor.getEdgeImage(), "edgeImage.png");
   }
@@ -61,7 +84,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
 
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawMarks(cpy, bigEllipses, cv::Scalar(255, 255, 0));
+    for (auto const &ellipse : bigEllipses) {
+      draw(cpy, ellipse, AQUA);
+    }
     showImage(cpy, "big-ellipses.png");
   }
 
@@ -82,7 +107,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   }
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawMarks(cpy, almostRoundEllipses, cv::Scalar(255, 255, 0));
+    for (auto const &ellipse : almostRoundEllipses) {
+      draw(cpy, ellipse, AQUA);
+    }
     showImage(cpy, "almost-round-ellipses.png");
   }
 
@@ -104,56 +131,56 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
       almostRoundEllipses.size() >= 4
           ? almostRoundEllipses[almostRoundEllipses.size() - 4UL].m_minor
           : almostRoundEllipses[0].m_minor;
-  for (auto const &e : almostRoundEllipses) {
-    if (e.m_minor / medianSize < 1.5 and e.m_minor / medianSize > 0.5) {
-      rightSizedEllipses.emplace_back(e);
+  for (auto const &ellipse : almostRoundEllipses) {
+    if (ellipse.m_minor / medianSize < 1.5 and
+        ellipse.m_minor / medianSize > 0.5) {
+      rightSizedEllipses.emplace_back(ellipse);
     }
   }
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();
-    drawMarks(cpy, rightSizedEllipses, cv::Scalar(255, 255, 0));
+    for (auto const &ellipse : rightSizedEllipses) {
+      draw(cpy, ellipse, AQUA);
+    }
     showImage(cpy, "right-sized-ellipses.png");
   }
 
-  cv::Mat hsv{};
-  cv::cvtColor(imageMat, hsv, cv::COLOR_BGR2HSV);
-  // TODO: We should not compute hue of every pixel when we only need
-  //       the hue of ~10 pixels.
-  cv::Mat hue = getHueChannelCopy(hsv);
-  std::vector<HuedEllipse> huedEllipses;
+  std::vector<hpm::Mark> marks;
   for (auto const &e : rightSizedEllipses) {
     // The ellipse center might be outside of picture frame
     int const row{
         std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
     int const col{
         std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
-    huedEllipses.emplace_back(e, (hue.at<uint8_t>(row, col) + 30) % 180);
+    auto bgr = imageMat.at<cv::Point3_<uint8_t>>(row, col);
+    double const skewedHue = bgr2skewedHue(bgr);
+
+    marks.emplace_back(e, skewedHue);
   }
 
-  std::sort(
-      huedEllipses.begin(), huedEllipses.end(),
-      [&](auto const &lhv, auto const &rhv) { return lhv.hue < rhv.hue; });
+  std::sort(marks.begin(), marks.end(), [&](auto const &lhv, auto const &rhv) {
+    return lhv.m_hue < rhv.m_hue;
+  });
 
-  double const min = static_cast<double>(huedEllipses[0].hue);
-  double const max = static_cast<double>(huedEllipses.back().hue);
+  double const min = marks[0].m_hue;
+  double const max = marks.back().m_hue;
   double redMid = min;
-  double greenMid = huedEllipses[huedEllipses.size() / 2].hue;
+  double greenMid = marks[marks.size() / 2].m_hue;
   double blueMid = max;
 
   Marks result{};
-  for (auto const &he : huedEllipses) {
-    double colorDistanceRed = std::abs(static_cast<double>(he.hue) - redMid);
-    double colorDistanceGreen =
-        std::abs(static_cast<double>(he.hue) - greenMid);
-    double colorDistanceBlue = std::abs(static_cast<double>(he.hue) - blueMid);
+  for (auto const &mark : marks) {
+    double colorDistanceRed = std::abs(mark.m_hue - redMid);
+    double colorDistanceGreen = std::abs(mark.m_hue - greenMid);
+    double colorDistanceBlue = std::abs(mark.m_hue - blueMid);
     if (colorDistanceRed < colorDistanceGreen and
         colorDistanceRed < colorDistanceBlue) {
-      result.red.emplace_back(he.ellipse);
+      result.m_red.emplace_back(mark);
     } else if (colorDistanceGreen < colorDistanceRed and
                colorDistanceGreen < colorDistanceBlue) {
-      result.green.emplace_back(he.ellipse);
+      result.m_green.emplace_back(mark);
     } else {
-      result.blue.emplace_back(he.ellipse);
+      result.m_blue.emplace_back(mark);
     }
   }
 

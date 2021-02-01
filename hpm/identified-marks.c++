@@ -18,12 +18,14 @@ static void fanSort(std::vector<hpm::Mark> &fan) {
   const auto &pivot = fan[0];
   std::sort(std::next(fan.begin()), fan.end(),
             [&pivot](hpm::Mark const &lhs, hpm::Mark const &rhs) -> bool {
-              return isRight(pivot.m_center, lhs.m_center, rhs.m_center);
+              return isRight(pivot.getCenter(), lhs.getCenter(),
+                             rhs.getCenter());
             });
 }
 
 void sortCcw(std::vector<hpm::Mark> &marks) {
-  if (not(isRight(marks[0].m_center, marks[1].m_center, marks[2].m_center))) {
+  if (not(isRight(marks[0].getCenter(), marks[1].getCenter(),
+                  marks[2].getCenter()))) {
     std::swap(marks[0], marks[1]);
   }
   fanSort(marks);
@@ -32,8 +34,8 @@ void sortCcw(std::vector<hpm::Mark> &marks) {
 IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
                                  double const f,
                                  PixelPosition const &imageCenter) {
-  if (marks.red.size() != 2 or marks.green.size() != 2 or
-      marks.blue.size() != 2) {
+  if (marks.m_red.size() != 2 or marks.m_green.size() != 2 or
+      marks.m_blue.size() != 2) {
     return;
   }
 

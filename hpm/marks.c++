@@ -7,9 +7,9 @@ using namespace hpm;
 std::vector<Mark> Marks::getFlatCopy() const {
   std::vector<Mark> all{};
   all.reserve(size());
-  all.insert(all.end(), red.begin(), red.end());
-  all.insert(all.end(), green.begin(), green.end());
-  all.insert(all.end(), blue.begin(), blue.end());
+  all.insert(all.end(), m_red.begin(), m_red.end());
+  all.insert(all.end(), m_green.begin(), m_green.end());
+  all.insert(all.end(), m_blue.begin(), m_blue.end());
   return all;
 }
 
@@ -29,7 +29,7 @@ double Marks::fit(ProvidedMarkerPositions const &markPos,
                   double const focalLength, PixelPosition const &imageCenter,
                   double const markerDiameter) {
 
-  if (not(red.size() >= 2 and green.size() >= 2 and blue.size() >= 2)) {
+  if (not(m_red.size() >= 2 and m_green.size() >= 2 and m_blue.size() >= 2)) {
     return std::numeric_limits<double>::max();
   }
 
@@ -57,9 +57,9 @@ double Marks::fit(ProvidedMarkerPositions const &markPos,
     }
   }
 
-  auto const redIndexPairs{getIndexPairs(red.size())};
-  auto const greenIndexPairs{getIndexPairs(green.size())};
-  auto const blueIndexPairs{getIndexPairs(blue.size())};
+  auto const redIndexPairs{getIndexPairs(m_red.size())};
+  auto const greenIndexPairs{getIndexPairs(m_green.size())};
+  auto const blueIndexPairs{getIndexPairs(m_blue.size())};
   // These are all the possible ordered combinations of marks
   // expressed as indices into the current red/green/blue vectors or marks.
   std::vector<std::array<size_t, 6>> sixtuples{};
@@ -74,7 +74,7 @@ double Marks::fit(ProvidedMarkerPositions const &markPos,
   }
 
   std::array<std::vector<CameraFramedPosition>, 3> const positions = {
-      getPositions(red), getPositions(green), getPositions(blue)};
+      getPositions(m_red), getPositions(m_green), getPositions(m_blue)};
 
   // Find the sixtuple that produces the smallest squared error
   // but avoid calculating the full squared error for all sixtuples
@@ -105,8 +105,8 @@ double Marks::fit(ProvidedMarkerPositions const &markPos,
 
   std::array<size_t, 6> const winnerSixtuple = sixtuples[bestSixtupleIdx];
 
-  red = {red[winnerSixtuple[0]], red[winnerSixtuple[1]]};
-  green = {green[winnerSixtuple[2]], green[winnerSixtuple[3]]};
-  blue = {blue[winnerSixtuple[4]], blue[winnerSixtuple[5]]};
+  m_red = {m_red[winnerSixtuple[0]], m_red[winnerSixtuple[1]]};
+  m_green = {m_green[winnerSixtuple[2]], m_green[winnerSixtuple[3]]};
+  m_blue = {m_blue[winnerSixtuple[4]], m_blue[winnerSixtuple[5]]};
   return smallestErr;
 }

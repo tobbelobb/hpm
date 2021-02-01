@@ -21,7 +21,7 @@ auto main() -> int {
     double const projectionHeight{focalLength * 2 * closerR / closerZ};
 
     auto const gotPosition =
-        hpm::Mark{imageCenter, projectionHeight, projectionHeight, 0.0}
+        hpm::Ellipse{imageCenter, projectionHeight, projectionHeight, 0.0}
             .toPosition(focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 0.0_d);
@@ -35,7 +35,7 @@ auto main() -> int {
         sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
     auto const gotPosition =
-        hpm::Mark{imageCenter + PixelPosition{xt, yt}, width, height, 0.0}
+        hpm::Ellipse{imageCenter + PixelPosition{xt, yt}, width, height, 0.0}
             .toPosition(focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 10.0_d);
@@ -49,7 +49,8 @@ auto main() -> int {
         sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
     auto const gotPosition =
-        hpm::Mark{imageCenter + PixelPosition{xt, yt}, width, height, M_PI / 2}
+        hpm::Ellipse{imageCenter + PixelPosition{xt, yt}, width, height,
+                     M_PI / 2}
             .toPosition(focalLength, imageCenter, sphereRadius * 2);
 
     expect(gotPosition.x == 0.0_d);
@@ -68,7 +69,8 @@ auto main() -> int {
             sphereToEllipseWidthHeight(knownPos, focalLength, sphereRadius);
 
         auto const gotPosition =
-            hpm::Mark{imageCenter + PixelPosition{xt, yt}, width, height, ang}
+            hpm::Ellipse{imageCenter + PixelPosition{xt, yt}, width, height,
+                         ang}
                 .toPosition(focalLength, imageCenter, sphereRadius * 2);
 
         auto constexpr EPS{0.0000000000115_d}; // 1.15e-11 precision

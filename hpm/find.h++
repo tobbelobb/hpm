@@ -10,12 +10,20 @@
 #include <iostream>
 #include <vector>
 
-std::pair<hpm::IdentifiedMarks, hpm::Marks>
-find(cv::InputArray undistortedImage,
-     hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
-     hpm::PixelPosition const &imageCenter, double const markerDiameter,
-     bool showIntermediateImages = false, bool verbose = false,
-     bool fitByDistance = false);
+namespace hpm {
+struct FindResult {
+  IdentifiedMarks identifiedMarks;
+  Marks marks;
+};
+} // namespace hpm
+
+hpm::FindResult find(cv::InputArray undistortedImage,
+                     hpm::ProvidedMarkerPositions const &markPos,
+                     double const focalLength,
+                     hpm::PixelPosition const &imageCenter,
+                     double const markerDiameter,
+                     bool showIntermediateImages = false, bool verbose = false,
+                     bool fitByDistance = false);
 
 hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::ProvidedMarkerPositions const &markPos,

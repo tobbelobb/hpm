@@ -12,27 +12,36 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
-void drawMarks(cv::InputOutputArray image,
-               std::vector<hpm::Mark> const &keyPoints,
-               cv::Scalar const &color) {
+void draw(cv::InputOutputArray image, Ellipse const &ellipse,
+          cv::Scalar const &color) {
   int constexpr LINE_WIDTH{2};
-  for (auto const &keyPoint : keyPoints) {
-    cv::ellipse(image, keyPoint.m_center,
-                cv::Size{static_cast<int>(keyPoint.m_major / 2.0),
-                         static_cast<int>(keyPoint.m_minor / 2.0)},
-                keyPoint.m_rot * 180.0 / M_PI, 0.0, 360.0, color, LINE_WIDTH);
-    cv::circle(image, keyPoint.m_center, LINE_WIDTH, color, LINE_WIDTH);
-  }
+  cv::ellipse(image, ellipse.m_center,
+              cv::Size{static_cast<int>(ellipse.m_major / 2.0),
+                       static_cast<int>(ellipse.m_minor / 2.0)},
+              ellipse.m_rot * 180.0 / M_PI, 0.0, 360.0, color, LINE_WIDTH);
+  cv::circle(image, ellipse.m_center, LINE_WIDTH, color, LINE_WIDTH);
 }
 
-void draw(cv::InputOutputArray image, Marks const &marks) {
+void draw(cv::InputOutputArray image, Mark const &mark,
+          cv::Scalar const &color) {
+  draw(image, mark.m_ellipse, color);
+}
+
+void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
   const auto AQUA{cv::Scalar(255, 255, 0)};
   const auto FUCHSIA{cv::Scalar(255, 0, 255)};
   const auto YELLOW{cv::Scalar(0, 255, 255)};
-  drawMarks(image, marks.red, AQUA);
-  drawMarks(image, marks.green, FUCHSIA);
-  drawMarks(image, marks.blue, YELLOW);
+  for (auto const &mark : marks.m_red) {
+    draw(image, mark, AQUA);
+  }
+  for (auto const &mark : marks.m_green) {
+    draw(image, mark, FUCHSIA);
+  }
+  for (auto const &mark : marks.m_blue) {
+    draw(image, mark, YELLOW);
+  }
 }
+
 void draw(cv::InputOutputArray image, IdentifiedMarks const &identifiedMarks) {
   const auto WHITE{cv::Scalar(255, 255, 255)};
   int constexpr LINE_WIDTH{2};

@@ -69,18 +69,14 @@ auto main() -> int {
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
 
-    auto [identifiedMarks, marks] =
-        find(image, providedMarkerPositions, meanFocalLength, imageCenter,
-             knownMarkerDiameter, false, false, true);
+    auto const res{find(image, providedMarkerPositions, meanFocalLength,
+                        imageCenter, knownMarkerDiameter, false, false, true)};
+    IdentifiedMarks const identifiedMarks{res.identifiedMarks};
+    Marks const marks{res.marks};
     expect((identifiedMarks.allIdentified()) >> fatal);
-    std::vector<hpm::Mark> sorted = marks.getFlatCopy();
-    sortCcw(sorted);
     std::vector<CameraFramedPosition> const positions{
-        findIndividualMarkerPositions({{sorted[0], sorted[1]},
-                                       {sorted[2], sorted[3]},
-                                       {sorted[4], sorted[5]}},
-                                      knownMarkerDiameter, meanFocalLength,
-                                      imageCenter)};
+        findIndividualMarkerPositions(marks, knownMarkerDiameter,
+                                      meanFocalLength, imageCenter)};
 
     // This is what we want to test.
     // Given all of the above, are we able to get back the

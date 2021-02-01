@@ -60,12 +60,12 @@ auto main() -> int {
 
     double const err = marks.fit(providedPositions, focalLength, imageCenter,
                                  knownMarkerDiameter);
-    expect(marks.red.size() == 2_ul);
-    expect(marks.red[0] != falsePositiveRed);
-    expect(marks.red[1] != falsePositiveRed);
-    expect(marks.blue.size() == 2_ul);
-    expect(marks.blue[0] != falsePositiveBlue);
-    expect(marks.blue[1] != falsePositiveBlue);
+    expect(marks.m_red.size() == 2_ul);
+    expect(marks.m_red[0] != falsePositiveRed);
+    expect(marks.m_red[1] != falsePositiveRed);
+    expect(marks.m_blue.size() == 2_ul);
+    expect(marks.m_blue[0] != falsePositiveBlue);
+    expect(marks.m_blue[1] != falsePositiveBlue);
     constexpr auto EPS{0.00000000001_d}; // 1e-11 precision
     expect(err < EPS);
   };

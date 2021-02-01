@@ -12,12 +12,16 @@ ENABLE_WARNINGS
 
 void showImage(cv::InputArray image, std::string const &name);
 
-void drawMarks(cv::InputOutputArray image,
-               std::vector<hpm::Mark> const &keyPoints,
-               cv::Scalar const &color);
+void draw(cv::InputOutputArray image, hpm::Ellipse const &ellipse,
+          cv::Scalar const &color);
 
-void draw(cv::InputOutputArray image, hpm::Marks const &markers);
-void draw(cv::InputOutputArray image, hpm::IdentifiedMarks const &markers);
+void draw(cv::InputOutputArray image, hpm::Mark const &mark,
+          cv::Scalar const &color);
+
+void draw(cv::InputOutputArray image,
+          hpm::IdentifiedMarks const &identifiedMarks);
+
+void draw(cv::InputOutputArray image, hpm::Marks const &marks);
 
 cv::Mat imageWith(cv::InputArray image,
                   hpm::IdentifiedMarks const &identifiedMarks);

@@ -21,7 +21,7 @@ auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
           bool showIntermediateImages, bool verbose, bool fitByDistance)
-    -> std::pair<hpm::IdentifiedMarks, hpm::Marks> {
+    -> FindResult {
   Marks const marks{findMarks(undistortedImage, markPos, focalLength,
                               imageCenter, markerDiameter,
                               showIntermediateImages, verbose, fitByDistance)};
@@ -50,9 +50,9 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   }
   if (verbose) {
-    std::cout << "Found " << marks.red.size() << " red markers, "
-              << marks.green.size() << " green markers, and "
-              << marks.blue.size() << " blue markers\n";
+    std::cout << "Found " << marks.m_red.size() << " red markers, "
+              << marks.m_green.size() << " green markers, and "
+              << marks.m_blue.size() << " blue markers\n";
   }
 
   return marks;
@@ -65,15 +65,15 @@ auto findIndividualMarkerPositions(Marks const &marks,
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
-  for (auto const &detected : marks.red) {
+  for (auto const &detected : marks.m_red) {
     positions.emplace_back(
         detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
-  for (auto const &detected : marks.green) {
+  for (auto const &detected : marks.m_green) {
     positions.emplace_back(
         detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
-  for (auto const &detected : marks.blue) {
+  for (auto const &detected : marks.m_blue) {
     positions.emplace_back(
         detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
   }
