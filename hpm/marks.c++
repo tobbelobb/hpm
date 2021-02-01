@@ -128,30 +128,34 @@ void Marks::filterAndSortByDistance(ProvidedMarkerPositions const &markPos,
   std::array<std::vector<CameraFramedPosition>, 3> const positions = {
       getPositions(red), getPositions(green), getPositions(blue)};
 
-  std::vector<cv::Vec<double, NUMBER_OF_DISTANCES>> distancesVec{};
-  for (auto const &sixtuple : sixtuples) {
-    cv::Vec<double, NUMBER_OF_DISTANCES> distances{};
-    {
-      int idx = 0;
-      for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-        for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
-          distances[idx] = cv::norm(positions[i / 2][sixtuple[i]] -
-                                    positions[j / 2][sixtuple[j]]);
-          idx++;
+  // Find the sixtuple that produces the smallest squared error
+  // but avoid calculating the full squared error for all sixtuples
+  size_t bestSixtupleIdx = 0;
+  double smallestErr = 1e23;
+  for (size_t sixtupleIdx{0}; sixtupleIdx < sixtuples.size(); sixtupleIdx++) {
+    auto const sixtuple{sixtuples[sixtupleIdx]};
+    int idx{0};
+    double err{0.0};
+    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+      for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
+        auto dist{cv::norm(positions[i / 2][sixtuple[i]] -
+                           positions[j / 2][sixtuple[j]])};
+        auto diff{dist - expectedDistances[idx]};
+        idx++;
+        err = err + diff * diff;
+        if (err > smallestErr) { // short out of hot loop
+          i = NUMBER_OF_MARKERS;
+          j = NUMBER_OF_MARKERS;
         }
       }
     }
-    distancesVec.emplace_back(distances);
+    if (err < smallestErr) {
+      smallestErr = err;
+      bestSixtupleIdx = sixtupleIdx;
+    }
   }
 
-  std::vector<double> errs{};
-  errs.reserve(sixtuples.size());
-  for (auto const &distances : distancesVec) {
-    errs.emplace_back(cv::norm(distances - expectedDistances));
-  }
-
-  std::array<size_t, 6> const winnerSixtuple = sixtuples[static_cast<size_t>(
-      std::distance(errs.begin(), std::min_element(errs.begin(), errs.end())))];
+  std::array<size_t, 6> const winnerSixtuple = sixtuples[bestSixtupleIdx];
 
   red = {red[winnerSixtuple[0]], red[winnerSixtuple[1]]};
   green = {green[winnerSixtuple[2]], green[winnerSixtuple[3]]};
