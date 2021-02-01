@@ -1,5 +1,7 @@
 #include <hpm/marks.h++>
 
+#include <limits>
+
 using namespace hpm;
 
 std::vector<Mark> Marks::getFlatCopy() const {
@@ -9,59 +11,6 @@ std::vector<Mark> Marks::getFlatCopy() const {
   all.insert(all.end(), green.begin(), green.end());
   all.insert(all.end(), blue.begin(), blue.end());
   return all;
-}
-
-void Marks::filterByDistance(ProvidedMarkerPositions const &markPos,
-                             double const focalLength,
-                             PixelPosition const &imageCenter,
-                             double const markerDiameter) {
-  auto filterSingleColor = [&](std::vector<Mark> &marksOfOneColor,
-                               double expectedDistance) {
-    size_t const sz{marksOfOneColor.size()};
-    if (sz > 2) {
-
-      std::vector<CameraFramedPosition> allPositions{};
-      for (auto const &mark : marksOfOneColor) {
-        allPositions.emplace_back(
-            mark.toPosition(focalLength, imageCenter, markerDiameter));
-      }
-
-      std::vector<std::pair<size_t, size_t>> allPairs{};
-      for (size_t i{0}; i < sz; ++i) {
-        for (size_t j{i + 1}; j < sz; ++j) {
-          allPairs.emplace_back(i, j);
-        }
-      }
-
-      std::vector<double> allDistances{};
-      for (auto const &pair : allPairs) {
-        allDistances.emplace_back(
-            cv::norm(allPositions[pair.first] - allPositions[pair.second]));
-      }
-
-      auto const winnerPair = allPairs[static_cast<size_t>(std::distance(
-          allDistances.begin(),
-          std::min_element(
-              allDistances.begin(), allDistances.end(),
-              [expectedDistance](double distanceLeft, double distanceRight) {
-                return abs(distanceLeft - expectedDistance) <
-                       abs(distanceRight - expectedDistance);
-              })))];
-
-      auto const first{marksOfOneColor[winnerPair.first]};
-      auto const second{marksOfOneColor[winnerPair.second]};
-      marksOfOneColor.clear();
-      marksOfOneColor.push_back(first);
-      marksOfOneColor.push_back(second);
-    }
-  };
-
-  double const redDistance = cv::norm(markPos.row(0) - markPos.row(1));
-  double const greenDistance = cv::norm(markPos.row(2) - markPos.row(3));
-  double const blueDistance = cv::norm(markPos.row(4) - markPos.row(5));
-  filterSingleColor(red, redDistance);
-  filterSingleColor(green, greenDistance);
-  filterSingleColor(blue, blueDistance);
 }
 
 static std::vector<std::pair<size_t, size_t>> getIndexPairs(size_t sz) {
@@ -76,13 +25,12 @@ static std::vector<std::pair<size_t, size_t>> getIndexPairs(size_t sz) {
   return indexPairs;
 }
 
-void Marks::filterAndSortByDistance(ProvidedMarkerPositions const &markPos,
-                                    double const focalLength,
-                                    PixelPosition const &imageCenter,
-                                    double const markerDiameter) {
+double Marks::fit(ProvidedMarkerPositions const &markPos,
+                  double const focalLength, PixelPosition const &imageCenter,
+                  double const markerDiameter) {
 
   if (not(red.size() >= 2 and green.size() >= 2 and blue.size() >= 2)) {
-    return;
+    return std::numeric_limits<double>::max();
   }
 
   auto getPositions =
@@ -131,7 +79,7 @@ void Marks::filterAndSortByDistance(ProvidedMarkerPositions const &markPos,
   // Find the sixtuple that produces the smallest squared error
   // but avoid calculating the full squared error for all sixtuples
   size_t bestSixtupleIdx = 0;
-  double smallestErr = 1e23;
+  double smallestErr = std::numeric_limits<double>::max();
   for (size_t sixtupleIdx{0}; sixtupleIdx < sixtuples.size(); sixtupleIdx++) {
     auto const sixtuple{sixtuples[sixtupleIdx]};
     int idx{0};
@@ -160,4 +108,5 @@ void Marks::filterAndSortByDistance(ProvidedMarkerPositions const &markPos,
   red = {red[winnerSixtuple[0]], red[winnerSixtuple[1]]};
   green = {green[winnerSixtuple[2]], green[winnerSixtuple[3]]};
   blue = {blue[winnerSixtuple[4]], blue[winnerSixtuple[5]]};
+  return smallestErr;
 }

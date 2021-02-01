@@ -7,7 +7,7 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
 
-  "filter marks by distance"_test = [] {
+  "fit marks to provided positions"_test = [] {
     // clang-format off
     cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                                0.0, 3000.0, 1000.0,
@@ -28,38 +28,46 @@ auto main() -> int {
     auto const F{cameraMatrix.at<double>(0, 0)};
     auto const Z0{F / PIX_DIST};
 
-    auto const MARKER_SIZE_STRAIGHT{
+    auto const MINOR{sphereToEllipseWidthHeight({0, 0, Z0}, focalLength,
+                                                knownMarkerDiameter / 2)
+                         .width};
+    auto const MAJOR_STRAIGHT{
         sphereToEllipseWidthHeight({1, 0, Z0}, focalLength,
                                    knownMarkerDiameter / 2)
             .width};
-    auto const MARKER_SIZE_DIAG{
-        sphereToEllipseWidthHeight({1, 1, Z0}, focalLength,
-                                   knownMarkerDiameter / 2)
-            .width};
+    auto const MAJOR_DIAG{sphereToEllipseWidthHeight({1, 1, Z0}, focalLength,
+                                                     knownMarkerDiameter / 2)
+                              .width};
 
     // Random false positive red detection result
-    hpm::Mark const falsePositiveRed{PixelPosition{200, 500}, 40.0};
-    // A bit harder to sort out false positive blue detection
-    hpm::Mark const falsePositiveBlue{{(CENTER + PIX_DIST) * 1.08, CENTER},
-                                      MARKER_SIZE_STRAIGHT * 1.08};
+    hpm::Mark const falsePositiveRed{PixelPosition{200, 500}, 40.0, 50.0, 0.0};
+    // Very hard to sort out false positive blue detection
+    hpm::Mark const falsePositiveBlue{{CENTER + PIX_DIST * 1.01, CENTER},
+                                      MAJOR_STRAIGHT * 1.01,
+                                      MINOR * 1.01,
+                                      0.0};
 
-    Marks marks{{{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
-                 {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
+    // clang-format off
+    Marks marks{{{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MAJOR_DIAG, MINOR, 5.0*M_PI/4.0},
+                 {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MAJOR_DIAG, MINOR, 7.0*M_PI/4.0},
                  falsePositiveRed},
-                {{{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT},
-                 {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MARKER_SIZE_DIAG}},
-                {{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MARKER_SIZE_DIAG},
+                {{{CENTER + PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, 0.0},
+                 {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, M_PI/4.0}},
+                {{{CENTER - PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, 3.0*M_PI/4.0},
                  falsePositiveBlue,
-                 {{CENTER + PIX_DIST, CENTER}, MARKER_SIZE_STRAIGHT}}};
+                 {{CENTER - PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, M_PI}}};
+    // clang-format on
 
-    marks.filterByDistance(providedPositions, focalLength, imageCenter,
-                           knownMarkerDiameter);
+    double const err = marks.fit(providedPositions, focalLength, imageCenter,
+                                 knownMarkerDiameter);
     expect(marks.red.size() == 2_ul);
     expect(marks.red[0] != falsePositiveRed);
     expect(marks.red[1] != falsePositiveRed);
     expect(marks.blue.size() == 2_ul);
     expect(marks.blue[0] != falsePositiveBlue);
     expect(marks.blue[1] != falsePositiveBlue);
+    constexpr auto EPS{0.00000000001_d}; // 1e-11 precision
+    expect(err < EPS);
   };
 
   return 0;

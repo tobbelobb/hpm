@@ -20,8 +20,7 @@ struct Ellipse {
 
   Ellipse(Ellipse const &ellipse) = default;
 
-  explicit Ellipse(PixelPosition const center, double major, double minor,
-                   double rot)
+  Ellipse(PixelPosition const center, double major, double minor, double rot)
       : m_center(center), m_major(major), m_minor(minor), m_rot(rot) {}
 
   explicit Ellipse(cv::KeyPoint const &keyPointIn)

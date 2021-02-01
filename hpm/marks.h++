@@ -18,13 +18,8 @@ struct Marks {
 
   size_t size() const { return red.size() + green.size() + blue.size(); }
   std::vector<Mark> getFlatCopy() const;
-  void filterByDistance(hpm::ProvidedMarkerPositions const &markPos,
-                        double const focalLength,
-                        hpm::PixelPosition const &imageCenter,
-                        double const markerDiameter);
-  void filterAndSortByDistance(hpm::ProvidedMarkerPositions const &markPos,
-                               double const focalLength,
-                               hpm::PixelPosition const &imageCenter,
-                               double const markerDiameter);
+  double fit(hpm::ProvidedMarkerPositions const &markPos,
+             double const focalLength, hpm::PixelPosition const &imageCenter,
+             double const markerDiameter);
 };
 } // namespace hpm

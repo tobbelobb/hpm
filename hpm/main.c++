@@ -27,14 +27,14 @@ auto main(int const argc, char **const argv) -> int {
         << *argv
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
-           "[-n|--no-filter-by-distance]\n";
+           "[-n|--no-fit-by-distance]\n";
   CommandLine args(usage.str());
 
   std::string show{};
   bool verbose{false};
   bool showResultImage{false};
   bool showIntermediateImages{false};
-  bool noFilterByDistance{false};
+  bool noFitByDistance{false};
   bool printHelp{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
   args.addArgument({"-v", "--verbose"}, &verbose,
@@ -44,9 +44,9 @@ auto main(int const argc, char **const argv) -> int {
                    "<result|intermediate|all|none>. none is the default."
                    " During any pop up you may press s to write the image, or"
                    " any other key to continue without saving.");
-  args.addArgument({"-n", "--no-filter-by-distance"}, &noFilterByDistance,
-                   "Don't filter the mark detection results by the marks' "
-                   "internal distance to each other.");
+  args.addArgument({"-n", "--no-fit-by-distance"}, &noFitByDistance,
+                   "Don't fit the mark detection results to only those marks "
+                   "who match the marks' internal distance to each other.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
   constexpr unsigned int NUM_OPTIONAL_ARGS = 4;
@@ -74,7 +74,7 @@ auto main(int const argc, char **const argv) -> int {
   }
   showResultImage = (show == "result") or (show == "all");
   showIntermediateImages = (show == "intermediate") or (show == "all");
-  bool const filterByDistance{not noFilterByDistance};
+  bool const fitByDistance{not noFitByDistance};
 
   if (printHelp) {
     args.printHelp();
@@ -167,7 +167,7 @@ auto main(int const argc, char **const argv) -> int {
 
   auto const [identifiedMarks, marks] = find(
       undistortedImage, providedMarkerPositions, meanFocalLength, imageCenter,
-      markerDiameter, showIntermediateImages, verbose, filterByDistance);
+      markerDiameter, showIntermediateImages, verbose, fitByDistance);
 
   if (identifiedMarks.allIdentified()) {
     if (showResultImage) {

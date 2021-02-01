@@ -15,7 +15,7 @@ find(cv::InputArray undistortedImage,
      hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
      hpm::PixelPosition const &imageCenter, double const markerDiameter,
      bool showIntermediateImages = false, bool verbose = false,
-     bool noFilterByDistance = false);
+     bool fitByDistance = false);
 
 hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::ProvidedMarkerPositions const &markPos,
@@ -23,7 +23,7 @@ hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::PixelPosition const &imageCenter,
                      double const markerDiameter,
                      bool showIntermediateImages = false, bool verbose = false,
-                     bool noFilterByDistance = false);
+                     bool fitByDistance = false);
 
 std::vector<hpm::CameraFramedPosition>
 findIndividualMarkerPositions(hpm::Marks const &marks,

@@ -117,6 +117,8 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
 
   cv::Mat hsv{};
   cv::cvtColor(imageMat, hsv, cv::COLOR_BGR2HSV);
+  // TODO: We should not compute hue of every pixel when we only need
+  //       the hue of ~10 pixels.
   cv::Mat hue = getHueChannelCopy(hsv);
   std::vector<HuedEllipse> huedEllipses;
   for (auto const &e : rightSizedEllipses) {

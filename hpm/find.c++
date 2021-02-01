@@ -20,11 +20,11 @@ using namespace hpm;
 auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
-          bool showIntermediateImages, bool verbose, bool filterByDistance)
+          bool showIntermediateImages, bool verbose, bool fitByDistance)
     -> std::pair<hpm::IdentifiedMarks, hpm::Marks> {
-  Marks const marks{findMarks(
-      undistortedImage, markPos, focalLength, imageCenter, markerDiameter,
-      showIntermediateImages, verbose, filterByDistance)};
+  Marks const marks{findMarks(undistortedImage, markPos, focalLength,
+                              imageCenter, markerDiameter,
+                              showIntermediateImages, verbose, fitByDistance)};
   IdentifiedMarks const identifiedMarks{marks, markerDiameter / 2.0,
                                         focalLength, imageCenter};
   return {identifiedMarks, marks};
@@ -34,20 +34,19 @@ auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
                double const markerDiameter, bool showIntermediateImages,
-               bool verbose, bool filterByDistance) -> Marks {
+               bool verbose, bool fitByDistance) -> Marks {
 
   auto marks{ellipseDetect(undistortedImage, showIntermediateImages)};
 
   if (showIntermediateImages) {
     showImage(imageWith(undistortedImage, marks),
-              "found-marks-before-filtering-by-distance.png");
+              "found-marks-before-fit-by-distance.png");
   }
-  if (filterByDistance) {
-    marks.filterAndSortByDistance(markPos, focalLength, imageCenter,
-                                  markerDiameter);
+  if (fitByDistance) {
+    marks.fit(markPos, focalLength, imageCenter, markerDiameter);
     if (showIntermediateImages) {
       showImage(imageWith(undistortedImage, marks),
-                "found-marks-after-filtering-by-distance.png");
+                "found-marks-after-fit-by-distance.png");
     }
   }
   if (verbose) {
