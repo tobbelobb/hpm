@@ -7,8 +7,6 @@
 #include <array>
 #include <functional>
 
-void sortCcw(std::vector<hpm::Mark> &marks);
-
 namespace hpm {
 
 struct IdentifiedMarks {

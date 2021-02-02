@@ -3,34 +3,6 @@
 
 using namespace hpm;
 
-static inline auto signed2DCross(PixelPosition const &v0,
-                                 PixelPosition const &v1,
-                                 PixelPosition const &v2) {
-  return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y);
-}
-
-static inline auto isRight(PixelPosition const &v0, PixelPosition const &v1,
-                           PixelPosition const &v2) -> bool {
-  return signed2DCross(v0, v1, v2) <= 0.0;
-}
-
-static void fanSort(std::vector<hpm::Mark> &fan) {
-  const auto &pivot = fan[0];
-  std::sort(std::next(fan.begin()), fan.end(),
-            [&pivot](hpm::Mark const &lhs, hpm::Mark const &rhs) -> bool {
-              return isRight(pivot.getCenter(), lhs.getCenter(),
-                             rhs.getCenter());
-            });
-}
-
-void sortCcw(std::vector<hpm::Mark> &marks) {
-  if (not(isRight(marks[0].getCenter(), marks[1].getCenter(),
-                  marks[2].getCenter()))) {
-    std::swap(marks[0], marks[1]);
-  }
-  fanSort(marks);
-}
-
 IdentifiedMarks::IdentifiedMarks(Marks const &marks, double const markerR,
                                  double const f,
                                  PixelPosition const &imageCenter) {

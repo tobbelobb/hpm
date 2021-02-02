@@ -19,24 +19,7 @@ struct Mark {
       : m_ellipse(center, major, minor, rot) {}
   Mark(PixelPosition const &center, double size) : m_ellipse(center, size) {}
 
-  // Need move/copy constructible for swap.
-  // TODO: Remove this when sortCcw is removed.
-  Mark(Mark const &) = default;
-
   explicit Mark(cv::KeyPoint const &keyPointIn) : m_ellipse(keyPointIn) {}
-
-  // Trying to std::swap() two Marks. Need move assignment operator or copy
-  // assignment operator?
-  // TODO: Remove when sortCcw is removed.
-  // Mark &operator=(Mark const &) = default;
-  Mark &operator=(Mark &&other) noexcept {
-    if (this != &other) {
-      m_ellipse = other.m_ellipse;
-      m_hue = other.m_hue;
-    }
-    return *this;
-  }
-  Mark &operator=(const hpm::Mark &) = default;
 
   bool operator==(Mark const &) const = default;
 
@@ -55,9 +38,6 @@ struct Mark {
     return m_ellipse.m_minor;
   }
 };
-static_assert(std::is_move_constructible<Mark>::value);
-static_assert(std::is_move_assignable<Mark>::value);
-static_assert(std::is_swappable<Mark>::value);
 
 struct Marks {
   std::vector<Mark> m_red;
