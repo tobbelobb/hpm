@@ -34,9 +34,6 @@ struct Mark {
                              PixelPosition const &imageCenter) const {
     return m_ellipse.getCenterRay(markerR, f, imageCenter);
   }
-  double getSize() const { // TODO: remove when blob-detector is removed
-    return m_ellipse.m_minor;
-  }
 };
 
 struct Marks {

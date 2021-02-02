@@ -1,4 +1,3 @@
-#include <hpm/blob-detector.h++>
 #include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
 #include <hpm/util.h++>

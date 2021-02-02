@@ -1,11 +1,13 @@
 #pragma once
 
-#include <hpm/blob-detector.h++>
 #include <hpm/identified-marks.h++>
 #include <hpm/marks.h++>
 #include <hpm/simple-types.h++>
 
+#include <hpm/open-cv-warnings-disabler.h++>
+DISABLE_WARNINGS
 #include <opencv2/core.hpp>
+ENABLE_WARNINGS
 
 #include <iostream>
 #include <vector>
