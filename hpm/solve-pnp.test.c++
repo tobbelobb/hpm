@@ -26,16 +26,15 @@ auto main() -> int {
   auto const X0{F / PIX_DIST};
 
   "No rotation"_test = [&]() {
-    IdentifiedMarks const identifiedMarks{
-        {CENTER - PIX_DIST, CENTER - PIX_DIST},
-        {CENTER + PIX_DIST, CENTER - PIX_DIST},
-        {CENTER + PIX_DIST, CENTER},
-        {CENTER + PIX_DIST, CENTER + PIX_DIST},
-        {CENTER - PIX_DIST, CENTER + PIX_DIST},
-        {CENTER - PIX_DIST, CENTER}};
+    SolvePnpPoints const points{{CENTER - PIX_DIST, CENTER - PIX_DIST},
+                                {CENTER + PIX_DIST, CENTER - PIX_DIST},
+                                {CENTER + PIX_DIST, CENTER},
+                                {CENTER + PIX_DIST, CENTER + PIX_DIST},
+                                {CENTER - PIX_DIST, CENTER + PIX_DIST},
+                                {CENTER - PIX_DIST, CENTER}};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, points)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -67,10 +66,10 @@ auto main() -> int {
       mark.y = (mark.x - CENTER) * sin + (mark.y - CENTER) * cos + CENTER;
     }
 
-    IdentifiedMarks const identifiedMarks{marks};
+    SolvePnpPoints const points{marks};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, points)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -98,16 +97,15 @@ auto main() -> int {
     auto const farthersX{F * sqrt2Inv / (X0 + sqrt2Inv)};
     auto const farthersY{F / (X0 + sqrt2Inv)};
 
-    IdentifiedMarks const identifiedMarks{
-        {CENTER - closersX, CENTER - closersY},
-        {CENTER + farthersX, CENTER - farthersY},
-        {CENTER + farthersX, CENTER},
-        {CENTER + farthersX, CENTER + farthersY},
-        {CENTER - closersX, CENTER + closersY},
-        {CENTER - closersX, CENTER}};
+    SolvePnpPoints const points{{CENTER - closersX, CENTER - closersY},
+                                {CENTER + farthersX, CENTER - farthersY},
+                                {CENTER + farthersX, CENTER},
+                                {CENTER + farthersX, CENTER + farthersY},
+                                {CENTER - closersX, CENTER + closersY},
+                                {CENTER - closersX, CENTER}};
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, points)};
     expect((result.has_value()) >> fatal); // NOLINT
     auto const &value{result.value()};
 
@@ -127,19 +125,18 @@ auto main() -> int {
     auto const closersY{F / (X0 - sqrt2Inv)};
     auto const farthersX{F * sqrt2Inv / (X0 + sqrt2Inv)};
     auto const farthersY{F / (X0 + sqrt2Inv)};
-    IdentifiedMarks identifiedMarks{{CENTER - closersX, CENTER - closersY},
-                                    {CENTER + farthersX, CENTER - farthersY},
-                                    {CENTER + farthersX, CENTER},
-                                    {CENTER + farthersX, CENTER + farthersY},
-                                    {CENTER - closersX, CENTER + closersY},
-                                    {CENTER - closersX, CENTER}};
-    identifiedMarks.m_pixelPositions[0] = {
-        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::quiet_NaN()};
-    identifiedMarks.m_identified[0] = false;
+    SolvePnpPoints points{{CENTER - closersX, CENTER - closersY},
+                          {CENTER + farthersX, CENTER - farthersY},
+                          {CENTER + farthersX, CENTER},
+                          {CENTER + farthersX, CENTER + farthersY},
+                          {CENTER - closersX, CENTER + closersY},
+                          {CENTER - closersX, CENTER}};
+    points.m_pixelPositions[0] = {std::numeric_limits<double>::quiet_NaN(),
+                                  std::numeric_limits<double>::quiet_NaN()};
+    points.m_identified[0] = false;
 
     std::optional<SixDof> const result{
-        solvePnp(cameraMatrix, providedPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedPositions, points)};
     expect((result.has_value()) >> fatal); // NOLINT
 
     auto const &value{result.value()};

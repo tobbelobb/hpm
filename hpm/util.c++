@@ -42,12 +42,12 @@ void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
   }
 }
 
-void draw(cv::InputOutputArray image, IdentifiedMarks const &identifiedMarks) {
+void draw(cv::InputOutputArray image, SolvePnpPoints const &points) {
   const auto WHITE{cv::Scalar(255, 255, 255)};
   int constexpr LINE_WIDTH{2};
   double constexpr TEXT_OFFSET{5.0};
-  for (size_t i{0}; i < identifiedMarks.m_pixelPositions.size(); ++i) {
-    auto const pos{identifiedMarks.getPixelPosition(i)};
+  for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
+    auto const pos{points.get(i)};
     cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH);
     cv::putText(image, std::to_string(i + 1),
                 pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
@@ -62,11 +62,10 @@ auto imageWith(cv::InputArray image, Marks const &marks) -> cv::Mat {
   return imageCopy;
 }
 
-auto imageWith(cv::InputArray image, IdentifiedMarks const &identifiedMarks)
-    -> cv::Mat {
+auto imageWith(cv::InputArray image, SolvePnpPoints const &points) -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
-  draw(imageCopy, identifiedMarks);
+  draw(imageCopy, points);
   return imageCopy;
 }
 

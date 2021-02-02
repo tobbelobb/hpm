@@ -165,18 +165,17 @@ auto main(int const argc, char **const argv) -> int {
                            distortedImage.type());
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
-  auto const [identifiedMarks, marks] = find(
+  auto const [points, marks] = find(
       undistortedImage, providedMarkerPositions, meanFocalLength, imageCenter,
       markerDiameter, showIntermediateImages, verbose, fitByDistance);
 
-  if (identifiedMarks.allIdentified()) {
+  if (points.allIdentified()) {
     if (showResultImage) {
-      showImage(imageWith(undistortedImage, identifiedMarks),
-                "identified-marks.png");
+      showImage(imageWith(undistortedImage, points), "solve-pnp-points.png");
     }
 
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cam.matrix, providedMarkerPositions, identifiedMarks)};
+        solvePnp(cam.matrix, providedMarkerPositions, points)};
 
     if (effectorPoseRelativeToCamera.has_value()) {
       SixDof const worldPose{effectorWorldPose(
@@ -206,7 +205,7 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers detected";
   }
 
-  if (not identifiedMarks.allIdentified()) {
+  if (not points.allIdentified()) {
     std::string delimeter{};
     for (auto const &cameraFramedPosition : cameraFramedPositions) {
       std::cout << delimeter << cameraFramedPosition;

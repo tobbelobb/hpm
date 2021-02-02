@@ -9,9 +9,50 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
+SolvePnpPoints::SolvePnpPoints(Marks const &marks, double const markerR,
+                               double const f,
+                               PixelPosition const &imageCenter) {
+  if (marks.m_red.size() != 2 or marks.m_green.size() != 2 or
+      marks.m_blue.size() != 2) {
+    return;
+  }
+
+  std::vector<hpm::Mark> all{marks.getFlatCopy()};
+
+  for (size_t i{0}; i < m_pixelPositions.size() and i < all.size(); ++i) {
+    m_pixelPositions[i] = all[i].getCenterRay(markerR, f, imageCenter);
+    m_identified[i] = true;
+  }
+}
+
+bool SolvePnpPoints::isIdentified(size_t idx) const {
+  return idx < m_identified.size() and m_identified[idx];
+}
+
+PixelPosition SolvePnpPoints::get(size_t idx) const {
+  return m_pixelPositions[idx];
+}
+
+bool SolvePnpPoints::allIdentified() const {
+  return std::all_of(m_identified.begin(), m_identified.end(), std::identity());
+}
+
+std::ostream &operator<<(std::ostream &out,
+                         SolvePnpPoints const &solvePnpPoints) {
+  for (size_t i{0}; i < solvePnpPoints.m_pixelPositions.size(); ++i) {
+    if (solvePnpPoints.isIdentified(i)) {
+      out << solvePnpPoints.get(i);
+    } else {
+      out << '?';
+    }
+    out << '\n';
+  }
+  return out;
+}
+
 auto solvePnp(cv::InputArray cameraMatrix,
               cv::InputArray providedPositionsRelativeToNozzle,
-              IdentifiedMarks const &marks) -> std::optional<SixDof> {
+              SolvePnpPoints const &points) -> std::optional<SixDof> {
 
   cv::Mat providedPositionsMatrix = providedPositionsRelativeToNozzle.getMat();
   size_t const numMarkers{static_cast<size_t>(providedPositionsMatrix.rows *
@@ -22,8 +63,8 @@ auto solvePnp(cv::InputArray cameraMatrix,
   std::vector<PixelPosition> usablePixelPositions{};
   cv::Mat relevantProvidedPositions(0, 3, CV_64F);
   for (size_t i{0}; i < numMarkers; ++i) {
-    if (marks.isIdentified(i)) {
-      usablePixelPositions.push_back(marks.getPixelPosition(i));
+    if (points.isIdentified(i)) {
+      usablePixelPositions.emplace_back(points.get(i));
       relevantProvidedPositions.push_back(
           providedPositionsMatrix.row(static_cast<int>(i)));
     }

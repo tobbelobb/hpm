@@ -71,9 +71,9 @@ auto main() -> int {
 
     auto const res{find(image, providedMarkerPositions, meanFocalLength,
                         imageCenter, knownMarkerDiameter, false, false, true)};
-    IdentifiedMarks const identifiedMarks{res.identifiedMarks};
+    SolvePnpPoints const points{res.points};
     Marks const marks{res.marks};
-    expect((identifiedMarks.allIdentified()) >> fatal);
+    expect((points.allIdentified()) >> fatal);
     std::vector<CameraFramedPosition> const positions{
         findIndividualMarkerPositions(marks, knownMarkerDiameter,
                                       meanFocalLength, imageCenter)};

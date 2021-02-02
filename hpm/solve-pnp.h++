@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hpm/identified-marks.h++>
+#include <hpm/marks.h++>
 #include <hpm/simple-types.h++>
 #include <hpm/six-dof.h++>
 
@@ -11,13 +11,40 @@ ENABLE_WARNINGS
 
 #include <optional>
 
-/* We want to use OpenCV's implementation of an IPPE PnP solver
- * as long as the points are co-planar.
- * If points are not co-planar, then we want to use OpenCV's
- * coming implementation of the SQPnP algorithm.
- */
+namespace hpm {
+struct SolvePnpPoints {
+  static size_t constexpr NUM_MARKERS{6};
+  std::array<PixelPosition, NUM_MARKERS> m_pixelPositions{};
+  std::array<bool, NUM_MARKERS> m_identified{false};
+
+  explicit SolvePnpPoints(PixelPosition const &red0_,
+                          PixelPosition const &red1_,
+                          PixelPosition const &green0_,
+                          PixelPosition const &green1_,
+                          PixelPosition const &blue0_,
+                          PixelPosition const &blue1_)
+      : m_pixelPositions{red0_, red1_, green0_, green1_, blue0_, blue1_},
+        m_identified{true, true, true, true, true, true} {}
+
+  explicit SolvePnpPoints(
+      std::array<PixelPosition, NUM_MARKERS> const positions_)
+      : m_pixelPositions{positions_} {
+    std::fill(m_identified.begin(), m_identified.end(), true);
+  }
+
+  explicit SolvePnpPoints(Marks const &marks, double const markerR,
+                          double const f, PixelPosition const &imageCenter);
+
+  [[nodiscard]] bool isIdentified(size_t idx) const;
+  [[nodiscard]] PixelPosition get(size_t idx) const;
+  [[nodiscard]] bool allIdentified() const;
+
+  friend std::ostream &operator<<(std::ostream &out,
+                                  SolvePnpPoints const &points);
+};
+} // namespace hpm
 
 std::optional<hpm::SixDof>
 solvePnp(cv::InputArray cameraMatrix,
          cv::InputArray markerPositionsRelativeToNozzle,
-         hpm::IdentifiedMarks const &marks);
+         hpm::SolvePnpPoints const &points);

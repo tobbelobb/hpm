@@ -45,14 +45,14 @@ auto main() -> int {
                                                cameraMatrix.at<double>(1, 1))};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
-    auto const [identifiedMarks, marks] =
+    auto const [points, marks] =
         find(image, providedMarkerPositions, meanFocalLength, imageCenter,
              markerDiameter, false, false, true);
 
-    expect((identifiedMarks.allIdentified()) >> fatal);
+    expect((points.allIdentified()) >> fatal);
 
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cameraMatrix, providedMarkerPositions, identifiedMarks)};
+        solvePnp(cameraMatrix, providedMarkerPositions, points)};
 
     expect((effectorPoseRelativeToCamera.has_value()) >> fatal);
 

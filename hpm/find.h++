@@ -1,8 +1,8 @@
 #pragma once
 
-#include <hpm/identified-marks.h++>
 #include <hpm/marks.h++>
 #include <hpm/simple-types.h++>
+#include <hpm/solve-pnp.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -14,7 +14,7 @@ ENABLE_WARNINGS
 
 namespace hpm {
 struct FindResult {
-  IdentifiedMarks identifiedMarks;
+  SolvePnpPoints points;
   Marks marks;
 };
 } // namespace hpm

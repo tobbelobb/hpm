@@ -1,8 +1,8 @@
 #pragma once
 
-#include <hpm/identified-marks.h++>
 #include <hpm/marks.h++>
 #include <hpm/simple-types.h++>
+#include <hpm/solve-pnp.h++>
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -18,13 +18,11 @@ void draw(cv::InputOutputArray image, hpm::Ellipse const &ellipse,
 void draw(cv::InputOutputArray image, hpm::Mark const &mark,
           cv::Scalar const &color);
 
-void draw(cv::InputOutputArray image,
-          hpm::IdentifiedMarks const &identifiedMarks);
+void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points);
 
 void draw(cv::InputOutputArray image, hpm::Marks const &marks);
 
-cv::Mat imageWith(cv::InputArray image,
-                  hpm::IdentifiedMarks const &identifiedMarks);
+cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points);
 cv::Mat imageWith(cv::InputArray image, hpm::Marks const &marks);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);

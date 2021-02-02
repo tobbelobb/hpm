@@ -24,9 +24,9 @@ auto find(cv::InputArray undistortedImage,
   Marks const marks{findMarks(undistortedImage, markPos, focalLength,
                               imageCenter, markerDiameter,
                               showIntermediateImages, verbose, fitByDistance)};
-  IdentifiedMarks const identifiedMarks{marks, markerDiameter / 2.0,
-                                        focalLength, imageCenter};
-  return {identifiedMarks, marks};
+  SolvePnpPoints const points{marks, markerDiameter / 2.0, focalLength,
+                              imageCenter};
+  return {points, marks};
 }
 
 auto findMarks(cv::InputArray undistortedImage,
