@@ -81,7 +81,7 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 /Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
 END
 
-: Finds-all-markers-training-image-00
+: Finds-all-markers-training-image-01
 : Checks that we have a single digit error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_01.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
@@ -91,7 +91,7 @@ Found 2 red markers, 2 green markers, and 2 blue markers
 /.*/
 END
 
-: Finds-all-markers-training-image-01
+: Finds-all-markers-training-image-02
 : Checks that we have a single digit error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_02.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
@@ -101,7 +101,7 @@ Found 2 red markers, 2 green markers, and 2 blue markers
 /.*/
 END
 
-: Finds-all-markers-training-image-02
+: Finds-all-markers-training-image-03
 : Checks that we have a single digit error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_03.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
