@@ -14,7 +14,7 @@ auto main() -> int {
   double const closerR{sphereRadius * cos(gamma)};
   double const moreExactHeight{focalLength * 2 * closerR / closerZ};
 
-  auto constexpr EPS{0.000000000001_d}; // 1e-12 precision
+  auto constexpr EPS{0.000000001_d}; // 1e-9 precision
 
   "sphere to sphere width and height"_test = [&] {
     CameraFramedPosition const center{0.0, 0.0, zDist};

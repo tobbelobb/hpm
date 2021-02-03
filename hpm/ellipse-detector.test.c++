@@ -73,7 +73,7 @@ auto main() -> int {
                          ang}
                 .toPosition(focalLength, imageCenter, sphereRadius * 2);
 
-        auto constexpr EPS{0.0000000000115_d}; // 1.15e-11 precision
+        auto constexpr EPS{0.00000000115_d}; // 1.15e-9 precision
         expect(std::abs(gotPosition.x - xDist) < EPS);
         expect(std::abs(gotPosition.y - yDist) < EPS);
         expect(std::abs(gotPosition.z - zDist) < EPS);

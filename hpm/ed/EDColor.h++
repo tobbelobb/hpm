@@ -7,8 +7,6 @@ DISABLE_WARNINGS
 #include <opencv2/opencv.hpp>
 ENABLE_WARNINGS
 
-#include <span>
-
 using LabPixSingle = uint8_t;
 auto constexpr LAB_PIX_CV_TYPE{CV_8UC3};
 using LabPix = cv::Point3_<LabPixSingle>;

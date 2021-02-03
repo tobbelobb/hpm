@@ -3,8 +3,6 @@
 #include <hpm/ellipse.h++>
 #include <hpm/simple-types.h++>
 
-#include <pipes/pipes.hpp>
-
 #include <vector>
 
 namespace hpm {
