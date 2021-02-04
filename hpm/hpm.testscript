@@ -24,7 +24,7 @@ EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png --no-fit-by-distance >>~/END/
 Could not identify markers
 /\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
@@ -126,6 +126,16 @@ END
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_05.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
+/\d.\d\d?\d?\d?\d?\d?\d?/
+/.*/
+END
+
+: Finds-all-markers-training-image-06
+: Checks that we have a single digit error
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_02.jpg -v >>~/END/
+Found 2 red markers, 2 green markers, and 2 blue markers
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/

@@ -8,5 +8,5 @@ DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-hpm::Marks ellipseDetect(cv::InputArray image,
-                         bool showIntermediateImages = false);
+std::vector<hpm::Ellipse> ellipseDetect(cv::InputArray image,
+                                        bool showIntermediateImages = false);
