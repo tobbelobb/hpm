@@ -31,7 +31,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
       imageMat,
-      {.gradThresh = 10, // lower gradThresh finds more ellipses, both true and
+      {.gradThresh = 20, // lower gradThresh finds more ellipses, both true and
                          // false positives
        .anchorThresh = 4,
        .blurSize = 1.5,
@@ -47,9 +47,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
               "edCircles.png");
   }
 
-  // Size of a marker must be at least 1/200 of the image width
+  // Size of a marker must be at least 1/250 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};
-  double constexpr SIZE_THRESHOLD_DENOMINATOR{200.0};
+  double constexpr SIZE_THRESHOLD_DENOMINATOR{250.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
   std::vector<hpm::Ellipse> bigEllipses{

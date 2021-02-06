@@ -30,7 +30,7 @@ auto find(cv::InputArray undistortedImage,
   return {points, marks};
 }
 
-static auto bgr2skewedHue(cv::Point3_<uint8_t> bgr) -> double {
+static auto bgr2hue(cv::Point3_<uint8_t> bgr) -> double {
   auto smallHue = [](std::array<double, 3> const &rgb) -> double {
     auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
     auto const diff{std::max(std::numeric_limits<double>::min(), *max - *min)};
@@ -56,9 +56,25 @@ static auto bgr2skewedHue(cv::Point3_<uint8_t> bgr) -> double {
   }
   assert(hue < MAX_DEG);
   assert(hue >= 0.0);
-  double const ret = std::fmod(hue + 60.0, MAX_DEG);
-  // skew hue so all red colors end up closer to 0 than to MAX_DEG.
-  return ret;
+  return hue;
+}
+
+static auto getLargest(std::vector<double> const &v, int howManyToSort)
+    -> std::vector<size_t> {
+  struct Comp {
+    Comp(const std::vector<double> &v) : _v(v) {}
+    bool operator()(size_t a, size_t b) { return _v[a] > _v[b]; }
+    const std::vector<double> &_v;
+  };
+  std::vector<size_t> largest;
+  largest.resize(v.size());
+  for (size_t i = 0; i < largest.size(); ++i) {
+    largest[i] = i;
+  }
+  std::partial_sort(largest.begin(), std::next(largest.begin(), howManyToSort),
+                    largest.end(), Comp(v));
+  largest.resize(static_cast<size_t>(howManyToSort));
+  return largest;
 }
 
 auto findMarks(cv::InputArray undistortedImage,
@@ -88,17 +104,44 @@ auto findMarks(cv::InputArray undistortedImage,
       }
     }
   }
-  bubbleSizeLimit *= 1.1;
+  bubbleSizeLimit *= 1.7;
   std::vector<size_t> validEllipseIndices;
-  std::vector<size_t> ellipseNeighCounts(positions.size(), 0);
+  std::vector<std::vector<size_t>> ellipseNeighs(positions.size(),
+                                                 std::vector<size_t>{});
+  double const bubbleSizeLimitSq{bubbleSizeLimit * bubbleSizeLimit};
   for (size_t i{0}; i < positions.size(); ++i) {
     for (size_t j{0}; j < positions.size(); ++j) {
-      if (i != j and cv::norm(positions[i] - positions[j]) < bubbleSizeLimit) {
-        ellipseNeighCounts[i] = ellipseNeighCounts[i] + 1;
-        if (ellipseNeighCounts[i] >= 5) {
-          validEllipseIndices.emplace_back(i);
-          break;
+      auto const pixDist{cv::norm(ellipses[i].m_center - ellipses[j].m_center)};
+      if (i != j and pixDist > ellipses[i].m_minor and
+          pixDist > ellipses[j].m_minor) {
+        // j is not i, and they don't overlap
+        // Are they close enough to each other to be counted as neighbors?
+        auto const diff(positions[i] - positions[j]);
+        if (diff.dot(diff) < bubbleSizeLimitSq) {
+          ellipseNeighs[i].emplace_back(j);
         }
+      }
+    }
+  }
+
+  for (size_t i{0}; i < ellipseNeighs.size(); ++i) {
+    if (ellipseNeighs[i].size() >= 5) {
+      size_t neighsWithFourOrMoreSharedNeighs{0};
+      for (auto const &neighIdx : ellipseNeighs[i]) {
+        size_t sharedNeighs = 0;
+        for (auto const &neighIdxInner : ellipseNeighs[i]) {
+          if (neighIdx != neighIdxInner and
+              std::find(std::begin(ellipseNeighs[neighIdx]),
+                        std::end(ellipseNeighs[neighIdx]),
+                        neighIdxInner) != std::end(ellipseNeighs[neighIdx]))
+            sharedNeighs++;
+        }
+        if (sharedNeighs >= 4) {
+          neighsWithFourOrMoreSharedNeighs++;
+        }
+      }
+      if (neighsWithFourOrMoreSharedNeighs >= 5) {
+        validEllipseIndices.emplace_back(i);
       }
     }
   }
@@ -108,15 +151,31 @@ auto findMarks(cv::InputArray undistortedImage,
     for (auto const &ellipseIndex : validEllipseIndices) {
       auto const e{ellipses[ellipseIndex]};
       // The ellipse center might be outside of picture frame
-      int const row{
+      int const row0{
           std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
-      int const col{
+      int const col0{
           std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
-      auto bgr = imageMat.at<cv::Point3_<uint8_t>>(row, col);
+      int const rowUp{std::clamp(row0 - 1, 0, imageMat.rows - 1)};
+      int const rowDown{std::clamp(row0 + 1, 0, imageMat.rows - 1)};
+      int const colLeft{std::clamp(col0 - 1, 0, imageMat.cols - 1)};
+      int const colRight{std::clamp(col0 + 1, 0, imageMat.cols - 1)};
+      cv::Point3_<int> bgr0 =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, col0));
+      cv::Point3_<int> bgrLeft =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colLeft));
+      cv::Point3_<int> bgrRight =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colRight));
+      cv::Point3_<int> bgrUp =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowUp, col0));
+      cv::Point3_<int> bgrDown =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowDown, col0));
+      cv::Point3_<uint8_t> bgr = cv::Point3_<uint8_t>(
+          (bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
 
       if (not((bgr.x > 220 and bgr.y > 220 and bgr.z > 220) or
               (bgr.x < 35 and bgr.y < 35 and bgr.z < 35))) {
-        marks.emplace_back(e, bgr2skewedHue(bgr));
+        // Not completely white or black..
+        marks.emplace_back(e, bgr2hue(bgr));
       }
     }
     if (showIntermediateImages) {
@@ -133,34 +192,46 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   }
 
-  std::sort(marks.begin(), marks.end(), [&](auto const &lhv, auto const &rhv) {
+  auto hueLessThan = [](hpm::Mark const &lhv, hpm::Mark const &rhv) -> bool {
     return lhv.m_hue < rhv.m_hue;
-  });
+  };
+
+  std::sort(marks.begin(), marks.end(), hueLessThan);
 
   if (marks.empty()) {
     return {};
   }
 
-  double const min = marks[0].m_hue;
-  double const max = marks.back().m_hue;
-  double redMid = min;
-  double greenMid = marks[marks.size() / 2].m_hue;
-  double blueMid = max;
+  std::vector<double> hueDistances(marks.size(), 0.0);
+  for (size_t i{0}; i < marks.size() - 1; ++i) {
+    hueDistances[i] = marks[i + 1].m_hue - marks[i].m_hue;
+  }
+  hueDistances.back() = marks[0].m_hue + (360.0 - marks.back().m_hue);
+  std::array<std::vector<hpm::Mark>, 3> hueGroups;
+
+  std::vector<size_t> const largestJumps = getLargest(hueDistances, 3);
+
+  size_t groupIdx{0};
+  for (size_t i{0}; i < marks.size(); ++i) {
+    hueGroups[groupIdx % 3].emplace_back(marks[i]);
+    if (i == largestJumps[0] or i == largestJumps[1] or i == largestJumps[2]) {
+      // If the coming hue jump is one of the three largest ones, start
+      // emplacing marks into the next hue group from now on
+      groupIdx++;
+    }
+  }
 
   Marks result{};
-  for (auto const &mark : marks) {
-    double colorDistanceRed = std::abs(mark.m_hue - redMid);
-    double colorDistanceGreen = std::abs(mark.m_hue - greenMid);
-    double colorDistanceBlue = std::abs(mark.m_hue - blueMid);
-    if (colorDistanceRed < colorDistanceGreen and
-        colorDistanceRed < colorDistanceBlue) {
-      result.m_red.emplace_back(mark);
-    } else if (colorDistanceGreen < colorDistanceRed and
-               colorDistanceGreen < colorDistanceBlue) {
-      result.m_green.emplace_back(mark);
-    } else {
-      result.m_blue.emplace_back(mark);
-    }
+  if (not(hueGroups[2].empty()) and not(hueGroups[0].empty()) and
+      (360.0 - hueGroups[2].back().m_hue) < hueGroups[0][0].m_hue) {
+    // hueGroup 2 is closer to 360 than hueGroup 0 is close to 0.
+    result.m_red = hueGroups[2];
+    result.m_green = hueGroups[0];
+    result.m_blue = hueGroups[1];
+  } else {
+    result.m_red = hueGroups[0];
+    result.m_green = hueGroups[1];
+    result.m_blue = hueGroups[2];
   }
 
   if (showIntermediateImages) {
