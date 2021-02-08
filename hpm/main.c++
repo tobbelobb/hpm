@@ -27,11 +27,12 @@ auto main(int const argc, char **const argv) -> int {
         << *argv
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
-           "[-n|--no-fit-by-distance]\n";
+           "[-n|--no-fit-by-distance] [-c|--camera-position-calibration]\n";
   CommandLine args(usage.str());
 
   std::string show{};
   bool verbose{false};
+  bool cameraPositionCalibration{false};
   bool showResultImage{false};
   bool showIntermediateImages{false};
   bool noFitByDistance{false};
@@ -47,6 +48,10 @@ auto main(int const argc, char **const argv) -> int {
   args.addArgument({"-n", "--no-fit-by-distance"}, &noFitByDistance,
                    "Don't fit the mark detection results to only those marks "
                    "who match the marks' internal distance to each other.");
+  args.addArgument({"-c", "--camera-position-calibration"},
+                   &cameraPositionCalibration,
+                   "Output the position of the camera in a way that can be "
+                   "pasted into the camera-parameters file.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
   constexpr unsigned int NUM_OPTIONAL_ARGS = 4;
@@ -86,7 +91,11 @@ auto main(int const argc, char **const argv) -> int {
     cv::Mat const distortion;
     hpm::SixDof const worldPose;
   };
-  auto const cam = [&camParamsFileName]() -> Cam {
+  auto const cam = [&camParamsFileName, &cameraPositionCalibration]() -> Cam {
+    cv::Mat cameraMatrix_;
+    cv::Mat distortionCoefficients_;
+    cv::Mat cameraRotation_(3, 1, CV_64FC1, cv::Scalar(0));
+    cv::Mat cameraTranslation_(3, 1, CV_64FC1, cv::Scalar(0));
     try {
       cv::FileStorage const camParamsFile(camParamsFileName,
                                           cv::FileStorage::READ);
@@ -95,24 +104,36 @@ auto main(int const argc, char **const argv) -> int {
                   << '\n';
         std::exit(1);
       }
-      cv::Mat cameraMatrix_;
       camParamsFile["camera_matrix"] >> cameraMatrix_;
-      cv::Mat distortionCoefficients_;
       camParamsFile["distortion_coefficients"] >> distortionCoefficients_;
-      cv::Mat cameraRotation_;
-      camParamsFile["camera_rotation"] >> cameraRotation_;
-      cv::Mat cameraTranslation_{};
-      camParamsFile["camera_translation"] >> cameraTranslation_;
-      return {cameraMatrix_,
-              distortionCoefficients_,
-              {cameraRotation_, cameraTranslation_}};
-
+      cv::Mat cameraRotationHelper_;
+      cv::Mat cameraTranslationHelper_;
+      camParamsFile["camera_rotation"] >> cameraRotationHelper_;
+      camParamsFile["camera_translation"] >> cameraTranslationHelper_;
+      if (cameraRotationHelper_.rows == 3 and
+          cameraTranslationHelper_.rows == 3) {
+        cameraRotation_ = cameraRotationHelper_.clone();
+        cameraTranslation_ = cameraTranslationHelper_.clone();
+      } else {
+        std::cout
+            << "Warning! Did not find valid camera_rotation or "
+               "camera_translation in "
+            << camParamsFileName
+            << ". Will try to calculate these based on the input image. "
+               "The calculated values will only be valid if the nozzle was "
+               "at the origin, and the markers were level with the print "
+               "bed, when the image was taken.\n";
+        cameraPositionCalibration = true;
+      }
     } catch (std::exception const &e) {
       std::cerr << "Could not read camera parameters from file "
                 << camParamsFileName << '\n';
       std::cerr << e.what() << std::endl;
       std::exit(1);
     }
+    return {cameraMatrix_,
+            distortionCoefficients_,
+            {cameraRotation_, cameraTranslation_}};
   }();
 
   auto const [providedMarkerPositions, markerDiameter] =
@@ -177,26 +198,61 @@ auto main(int const argc, char **const argv) -> int {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, providedMarkerPositions, points)};
 
+    double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (effectorPoseRelativeToCamera.has_value()) {
+      if (cameraPositionCalibration) {
+        if (effectorPoseRelativeToCamera.value().reprojectionError >
+            HIGH_REPROJECTION_ERROR) {
+          std::cout
+              << "Reprojection error was too high to find good values "
+                 "for camera_rotation and camera_translation. This happens "
+                 "when camera_matrix, distortion_coefficients, "
+                 "marker_positions, and the image don't match up well "
+                 "enough.\n";
+        } else {
+          SixDof const camTranslation{effectorWorldPose(
+              effectorPoseRelativeToCamera.value(),
+              {effectorPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
+          std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                       "  <rows>3</rows>\n"
+                       "  <cols>1</cols>\n"
+                       "  <dt>d</dt>\n"
+                       "  <data>\n    "
+                    << effectorPoseRelativeToCamera.value().rotation[0] << ' '
+                    << effectorPoseRelativeToCamera.value().rotation[1] << ' '
+                    << effectorPoseRelativeToCamera.value().rotation[2]
+                    << "\n  </data>\n"
+                       "</camera_rotation>\n"
+                       "<camera_translation type_id=\"opencv-matrix\">\n"
+                       "  <rows>3</rows>\n"
+                       "  <cols>1</cols>\n"
+                       "  <dt>d</dt>\n"
+                       "  <data>\n    "
+                    << -camTranslation.translation[0] << ' '
+                    << -camTranslation.translation[1] << ' '
+                    << -camTranslation.translation[2] << "\n  </data>\n"
+                    << "</camera_translation>\n";
+        }
+      }
       SixDof const worldPose{effectorWorldPose(
           effectorPoseRelativeToCamera.value(), cam.worldPose)};
       if (verbose) {
-        std::cout << worldPose;
-      } else {
-        std::cout << worldPose.translation;
+        std::cout << worldPose << '\n';
+      }
+      if (not verbose and not cameraPositionCalibration) {
+        std::cout << worldPose.translation << '\n';
       }
       double constexpr HIGH_REPROJECTION_ERROR{1.0};
       if (worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
-        std::cout << "\nWarning! High reprojection error: "
-                  << worldPose.reprojectionError;
+        std::cout << "Warning! High reprojection error: "
+                  << worldPose.reprojectionError << '\n';
       }
     } else {
-      std::cout << "Found no camera pose";
+      std::cout << "Found no camera pose\n";
     }
   } else {
-    std::cout << "Could not identify markers";
+    std::cout << "Could not identify markers\n";
   }
-  std::cout << '\n';
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
       marks, markerDiameter, meanFocalLength, imageCenter)};

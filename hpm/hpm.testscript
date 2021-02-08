@@ -10,16 +10,18 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration]
 
--h, --help                Print this help.
--v, --verbose             Print rotation, translation, and reprojection_error of the found
-                          pose. The default is to only print the translation.
--s, --show                <result|intermediate|all|none>. none is the default. During any
-                          pop up you may press s to write the image, or any other key to
-                          continue without saving.
--n, --no-fit-by-distance  Don't fit the mark detection results to only those marks who match
-                          the marks' internal distance to each other.
+-h, --help                         Print this help.
+-v, --verbose                      Print rotation, translation, and reprojection_error of the found
+                                   pose. The default is to only print the translation.
+-s, --show                         <result|intermediate|all|none>. none is the default. During any
+                                   pop up you may press s to write the image, or any other key to
+                                   continue without saving.
+-n, --no-fit-by-distance           Don't fit the mark detection results to only those marks who match
+                                   the marks' internal distance to each other.
+-c, --camera-position-calibration  Output the position of the camera in a way that can be pasted
+                                   into the camera-parameters file.
 EOE
 
 : End-as-expected
@@ -145,7 +147,36 @@ END
 : Checks that we have a single digit error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_05.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?\]/
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e-??\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e-??\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/\d.\d\d?\d?\d?\d?\d?\d?e?\d?\d?/
+END
+
+: Finds-all-markers-no-cam-pos
+: Checks output when there's no cam pos in cam params file
+$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_05.jpg >>~/END/
+/Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
+<camera_rotation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+/    -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
+  </data>
+</camera_rotation>
+<camera_translation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+/    -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
+  </data>
+</camera_translation>
+END
+
+: Tries-to-calibrate-cam-pos-based-on-too-bad-image-nozzle-position-01
+: Checks that we have a single digit error
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_01.jpg --camera-position-calibration >>~/END/
+Reprojection error was too high to find good values for camera_rotation and camera_translation. This happens when camera_matrix, distortion_coefficients, marker_positions, and the image don't match up well enough.
+/Warning! High reprojection error: \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
 END
