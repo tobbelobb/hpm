@@ -30,6 +30,17 @@ auto find(cv::InputArray undistortedImage,
   return {points, marks};
 }
 
+static auto saturation(cv::Point3_<uint8_t> bgr) -> double {
+  std::array<double, 3> const rgb = {static_cast<double>(bgr.z),
+                                     static_cast<double>(bgr.y),
+                                     static_cast<double>(bgr.x)};
+  auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
+  if (*max <= std::numeric_limits<double>::min()) {
+    return 0.0;
+  }
+  return (*max - *min) / *max;
+}
+
 static auto bgr2hue(cv::Point3_<uint8_t> bgr) -> double {
   auto smallHue = [](std::array<double, 3> const &rgb) -> double {
     auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
@@ -146,50 +157,65 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   }
 
-  std::vector<hpm::Mark> marks;
+  std::vector<hpm::Ellipse> bubbleDistanceSorted;
   if (fitByDistance) {
     for (auto const &ellipseIndex : validEllipseIndices) {
-      auto const e{ellipses[ellipseIndex]};
-      // The ellipse center might be outside of picture frame
-      int const row0{
-          std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
-      int const col0{
-          std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
-      int const rowUp{std::clamp(row0 - 1, 0, imageMat.rows - 1)};
-      int const rowDown{std::clamp(row0 + 1, 0, imageMat.rows - 1)};
-      int const colLeft{std::clamp(col0 - 1, 0, imageMat.cols - 1)};
-      int const colRight{std::clamp(col0 + 1, 0, imageMat.cols - 1)};
-      cv::Point3_<int> bgr0 =
-          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, col0));
-      cv::Point3_<int> bgrLeft =
-          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colLeft));
-      cv::Point3_<int> bgrRight =
-          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colRight));
-      cv::Point3_<int> bgrUp =
-          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowUp, col0));
-      cv::Point3_<int> bgrDown =
-          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowDown, col0));
-      cv::Point3_<uint8_t> bgr = cv::Point3_<uint8_t>(
-          (bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
-
-      if (not((bgr.x > 220 and bgr.y > 220 and bgr.z > 220) or
-              (bgr.x < 35 and bgr.y < 35 and bgr.z < 35))) {
-        // Not completely white or black..
-        marks.emplace_back(e, bgr2hue(bgr));
-      }
+      bubbleDistanceSorted.emplace_back(ellipses[ellipseIndex]);
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
       const auto AQUA{cv::Scalar(255, 255, 0)};
-      for (auto const &mark : marks) {
-        draw(cpy, mark, AQUA);
+      for (auto const &ellipse : bubbleDistanceSorted) {
+        draw(cpy, ellipse, AQUA);
       }
       showImage(cpy, "distance-bubble-sorted-ones.png");
     }
   } else {
-    for (auto const &ellipse : ellipses) {
-      marks.emplace_back(ellipse, 0.0);
+    bubbleDistanceSorted = ellipses;
+  }
+
+  bool const saturationFilter{bubbleDistanceSorted.size() > 6UL};
+  std::vector<hpm::Mark> marks;
+  for (auto const &e : bubbleDistanceSorted) {
+    // The ellipse center might be outside of picture frame
+    int const row0{
+        std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
+    int const col0{
+        std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
+    int const rowUp{std::clamp(row0 - 1, 0, imageMat.rows - 1)};
+    int const rowDown{std::clamp(row0 + 1, 0, imageMat.rows - 1)};
+    int const colLeft{std::clamp(col0 - 1, 0, imageMat.cols - 1)};
+    int const colRight{std::clamp(col0 + 1, 0, imageMat.cols - 1)};
+    cv::Point3_<int> bgr0 =
+        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, col0));
+    cv::Point3_<int> bgrLeft =
+        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colLeft));
+    cv::Point3_<int> bgrRight =
+        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colRight));
+    cv::Point3_<int> bgrUp =
+        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowUp, col0));
+    cv::Point3_<int> bgrDown =
+        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowDown, col0));
+    cv::Point3_<uint8_t> bgr =
+        cv::Point3_<uint8_t>((bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
+
+    if (not((bgr.x > 220 and bgr.y > 220 and bgr.z > 220) or
+            (bgr.x < 35 and bgr.y < 35 and bgr.z < 35)) or
+        not saturationFilter) {
+      // Not completely white or black..
+      if (saturation(bgr) > 0.05 or not saturationFilter) {
+        // Marks should be very saturated
+        marks.emplace_back(e, bgr2hue(bgr));
+      }
     }
+  }
+  if (saturationFilter and showIntermediateImages) {
+    cv::Mat cpy = imageMat.clone();
+    const auto AQUA{cv::Scalar(255, 255, 0)};
+    for (auto const &mark : marks) {
+      draw(cpy, mark, AQUA);
+    }
+    showImage(cpy, "color-saturation-filtered-ones.png");
   }
 
   auto hueLessThan = [](hpm::Mark const &lhv, hpm::Mark const &rhv) -> bool {
