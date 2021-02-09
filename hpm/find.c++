@@ -30,17 +30,6 @@ auto find(cv::InputArray undistortedImage,
   return {points, marks};
 }
 
-static auto saturation(cv::Point3_<uint8_t> bgr) -> double {
-  std::array<double, 3> const rgb = {static_cast<double>(bgr.z),
-                                     static_cast<double>(bgr.y),
-                                     static_cast<double>(bgr.x)};
-  auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
-  if (*max <= std::numeric_limits<double>::min()) {
-    return 0.0;
-  }
-  return (*max - *min) / *max;
-}
-
 static auto bgr2hue(cv::Point3_<uint8_t> bgr) -> double {
   auto smallHue = [](std::array<double, 3> const &rgb) -> double {
     auto const [min, max] = std::minmax_element(std::begin(rgb), std::end(rgb));
@@ -106,15 +95,18 @@ auto findMarks(cv::InputArray undistortedImage,
         e.toPosition(focalLength, imageCenter, markerDiameter));
   }
   double bubbleSizeLimit{0.0};
+  std::vector<double> expectedDists;
   for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
     for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
       double const dist = cv::norm(markPos.row(static_cast<int>(i)) -
                                    markPos.row(static_cast<int>(j)));
+      expectedDists.emplace_back(dist);
       if (dist > bubbleSizeLimit) {
         bubbleSizeLimit = dist;
       }
     }
   }
+  std::sort(std::begin(expectedDists), std::end(expectedDists));
   bubbleSizeLimit *= 1.7;
   std::vector<size_t> validEllipseIndices;
   std::vector<std::vector<size_t>> ellipseNeighs(positions.size(),
@@ -157,65 +149,102 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   }
 
-  std::vector<hpm::Ellipse> bubbleDistanceSorted;
-  if (fitByDistance) {
+  if (showIntermediateImages and fitByDistance) {
+    std::vector<hpm::Ellipse> bubbleDistanceSorted;
     for (auto const &ellipseIndex : validEllipseIndices) {
       bubbleDistanceSorted.emplace_back(ellipses[ellipseIndex]);
+    }
+    cv::Mat cpy = imageMat.clone();
+    const auto AQUA{cv::Scalar(255, 255, 0)};
+    for (auto const &ellipse : bubbleDistanceSorted) {
+      draw(cpy, ellipse, AQUA);
+    }
+    showImage(cpy, "distance-bubble-sorted-ones.png");
+  }
+
+  std::vector<std::array<size_t, 6>> candidateSixtuples;
+  for (size_t a{0}; a < validEllipseIndices.size(); ++a) {
+    for (size_t b{a + 1}; b < validEllipseIndices.size(); ++b) {
+      for (size_t c{b + 1}; c < validEllipseIndices.size(); ++c) {
+        for (size_t d{c + 1}; d < validEllipseIndices.size(); ++d) {
+          for (size_t e{d + 1}; e < validEllipseIndices.size(); ++e) {
+            for (size_t f{e + 1}; f < validEllipseIndices.size(); ++f) {
+              candidateSixtuples.emplace_back(std::array<size_t, 6>{
+                  validEllipseIndices[a], validEllipseIndices[b],
+                  validEllipseIndices[c], validEllipseIndices[d],
+                  validEllipseIndices[e], validEllipseIndices[f]});
+            }
+          }
+        }
+      }
+    }
+  }
+
+  size_t bestSixtupleIdx{0UL};
+  if (candidateSixtuples.size() > 1) {
+    double bestErr{std::numeric_limits<double>::max()};
+    for (size_t i{0}; i < candidateSixtuples.size(); ++i) {
+      auto const sixtuple{candidateSixtuples[i]};
+      std::vector<double> dists;
+      for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
+        for (size_t k{j + 1}; k < NUMBER_OF_MARKERS; ++k) {
+          double const dist =
+              cv::norm(positions[sixtuple[j]] - positions[sixtuple[k]]);
+          dists.emplace_back(dist);
+        }
+      }
+      std::sort(std::begin(dists), std::end(dists));
+      double err{0.0};
+      for (size_t distIdx{0}; distIdx < dists.size(); distIdx++) {
+        err += pow(dists[distIdx] - expectedDists[distIdx], 2);
+      }
+      if (err < bestErr) {
+        bestSixtupleIdx = i;
+        bestErr = err;
+      }
+    }
+  }
+
+  std::vector<hpm::Mark> marks;
+  if (fitByDistance and not candidateSixtuples.empty()) {
+    for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
+      // clamp because the ellipse center might be outside of picture frame
+      auto const e{ellipses[ellipseIndex]};
+      int const row0{
+          std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
+      int const col0{
+          std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
+      int const rowUp{std::clamp(row0 - 1, 0, imageMat.rows - 1)};
+      int const rowDown{std::clamp(row0 + 1, 0, imageMat.rows - 1)};
+      int const colLeft{std::clamp(col0 - 1, 0, imageMat.cols - 1)};
+      int const colRight{std::clamp(col0 + 1, 0, imageMat.cols - 1)};
+      cv::Point3_<int> bgr0 =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, col0));
+      cv::Point3_<int> bgrLeft =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colLeft));
+      cv::Point3_<int> bgrRight =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colRight));
+      cv::Point3_<int> bgrUp =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowUp, col0));
+      cv::Point3_<int> bgrDown =
+          cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowDown, col0));
+      cv::Point3_<uint8_t> bgr = cv::Point3_<uint8_t>(
+          (bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
+
+      marks.emplace_back(e, bgr2hue(bgr));
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
       const auto AQUA{cv::Scalar(255, 255, 0)};
-      for (auto const &ellipse : bubbleDistanceSorted) {
-        draw(cpy, ellipse, AQUA);
+      for (auto const &mark : marks) {
+        draw(cpy, mark, AQUA);
       }
-      showImage(cpy, "distance-bubble-sorted-ones.png");
+      showImage(cpy, "total-distance-filtered-ones.png");
     }
   } else {
-    bubbleDistanceSorted = ellipses;
-  }
-
-  bool const saturationFilter{bubbleDistanceSorted.size() > 6UL};
-  std::vector<hpm::Mark> marks;
-  for (auto const &e : bubbleDistanceSorted) {
-    // The ellipse center might be outside of picture frame
-    int const row0{
-        std::clamp(static_cast<int>(e.m_center.y), 0, imageMat.rows - 1)};
-    int const col0{
-        std::clamp(static_cast<int>(e.m_center.x), 0, imageMat.cols - 1)};
-    int const rowUp{std::clamp(row0 - 1, 0, imageMat.rows - 1)};
-    int const rowDown{std::clamp(row0 + 1, 0, imageMat.rows - 1)};
-    int const colLeft{std::clamp(col0 - 1, 0, imageMat.cols - 1)};
-    int const colRight{std::clamp(col0 + 1, 0, imageMat.cols - 1)};
-    cv::Point3_<int> bgr0 =
-        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, col0));
-    cv::Point3_<int> bgrLeft =
-        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colLeft));
-    cv::Point3_<int> bgrRight =
-        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(row0, colRight));
-    cv::Point3_<int> bgrUp =
-        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowUp, col0));
-    cv::Point3_<int> bgrDown =
-        cv::Point3_<int>(imageMat.at<cv::Point3_<uint8_t>>(rowDown, col0));
-    cv::Point3_<uint8_t> bgr =
-        cv::Point3_<uint8_t>((bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
-
-    if (not((bgr.x > 220 and bgr.y > 220 and bgr.z > 220) or
-            (bgr.x < 35 and bgr.y < 35 and bgr.z < 35)) or
-        not saturationFilter) {
-      // Not completely white or black..
-      if (saturation(bgr) > 0.05 or not saturationFilter) {
-        // Marks should be very saturated
-        marks.emplace_back(e, bgr2hue(bgr));
-      }
+    for (auto const &e : ellipses) {
+      marks.emplace_back(e, 0.0);
     }
-  }
-  if (saturationFilter and showIntermediateImages) {
-    cv::Mat cpy = imageMat.clone();
-    const auto AQUA{cv::Scalar(255, 255, 0)};
-    for (auto const &mark : marks) {
-      draw(cpy, mark, AQUA);
-    }
-    showImage(cpy, "color-saturation-filtered-ones.png");
   }
 
   auto hueLessThan = [](hpm::Mark const &lhv, hpm::Mark const &rhv) -> bool {
@@ -262,14 +291,10 @@ auto findMarks(cv::InputArray undistortedImage,
 
   if (showIntermediateImages) {
     showImage(imageWith(undistortedImage, result),
-              "found-marks-before-fit-by-distance.png");
+              "color-categorized-ones.png");
   }
   if (fitByDistance) {
-    result.fit(markPos, focalLength, imageCenter, markerDiameter);
-    if (showIntermediateImages) {
-      showImage(imageWith(undistortedImage, result),
-                "found-marks-after-fit-by-distance.png");
-    }
+    result.identify(markPos, focalLength, imageCenter, markerDiameter);
   }
   if (verbose) {
     std::cout << "Found " << result.m_red.size() << " red markers, "

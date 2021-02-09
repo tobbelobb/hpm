@@ -7,7 +7,7 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
 
-  "fit marks to provided positions"_test = [] {
+  "identify marks according to provided positions"_test = [] {
     // clang-format off
     cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                                0.0, 3000.0, 1000.0,
@@ -58,8 +58,8 @@ auto main() -> int {
                  {{CENTER - PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, M_PI}}};
     // clang-format on
 
-    double const err = marks.fit(providedPositions, focalLength, imageCenter,
-                                 knownMarkerDiameter);
+    double const err = marks.identify(providedPositions, focalLength,
+                                      imageCenter, knownMarkerDiameter);
     expect(marks.m_red.size() == 2_ul);
     expect(marks.m_red[0] != falsePositiveRed);
     expect(marks.m_red[1] != falsePositiveRed);

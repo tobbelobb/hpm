@@ -70,13 +70,21 @@ auto imageWith(cv::InputArray image, SolvePnpPoints const &points) -> cv::Mat {
 }
 
 void showImage(cv::InputArray image, std::string const &name) {
-  cv::namedWindow(name, cv::WINDOW_NORMAL);
-  constexpr auto SHOW_PIXELS_X{1500};
-  constexpr auto SHOW_PIXELS_Y{1500};
-  cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
-  cv::imshow(name, image);
-  if (cv::waitKey(0) == 's') {
-    cv::imwrite(name, image);
+  static bool userWantsMoreImages{true};
+  if (userWantsMoreImages) {
+    cv::namedWindow(name, cv::WINDOW_NORMAL);
+    constexpr auto SHOW_PIXELS_X{1500};
+    constexpr auto SHOW_PIXELS_Y{1500};
+    cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
+    cv::imshow(name, image);
+    auto const key{cv::waitKey(0)};
+    if (key == 's') {
+      cv::imwrite(name, image);
+      userWantsMoreImages = false;
+    }
+    if (key == 'q') {
+      userWantsMoreImages = false;
+    }
   }
 }
 

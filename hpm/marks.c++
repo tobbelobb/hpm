@@ -25,9 +25,10 @@ static std::vector<std::pair<size_t, size_t>> getIndexPairs(size_t sz) {
   return indexPairs;
 }
 
-double Marks::fit(ProvidedMarkerPositions const &markPos,
-                  double const focalLength, PixelPosition const &imageCenter,
-                  double const markerDiameter) {
+double Marks::identify(ProvidedMarkerPositions const &markPos,
+                       double const focalLength,
+                       PixelPosition const &imageCenter,
+                       double const markerDiameter) {
 
   if (not(m_red.size() >= 2 and m_green.size() >= 2 and m_blue.size() >= 2)) {
     return std::numeric_limits<double>::max();

@@ -41,8 +41,9 @@ struct Marks {
 
   size_t size() const { return m_red.size() + m_green.size() + m_blue.size(); }
   std::vector<Mark> getFlatCopy() const;
-  double fit(hpm::ProvidedMarkerPositions const &markPos,
-             double const focalLength, hpm::PixelPosition const &imageCenter,
-             double const markerDiameter);
+  double identify(hpm::ProvidedMarkerPositions const &markPos,
+                  double const focalLength,
+                  hpm::PixelPosition const &imageCenter,
+                  double const markerDiameter);
 };
 } // namespace hpm
