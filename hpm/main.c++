@@ -41,10 +41,11 @@ auto main(int const argc, char **const argv) -> int {
   args.addArgument({"-v", "--verbose"}, &verbose,
                    "Print rotation, translation, and reprojection_error of the "
                    "found pose. The default is to only print the translation.");
-  args.addArgument({"-s", "--show"}, &show,
-                   "<result|intermediate|all|none>. none is the default."
-                   " During any pop up you may press s to write the image, or"
-                   " any other key to continue without saving.");
+  args.addArgument(
+      {"-s", "--show"}, &show,
+      "<result|intermediate|all|none>. none is the default. During any pop up "
+      "you may press s to write the image, or q to stop showing images, or any "
+      "other key to continue.");
   args.addArgument({"-n", "--no-fit-by-distance"}, &noFitByDistance,
                    "Don't fit the mark detection results to only those marks "
                    "who match the marks' internal distance to each other.");

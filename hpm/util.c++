@@ -105,7 +105,6 @@ void showImage(cv::InputArray image, std::string const &name) {
     auto const key{cv::waitKey(0)};
     if (key == 's') {
       cv::imwrite(name, image);
-      userWantsMoreImages = false;
     }
     if (key == 'q') {
       userWantsMoreImages = false;

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 using namespace hpm;
 
@@ -39,6 +40,22 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
   const auto AQUA{cv::Scalar(255, 255, 0)};
   if (showIntermediateImages) {
     showImage(edColor.getEdgeImage(), "edgeImage.png");
+    cv::Mat cpy(imageMat.rows, imageMat.cols, CV_8UC3,
+                cv::Scalar(255, 255, 255));
+    std::random_device
+        rd; // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> distrib(0, 255);
+    for (auto const &segment : edColor.getSegments()) {
+      uint8_t first{static_cast<uint8_t>(distrib(gen))};
+      uint8_t second{static_cast<uint8_t>(distrib(gen))};
+      uint8_t third{static_cast<uint8_t>(distrib(gen))};
+      for (auto const &point : segment) {
+        cpy.at<cv::Point3_<uint8_t>>(point) =
+            cv::Point3_<uint8_t>(first, second, third);
+      }
+    }
+    showImage(cpy, "segmentImage.png");
   }
 
   EDCircles const edCircles{edColor};
