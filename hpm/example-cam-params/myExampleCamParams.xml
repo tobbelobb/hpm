@@ -25,7 +25,7 @@
   <cols>1</cols>
   <dt>d</dt>
   <data>
-    2.4683 1.71026 -0.127703
+    -2.70634 -1.82784 0.119121
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
@@ -33,7 +33,7 @@
   <cols>1</cols>
   <dt>d</dt>
   <data>
-    470.952 -159.132 2533.58
+    450.071 -159.276 2567.25
   </data>
 </camera_translation>
 </opencv_storage>
