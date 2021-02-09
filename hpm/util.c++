@@ -42,17 +42,41 @@ void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
   }
 }
 
-void draw(cv::InputOutputArray image, SolvePnpPoints const &points) {
+void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
+          hpm::Vector3d const &position) {
+  cv::Mat imageMat{image.getMat()};
   const auto WHITE{cv::Scalar(255, 255, 255)};
+  const auto BLACK{cv::Scalar(0, 0, 0)};
   int constexpr LINE_WIDTH{2};
+  int constexpr LINE_WIDTH_BOLD{7};
   double constexpr TEXT_OFFSET{5.0};
+  double constexpr TEXT_SIZE{2.0};
+  double maxRow{0.0};
+  double minCol{static_cast<double>(imageMat.cols)};
   for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
     auto const pos{points.get(i)};
     cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH);
     cv::putText(image, std::to_string(i + 1),
                 pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
-                cv::FONT_HERSHEY_PLAIN, 10.0, WHITE, LINE_WIDTH);
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+    cv::putText(image, std::to_string(i + 1),
+                pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
+    if (pos.x > maxRow) {
+      maxRow = pos.x;
+    }
+    if (pos.y < minCol) {
+      minCol = pos.y;
+    }
   }
+  std::stringstream ss;
+  ss << std::setprecision(2) << std::fixed << position;
+  cv::putText(image, ss.str(),
+              {static_cast<int>(minCol), static_cast<int>(maxRow)},
+              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+  cv::putText(image, ss.str(),
+              {static_cast<int>(minCol), static_cast<int>(maxRow)},
+              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
 }
 
 auto imageWith(cv::InputArray image, Marks const &marks) -> cv::Mat {
@@ -62,10 +86,11 @@ auto imageWith(cv::InputArray image, Marks const &marks) -> cv::Mat {
   return imageCopy;
 }
 
-auto imageWith(cv::InputArray image, SolvePnpPoints const &points) -> cv::Mat {
+auto imageWith(cv::InputArray image, SolvePnpPoints const &points,
+               hpm::Vector3d const &position) -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
-  draw(imageCopy, points);
+  draw(imageCopy, points, position);
   return imageCopy;
 }
 

@@ -6,6 +6,7 @@
 
 #include <hpm/open-cv-warnings-disabler.h++>
 DISABLE_WARNINGS
+#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 ENABLE_WARNINGS
@@ -18,11 +19,13 @@ void draw(cv::InputOutputArray image, hpm::Ellipse const &ellipse,
 void draw(cv::InputOutputArray image, hpm::Mark const &mark,
           cv::Scalar const &color);
 
-void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points);
+void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
+          hpm::Vector3d const &position);
 
 void draw(cv::InputOutputArray image, hpm::Marks const &marks);
 
-cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points);
+cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
+                  hpm::Vector3d const &position);
 cv::Mat imageWith(cv::InputArray image, hpm::Marks const &marks);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);

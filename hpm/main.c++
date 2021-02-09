@@ -191,10 +191,6 @@ auto main(int const argc, char **const argv) -> int {
       markerDiameter, showIntermediateImages, verbose, fitByDistance);
 
   if (points.allIdentified()) {
-    if (showResultImage) {
-      showImage(imageWith(undistortedImage, points), "solve-pnp-points.png");
-    }
-
     std::optional<SixDof> const effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, providedMarkerPositions, points)};
 
@@ -246,6 +242,10 @@ auto main(int const argc, char **const argv) -> int {
       if (worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
         std::cout << "Warning! High reprojection error: "
                   << worldPose.reprojectionError << '\n';
+      }
+      if (showResultImage) {
+        showImage(imageWith(undistortedImage, points, worldPose.translation),
+                  "result.png");
       }
     } else {
       std::cout << "Found no camera pose\n";
