@@ -498,7 +498,7 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
 EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   edgeImg = edgeImage.ptr<uint8_t>(0);
   // Arcs & circles to be detected
-  // If the end-points of the segment is very close to each other,
+  // If the end-points of the segment are very close to each other,
   // then directly fit a circle/ellipse instead of line fitting
   noCircles1 = 0;
   circles1 = new Circle[(width + height) * 8];
@@ -517,35 +517,36 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   vector<LineSegment> lines;
 
   for (int i = 0; i < segments.size(); i++) {
+    Segment const &segment = segments[i];
 
     // Make note of the starting line number for this segment
     segmentStartLines[i] = lines.size();
 
-    int noPixels = segments[i].size();
-
-    if (noPixels < 2 * CIRCLE_MIN_LINE_LEN) {
+    if (segment.size() < 2 * CIRCLE_MIN_LINE_LEN) {
       continue;
     }
 
     double *x = bm->getX();
     double *y = bm->getY();
 
-    for (int j = 0; j < noPixels; j++) {
-      x[j] = segments[i][j].x;
-      y[j] = segments[i][j].y;
+    for (int j = 0; j < segment.size(); j++) {
+      x[j] = segment[j].x;
+      y[j] = segment[j].y;
     }
 
     // If the segment is reasonably long, then see if the segment traverses the
     // boundary of a closed shape
-    if (noPixels >= 4 * CIRCLE_MIN_LINE_LEN) {
+    bool foundFullCircle = false;
+    bool foundFullEllipse = false;
+    if (segment.size() >= 4 * CIRCLE_MIN_LINE_LEN) {
       // If the end-points of the segment is close to each other, then assume a
       // circular/elliptic structure
-      double dx = x[0] - x[noPixels - 1];
-      double dy = y[0] - y[noPixels - 1];
+      double dx = segment[0].x - segment.back().x;
+      double dy = segment[0].y - segment.back().y;
       double d = sqrt(dx * dx + dy * dy);
-      double r = noPixels / TWOPI; // Assume a complete circle
+      double r = segment.size() / TWOPI; // Assume a complete circle
 
-      double maxDistanceBetweenEndPoints = std::max(3.0, r / 4.0);
+      double const maxDistanceBetweenEndPoints = std::max(3.0, r / 4.0);
 
       // If almost closed loop, then try to fit a circle/ellipse
       if (d <= maxDistanceBetweenEndPoints) {
@@ -554,49 +555,39 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
         double r = std::numeric_limits<double>::quiet_NaN();
         double circleFitError = 1e10;
 
-        CircleFit(x, y, noPixels, &xc, &yc, &r, &circleFitError);
-
-        EllipseEquation eq;
-        double ellipseFitError = 1e10;
-
-        if (circleFitError > LONG_ARC_ERROR) {
-          // Try fitting an ellipse
-          if (EllipseFit(x, y, noPixels, &eq)) {
-            ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-          }
-        }
+        CircleFit(x, y, segment.size(), &xc, &yc, &r, &circleFitError);
 
         if (circleFitError <= LONG_ARC_ERROR) {
+          foundFullCircle = true;
           addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
-                    noPixels);
-          bm->move(noPixels);
-          continue;
-        }
-        if (ellipseFitError <= ELLIPSE_ERROR) {
-          double major = std::numeric_limits<double>::quiet_NaN();
-          double minor = std::numeric_limits<double>::quiet_NaN();
-          ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &major, &minor);
+                    segment.size());
+          bm->move(segment.size());
+        } else if (EllipseEquation eq; EllipseFit(x, y, segment.size(), &eq)) {
+          double const ellipseFitError =
+              ComputeEllipseError(&eq, x, y, segment.size());
+          if (ellipseFitError <= ELLIPSE_ERROR) {
+            foundFullEllipse = true;
+            double major = std::numeric_limits<double>::quiet_NaN();
+            double minor = std::numeric_limits<double>::quiet_NaN();
+            ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &major, &minor);
 
-          // Assume major is longer. Otherwise, swap
-          if (minor > major) {
-            double tmp = major;
-            major = minor;
-            minor = tmp;
+            // Assume major is longer. Otherwise, swap
+            if (minor > major) {
+              std::swap(major, minor);
+            }
+
+            if (major < 8 * minor) {
+              addCircle(circles1, noCircles1, xc, yc, r, circleFitError, &eq,
+                        ellipseFitError, x, y, segment.size());
+              bm->move(segment.size());
+            }
           }
-
-          if (major < 8 * minor) {
-            addCircle(circles1, noCircles1, xc, yc, r, circleFitError, &eq,
-                      ellipseFitError, x, y, noPixels);
-            bm->move(noPixels);
-          }
-
-          continue;
         }
       }
     }
-
-    // Otherwise, split to lines
-    EDLines::SplitSegment2Lines(x, y, noPixels, i, lines);
+    if (not(foundFullCircle or foundFullEllipse)) {
+      EDLines::SplitSegment2Lines(x, y, segment.size(), i, lines);
+    }
   }
 
   segmentStartLines[segments.size()] = lines.size();
@@ -676,22 +667,6 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   // Finally, go over the arcs & circles, and generate candidate circles
   GenerateCandidateCircles();
 
-  // EDCircles does not use validation when constructed wia EDColor object.
-  // TODO :: apply validation to color image
-
-  //----------------------------- VALIDATE CIRCLES --------------------------
-  // noCircles2 = 0;
-  // circles2 = new Circle[maxNoOfCircles];
-  // GaussianBlur(srcImage, smoothImage, Size(), 0.50); // calculate kernel from
-  // sigma;
-
-  // ValidateCircles();
-
-  //----------------------------- JOIN CIRCLES --------------------------
-  // noCircles3 = 0;
-  // circles3 = new Circle[maxNoOfCircles];
-  // JoinCircles();
-
   noCircles = 0;
   noEllipses = 0;
   for (int i = 0; i < noCircles1; i++) {
@@ -709,16 +684,17 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
       double yc = std::numeric_limits<double>::quiet_NaN();
       double a = std::numeric_limits<double>::quiet_NaN();
       double b = std::numeric_limits<double>::quiet_NaN();
-      double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
+      double const theta =
+          ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
                             theta);
 
     } else {
-      double r = circles1[i].r;
-      double xc = circles1[i].xc;
-      double yc = circles1[i].yc;
-      double err = circles1[i].circleFitError;
+      double const r = circles1[i].r;
+      double const xc = circles1[i].xc;
+      double const yc = circles1[i].yc;
+      double const err = circles1[i].circleFitError;
 
       circles.emplace_back(Point2d(xc, yc), r, err);
     }
@@ -731,8 +707,6 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
   delete edarcs4;
 
   delete[] circles1;
-  // delete[] circles2;
-  // delete[] circles3;
 
   delete bm;
   delete[] segmentStartLines;
