@@ -611,9 +611,9 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
 
       // If the end points of the lines are far from each other, then stop at
       // this line
-      double dx = l1->ex - l2->sx;
-      double dy = l1->ey - l2->sy;
-      double d = sqrt(dx * dx + dy * dy);
+      double const dx = l1->ex - l2->sx;
+      double const dy = l1->ey - l2->sy;
+      double const d = sqrt(dx * dx + dy * dy);
       if (d >= 15) {
         info[j].angle = 10;
         info[j].sign = 2;
@@ -622,20 +622,16 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
       }
 
       // Compute the angle between the lines & their turn direction
-      double v1x = l1->ex - l1->sx;
-      double v1y = l1->ey - l1->sy;
-      double v1Len = sqrt(v1x * v1x + v1y * v1y);
+      double const v1x = l1->ex - l1->sx;
+      double const v1y = l1->ey - l1->sy;
+      double const v1Len = sqrt(v1x * v1x + v1y * v1y);
 
-      double v2x = l2->ex - l2->sx;
-      double v2y = l2->ey - l2->sy;
-      double v2Len = sqrt(v2x * v2x + v2y * v2y);
+      double const v2x = l2->ex - l2->sx;
+      double const v2y = l2->ey - l2->sy;
+      double const v2Len = sqrt(v2x * v2x + v2y * v2y);
 
-      double dotProduct = (v1x * v2x + v1y * v2y) / (v1Len * v2Len);
-      if (dotProduct > 1.0) {
-        dotProduct = 1.0;
-      } else if (dotProduct < -1.0) {
-        dotProduct = -1.0;
-      }
+      double const dotProduct =
+          std::clamp((v1x * v2x + v1y * v2y) / (v1Len * v2Len), -1.0, 1.0);
 
       info[j].angle = acos(dotProduct);
       info[j].sign =
@@ -835,249 +831,152 @@ void EDCircles::GenerateCandidateCircles() {
 }
 
 void EDCircles::DetectArcs(vector<LineSegment> lines) {
-
   double maxLineLengthThreshold = MAX(width, height) / 5;
-
   double MIN_ANGLE = PI / 30; // 6 degrees
   double MAX_ANGLE = PI / 3;  // 60 degrees
-  // double MAX_ANGLE = PI / 6;  // 30 degrees finds one more billiard ball
 
   for (int iter = 1; iter <= 2; iter++) {
     if (iter == 2) {
       MAX_ANGLE = PI / 1.9; // 95 degrees
-      // MAX_ANGLE = PI / 3; // 60 degrees finds one more billiard ball
     }
 
     for (int curSegmentNo = 0; curSegmentNo < segments.size(); curSegmentNo++) {
       int firstLine = segmentStartLines[curSegmentNo];
       int stopLine = segmentStartLines[curSegmentNo + 1];
-
-      // We need at least 2 line segments
-      if (stopLine - firstLine <= 1) {
-        continue;
-      }
-
-      // Process the info for the lines of this segment
-      while (firstLine < stopLine - 1) {
-        // If the line is already taken during the previous step, continue
-        if (info[firstLine].taken) {
-          firstLine++;
-          continue;
-        }
-
-        // very long lines cannot be part of an arc
-        if (lines[firstLine].len >= maxLineLengthThreshold) {
-          firstLine++;
-          continue;
-        }
-
-        // Skip lines that cannot be part of an arc
-        if (info[firstLine].angle < MIN_ANGLE ||
-            info[firstLine].angle > MAX_ANGLE) {
-          firstLine++;
-          continue;
-        }
-
-        // Find a group of lines (at least 3) with the same sign & angle <
-        // MAX_ANGLE degrees
-        int lastLine = firstLine + 1;
-        while (lastLine < stopLine - 1) {
-          if (info[lastLine].taken) {
-            break;
-          }
-          if (info[lastLine].sign != info[firstLine].sign) {
-            break;
+      if (stopLine - firstLine >= 2) { // Need at least 2 line segments
+        // Process the info for the lines of this segment
+        while (firstLine < stopLine - 1) {
+          // Some lines cannot be part of an arc
+          if (info[firstLine].taken or
+              lines[firstLine].len >= maxLineLengthThreshold or
+              info[firstLine].angle < MIN_ANGLE or
+              info[firstLine].angle > MAX_ANGLE) {
+            firstLine++;
+            continue;
           }
 
-          if (lines[lastLine].len >= maxLineLengthThreshold) {
-            break; // very long lines cannot be part of an arc
-          }
-          if (info[lastLine].angle < MIN_ANGLE) {
-            break;
-          }
-          if (info[lastLine].angle > MAX_ANGLE) {
-            break;
-          }
-
-          lastLine++;
-        }
-
-        bool specialCase = false;
-        int wrapCase = -1; // 1: wrap the first two lines with the last line, 2:
-                           // wrap the last two lines with the first line
-        if (lastLine - firstLine == 1) {
-          // Just 2 lines. If long enough, then try to combine. Angle between 15
-          // & 45 degrees. Min. length = 40
-          int totalLineLength = lines[firstLine].len + lines[firstLine + 1].len;
-          int shorterLen = lines[firstLine].len;
-          int longerLen = lines[firstLine + 1].len;
-
-          if (lines[firstLine + 1].len < shorterLen) {
-            shorterLen = lines[firstLine + 1].len;
-            longerLen = lines[firstLine].len;
+          // Find a group of lines (at least 3) with the same sign and
+          // an acceptable angle
+          int lastLine = firstLine + 1;
+          while (lastLine < stopLine - 1 and not(info[lastLine].taken) and
+                 info[lastLine].sign == info[firstLine].sign and
+                 lines[lastLine].len < maxLineLengthThreshold and
+                 info[lastLine].angle > MIN_ANGLE and
+                 info[lastLine].angle < MAX_ANGLE) {
+            lastLine++;
           }
 
-          if (info[firstLine].angle >= PI / 12 &&
-              info[firstLine].angle <= PI / 4 && totalLineLength >= 40 &&
-              shorterLen * 2 >= longerLen) {
-            specialCase = true;
-          }
+          bool specialCase = false;
+          int const numberOfLinesInArc = lastLine - firstLine + 1;
+          int wrapCase = -1; // 1: wrap the first two lines with the last line,
+                             // 2: wrap the last two lines with the first line
+          if (numberOfLinesInArc == 2) {
+            // Just 2 lines. If long enough, then try to combine. Angle between
+            // 15 & 45 degrees. Min. length = 40
+            auto const [shorterLen, longerLen] =
+                std::minmax(lines[firstLine].len, lines[firstLine + 1].len);
+            int const totalLineLength = shorterLen + longerLen;
 
-          // If the two lines do not make up for arc generation, then try to
-          // wrap the lines to the first OR last line. There are two wrapper
-          // cases:
-          if (!specialCase) {
-            // Case 1: Combine the first two lines with the last line of the
-            // segment
-            if (firstLine == segmentStartLines[curSegmentNo] &&
-                info[stopLine - 1].angle >= MIN_ANGLE &&
-                info[stopLine - 1].angle <= MAX_ANGLE) {
-              wrapCase = 1;
-              specialCase = true;
+            specialCase = info[firstLine].angle >= PI / 12 and
+                          info[firstLine].angle <= PI / 4 and
+                          totalLineLength >= 40 and shorterLen * 2 >= longerLen;
+
+            // If the two lines do not make up for arc generation, then try to
+            // wrap the lines to the first OR last line. There are two wrapper
+            // cases:
+            if (not specialCase) {
+              // Case 1: Combine the first two lines with the last line of the
+              // segment
+              if (firstLine == segmentStartLines[curSegmentNo] and
+                  info[stopLine - 1].angle >= MIN_ANGLE and
+                  info[stopLine - 1].angle <= MAX_ANGLE) {
+                wrapCase = 1;
+                specialCase = true;
+              }
+
+              // Case 2: Combine the last two lines with the first line of the
+              // segment
+              else if (lastLine == stopLine - 1 and
+                       info[lastLine].angle >= MIN_ANGLE and
+                       info[lastLine].angle <= MAX_ANGLE) {
+                wrapCase = 2;
+                specialCase = true;
+              }
             }
 
-            // Case 2: Combine the last two lines with the first line of the
-            // segment
-            else if (lastLine == stopLine - 1 &&
-                     info[lastLine].angle >= MIN_ANGLE &&
-                     info[lastLine].angle <= MAX_ANGLE) {
-              wrapCase = 2;
-              specialCase = true;
+            // If still not enough for arc generation, then skip
+            if (!specialCase) {
+              firstLine = lastLine;
+              continue;
             }
           }
 
-          // If still not enough for arc generation, then skip
-          if (!specialCase) {
+          // Copy the pixels of this segment to an array
+          int noPixels = 0;
+          double *x = bm->getX();
+          double *y = bm->getY();
+
+          // wrapCase 1: Combine the first two lines with the last line of the
+          // segment
+          if (wrapCase == 1) {
+            int index = lines[stopLine - 1].firstPixelIndex;
+
+            for (int n = 0; n < lines[stopLine - 1].len; n++) {
+              x[noPixels] = segments[curSegmentNo][index + n].x;
+              y[noPixels] = segments[curSegmentNo][index + n].y;
+              noPixels++;
+            }
+          }
+
+          for (int m = firstLine; m <= lastLine; m++) {
+            int index = lines[m].firstPixelIndex;
+
+            for (int n = 0; n < lines[m].len; n++) {
+              x[noPixels] = segments[curSegmentNo][index + n].x;
+              y[noPixels] = segments[curSegmentNo][index + n].y;
+              noPixels++;
+            }
+          }
+
+          // wrapCase 2: Combine the last two lines with the first line of the
+          // segment
+          if (wrapCase == 2) {
+            int index = lines[segmentStartLines[curSegmentNo]].firstPixelIndex;
+
+            for (int n = 0; n < lines[segmentStartLines[curSegmentNo]].len;
+                 n++) {
+              x[noPixels] = segments[curSegmentNo][index + n].x;
+              y[noPixels] = segments[curSegmentNo][index + n].y;
+              noPixels++;
+            }
+          }
+
+          // Move buffer pointers
+          bm->move(noPixels);
+
+          // Try to fit a circle to the entire arc of lines
+          double radius = 0.0;
+          double xc = std::numeric_limits<double>::quiet_NaN();
+          double yc = std::numeric_limits<double>::quiet_NaN();
+          double circleFitError = std::numeric_limits<double>::quiet_NaN();
+          CircleFit(x, y, noPixels, &xc, &yc, &radius, &circleFitError);
+
+          double coverage = noPixels / (TWOPI * radius);
+
+          // In the special case, the arc must cover at least 22.5
+          // degrees
+          if (specialCase and coverage < 1.0 / 16) {
+            info[firstLine].taken = true;
             firstLine = lastLine;
             continue;
           }
-        }
 
-        // Copy the pixels of this segment to an array
-        int noPixels = 0;
-        double *x = bm->getX();
-        double *y = bm->getY();
-
-        // wrapCase 1: Combine the first two lines with the last line of the
-        // segment
-        if (wrapCase == 1) {
-          int index = lines[stopLine - 1].firstPixelIndex;
-
-          for (int n = 0; n < lines[stopLine - 1].len; n++) {
-            x[noPixels] = segments[curSegmentNo][index + n].x;
-            y[noPixels] = segments[curSegmentNo][index + n].y;
-            noPixels++;
+          // If only 3 lines, use the SHORT_ARC_ERROR
+          double MYERROR = SHORT_ARC_ERROR;
+          if (numberOfLinesInArc > 3) {
+            MYERROR = LONG_ARC_ERROR;
           }
-        }
-
-        for (int m = firstLine; m <= lastLine; m++) {
-          int index = lines[m].firstPixelIndex;
-
-          for (int n = 0; n < lines[m].len; n++) {
-            x[noPixels] = segments[curSegmentNo][index + n].x;
-            y[noPixels] = segments[curSegmentNo][index + n].y;
-            noPixels++;
-          }
-        }
-
-        // wrapCase 2: Combine the last two lines with the first line of the
-        // segment
-        if (wrapCase == 2) {
-          int index = lines[segmentStartLines[curSegmentNo]].firstPixelIndex;
-
-          for (int n = 0; n < lines[segmentStartLines[curSegmentNo]].len; n++) {
-            x[noPixels] = segments[curSegmentNo][index + n].x;
-            y[noPixels] = segments[curSegmentNo][index + n].y;
-            noPixels++;
-          }
-        }
-
-        // Move buffer pointers
-        bm->move(noPixels);
-
-        // Try to fit a circle to the entire arc of lines
-        double radius = 0.0;
-        double xc = std::numeric_limits<double>::quiet_NaN();
-        double yc = std::numeric_limits<double>::quiet_NaN();
-        double circleFitError = std::numeric_limits<double>::quiet_NaN();
-        CircleFit(x, y, noPixels, &xc, &yc, &radius, &circleFitError);
-
-        double coverage = noPixels / (TWOPI * radius);
-
-        // In the case of the special case, the arc must cover at least 22.5
-        // degrees
-        if (specialCase && coverage < 1.0 / 16) {
-          info[firstLine].taken = true;
-          firstLine = lastLine;
-          continue;
-        }
-
-        // If only 3 lines, use the SHORT_ARC_ERROR
-        double MYERROR = SHORT_ARC_ERROR;
-        if (lastLine - firstLine >= 3) {
-          MYERROR = LONG_ARC_ERROR;
-        }
-        if (circleFitError <= MYERROR) {
-          // Add this to the list of arcs
-          if (wrapCase == 1) {
-            x += lines[stopLine - 1].len;
-            y += lines[stopLine - 1].len;
-            noPixels -= lines[stopLine - 1].len;
-
-          } else if (wrapCase == 2) {
-            noPixels -= lines[segmentStartLines[curSegmentNo]].len;
-          }
-
-          if ((coverage >= FULL_CIRCLE_RATIO &&
-               circleFitError <= LONG_ARC_ERROR)) {
-            addCircle(circles1, noCircles1, xc, yc, radius, circleFitError, x,
-                      y, noPixels);
-
-          } else {
-            double sTheta = std::numeric_limits<double>::quiet_NaN();
-            double eTheta = std::numeric_limits<double>::quiet_NaN();
-            ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels, &sTheta,
-                                     &eTheta);
-
-            addArc(edarcs1->arcs, edarcs1->noArcs, xc, yc, radius,
-                   circleFitError, sTheta, eTheta, info[firstLine].sign,
-                   curSegmentNo, static_cast<int>(x[0]), static_cast<int>(y[0]),
-                   static_cast<int>(x[noPixels - 1]),
-                   static_cast<int>(y[noPixels - 1]), x, y, noPixels);
-          }
-
-          for (int m = firstLine; m < lastLine; m++) {
-            info[m].taken = true;
-          }
-          firstLine = lastLine;
-          continue;
-        }
-
-        // Check if this is an almost closed loop (i.e, if 60% of the circle is
-        // present). If so, try to fit an ellipse to the entire arc of lines
-        double dx = x[0] - x[noPixels - 1];
-        double dy = y[0] - y[noPixels - 1];
-        double distanceBetweenEndPoints = sqrt(dx * dx + dy * dy);
-
-        bool isAlmostClosedLoop = (distanceBetweenEndPoints <= 1.72 * radius &&
-                                   coverage >= FULL_CIRCLE_RATIO);
-        if (isAlmostClosedLoop ||
-            (iter == 1 &&
-             coverage >= 0.25)) { // an arc covering at least 90 degrees
-          EllipseEquation eq;
-          double ellipseFitError = 1e10;
-
-          bool valid = EllipseFit(x, y, noPixels, &eq);
-          if (valid) {
-            ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-          }
-
-          MYERROR = ELLIPSE_ERROR;
-          if (!isAlmostClosedLoop) {
-            MYERROR = 0.75;
-          }
-
-          if (ellipseFitError <= MYERROR) {
+          if (circleFitError <= MYERROR) {
             // Add this to the list of arcs
             if (wrapCase == 1) {
               x += lines[stopLine - 1].len;
@@ -1088,10 +987,10 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
               noPixels -= lines[segmentStartLines[curSegmentNo]].len;
             }
 
-            if (isAlmostClosedLoop) {
-              addCircle(circles1, noCircles1, xc, yc, radius, circleFitError,
-                        &eq, ellipseFitError, x, y,
-                        noPixels); // Add an ellipse for validation
+            if ((coverage >= FULL_CIRCLE_RATIO &&
+                 circleFitError <= LONG_ARC_ERROR)) {
+              addCircle(circles1, noCircles1, xc, yc, radius, circleFitError, x,
+                        y, noPixels);
 
             } else {
               double sTheta = std::numeric_limits<double>::quiet_NaN();
@@ -1101,7 +1000,7 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
 
               addArc(edarcs1->arcs, edarcs1->noArcs, xc, yc, radius,
                      circleFitError, sTheta, eTheta, info[firstLine].sign,
-                     curSegmentNo, &eq, ellipseFitError, static_cast<int>(x[0]),
+                     curSegmentNo, static_cast<int>(x[0]),
                      static_cast<int>(y[0]), static_cast<int>(x[noPixels - 1]),
                      static_cast<int>(y[noPixels - 1]), x, y, noPixels);
             }
@@ -1112,112 +1011,176 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             firstLine = lastLine;
             continue;
           }
-        }
 
-        if (specialCase) {
-          info[firstLine].taken = true;
-          firstLine = lastLine;
-          continue;
-        }
+          // Check if this is an almost closed loop (i.e, if 60% of the circle
+          // is present). If so, try to fit an ellipse to the entire arc of
+          // lines
+          double const dx = x[0] - x[noPixels - 1];
+          double const dy = y[0] - y[noPixels - 1];
+          double const distanceBetweenEndPoints = sqrt(dx * dx + dy * dy);
 
-        // Continue until we finish all lines that belong to arc of lines
-        while (firstLine <= lastLine - 2) {
-          // Fit an initial arc and extend it
-          int curLine = firstLine + 2;
+          bool isAlmostClosedLoop =
+              (distanceBetweenEndPoints <= 1.72 * radius &&
+               coverage >= FULL_CIRCLE_RATIO);
+          if (isAlmostClosedLoop ||
+              (iter == 1 &&
+               coverage >= 0.25)) { // an arc covering at least 90 degrees
+            EllipseEquation eq;
+            double ellipseFitError = 1e10;
 
-          // Fit a circle to the pixels of these lines and see if the error is
-          // less than a threshold
-          double XC = std::numeric_limits<double>::quiet_NaN();
-          double YC = std::numeric_limits<double>::quiet_NaN();
-          double R = std::numeric_limits<double>::quiet_NaN();
-          double Error = 1e10;
-          bool found = false;
-
-          noPixels = 0;
-          while (curLine <= lastLine) {
-            noPixels = 0;
-            for (int m = firstLine; m <= curLine; m++) {
-              noPixels += lines[m].len;
+            bool valid = EllipseFit(x, y, noPixels, &eq);
+            if (valid) {
+              ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
             }
 
-            // Fit circle
-            CircleFit(x, y, noPixels, &XC, &YC, &R, &Error);
-            if (Error <= SHORT_ARC_ERROR) {
-              found = true;
+            MYERROR = ELLIPSE_ERROR;
+            if (!isAlmostClosedLoop) {
+              MYERROR = 0.75;
+            }
+
+            if (ellipseFitError <= MYERROR) {
+              // Add this to the list of arcs
+              if (wrapCase == 1) {
+                x += lines[stopLine - 1].len;
+                y += lines[stopLine - 1].len;
+                noPixels -= lines[stopLine - 1].len;
+
+              } else if (wrapCase == 2) {
+                noPixels -= lines[segmentStartLines[curSegmentNo]].len;
+              }
+
+              if (isAlmostClosedLoop) {
+                addCircle(circles1, noCircles1, xc, yc, radius, circleFitError,
+                          &eq, ellipseFitError, x, y,
+                          noPixels); // Add an ellipse for validation
+
+              } else {
+                double sTheta = std::numeric_limits<double>::quiet_NaN();
+                double eTheta = std::numeric_limits<double>::quiet_NaN();
+                ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels,
+                                         &sTheta, &eTheta);
+
+                addArc(edarcs1->arcs, edarcs1->noArcs, xc, yc, radius,
+                       circleFitError, sTheta, eTheta, info[firstLine].sign,
+                       curSegmentNo, &eq, ellipseFitError,
+                       static_cast<int>(x[0]), static_cast<int>(y[0]),
+                       static_cast<int>(x[noPixels - 1]),
+                       static_cast<int>(y[noPixels - 1]), x, y, noPixels);
+              }
+
+              for (int m = firstLine; m < lastLine; m++) {
+                info[m].taken = true;
+              }
+              firstLine = lastLine;
+              continue;
+            }
+          }
+
+          if (specialCase) {
+            info[firstLine].taken = true;
+            firstLine = lastLine;
+            continue;
+          }
+
+          // Continue until we finish all lines that belong to arc of lines
+          while (firstLine <= lastLine - 2) {
+            // Fit an initial arc and extend it
+            int curLine = firstLine + 2;
+
+            // Fit a circle to the pixels of these lines and see if the error is
+            // less than a threshold
+            double XC = std::numeric_limits<double>::quiet_NaN();
+            double YC = std::numeric_limits<double>::quiet_NaN();
+            double R = std::numeric_limits<double>::quiet_NaN();
+            double Error = 1e10;
+            bool found = false;
+
+            noPixels = 0;
+            while (curLine <= lastLine) {
+              noPixels = 0;
+              for (int m = firstLine; m <= curLine; m++) {
+                noPixels += lines[m].len;
+              }
+
+              // Fit circle
+              CircleFit(x, y, noPixels, &XC, &YC, &R, &Error);
+              if (Error <= SHORT_ARC_ERROR) {
+                found = true;
+                break;
+              } // found if the error is smaller than the threshold
+
+              // Not found. Move to the next set of lines
+              x += lines[firstLine].len;
+              y += lines[firstLine].len;
+
+              firstLine++;
+              curLine++;
+            }
+
+            // If no initial arc found, then we are done with this arc of lines
+            if (!found) {
               break;
-            } // found if the error is smaller than the threshold
+            }
 
-            // Not found. Move to the next set of lines
-            x += lines[firstLine].len;
-            y += lines[firstLine].len;
-
-            firstLine++;
+            // If we found an initial arc, then extend it
+            for (int m = curLine - 2; m <= curLine; m++) {
+              info[m].taken = true;
+            }
             curLine++;
+            while (curLine <= lastLine) {
+              int noPixelsSave = noPixels;
+
+              noPixels += lines[curLine].len;
+
+              double xc = std::numeric_limits<double>::quiet_NaN();
+              double yc = std::numeric_limits<double>::quiet_NaN();
+              double r = std::numeric_limits<double>::quiet_NaN();
+              double error = std::numeric_limits<double>::quiet_NaN();
+              CircleFit(x, y, noPixels, &xc, &yc, &r, &error);
+              if (error > LONG_ARC_ERROR) {
+                noPixels = noPixelsSave;
+                break;
+              } // Adding this line made the error big. So, we do not use this
+                // line
+
+              // OK. Longer arc
+              XC = xc;
+              YC = yc;
+              R = r;
+              Error = error;
+
+              info[curLine].taken = true;
+              curLine++;
+            }
+
+            double coverage = noPixels / (TWOPI * radius);
+            if ((coverage >= FULL_CIRCLE_RATIO &&
+                 circleFitError <= LONG_ARC_ERROR)) {
+              addCircle(circles1, noCircles1, XC, YC, R, Error, x, y, noPixels);
+
+            } else {
+              // Add this to the list of arcs
+              double sTheta = std::numeric_limits<double>::quiet_NaN();
+              double eTheta = std::numeric_limits<double>::quiet_NaN();
+              ComputeStartAndEndAngles(XC, YC, R, x, y, noPixels, &sTheta,
+                                       &eTheta);
+
+              addArc(edarcs1->arcs, edarcs1->noArcs, XC, YC, R, Error, sTheta,
+                     eTheta, info[firstLine].sign, curSegmentNo,
+                     static_cast<int>(x[0]), static_cast<int>(y[0]),
+                     static_cast<int>(x[noPixels - 1]),
+                     static_cast<int>(y[noPixels - 1]), x, y, noPixels);
+            }
+
+            x += noPixels;
+            y += noPixels;
+
+            firstLine = curLine;
+            info[curLine].taken = false; // may reuse the last line?
           }
 
-          // If no initial arc found, then we are done with this arc of lines
-          if (!found) {
-            break;
-          }
-
-          // If we found an initial arc, then extend it
-          for (int m = curLine - 2; m <= curLine; m++) {
-            info[m].taken = true;
-          }
-          curLine++;
-          while (curLine <= lastLine) {
-            int noPixelsSave = noPixels;
-
-            noPixels += lines[curLine].len;
-
-            double xc = std::numeric_limits<double>::quiet_NaN();
-            double yc = std::numeric_limits<double>::quiet_NaN();
-            double r = std::numeric_limits<double>::quiet_NaN();
-            double error = std::numeric_limits<double>::quiet_NaN();
-            CircleFit(x, y, noPixels, &xc, &yc, &r, &error);
-            if (error > LONG_ARC_ERROR) {
-              noPixels = noPixelsSave;
-              break;
-            } // Adding this line made the error big. So, we do not use this
-              // line
-
-            // OK. Longer arc
-            XC = xc;
-            YC = yc;
-            R = r;
-            Error = error;
-
-            info[curLine].taken = true;
-            curLine++;
-          }
-
-          double coverage = noPixels / (TWOPI * radius);
-          if ((coverage >= FULL_CIRCLE_RATIO &&
-               circleFitError <= LONG_ARC_ERROR)) {
-            addCircle(circles1, noCircles1, XC, YC, R, Error, x, y, noPixels);
-
-          } else {
-            // Add this to the list of arcs
-            double sTheta = std::numeric_limits<double>::quiet_NaN();
-            double eTheta = std::numeric_limits<double>::quiet_NaN();
-            ComputeStartAndEndAngles(XC, YC, R, x, y, noPixels, &sTheta,
-                                     &eTheta);
-
-            addArc(edarcs1->arcs, edarcs1->noArcs, XC, YC, R, Error, sTheta,
-                   eTheta, info[firstLine].sign, curSegmentNo,
-                   static_cast<int>(x[0]), static_cast<int>(y[0]),
-                   static_cast<int>(x[noPixels - 1]),
-                   static_cast<int>(y[noPixels - 1]), x, y, noPixels);
-          }
-
-          x += noPixels;
-          y += noPixels;
-
-          firstLine = curLine;
-          info[curLine].taken = false; // may reuse the last line?
+          firstLine = lastLine;
         }
-
-        firstLine = lastLine;
       }
     }
   }
