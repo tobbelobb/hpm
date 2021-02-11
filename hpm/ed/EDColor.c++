@@ -152,18 +152,18 @@ auto EDColor::ComputeGradientMapByDiZenzo(cv::Mat lab) -> GradientMapResult {
     Point3i const com1 = downRight - upLeft;
     Point3i const com2 = upRight - downLeft;
 
-    LabPix const &currRight{labPtr[i * width + j + 1]};
-    LabPix const &currLeft{labPtr[i * width + j - 1]};
-    LabPix const &downCurr{labPtr[(i + 1) * width + j]};
-    LabPix const &upCurr{labPtr[(i - 1) * width + j]};
+    LabPix const &right{labPtr[i * width + j + 1]};
+    LabPix const &left{labPtr[i * width + j - 1]};
+    LabPix const &down{labPtr[(i + 1) * width + j]};
+    LabPix const &up{labPtr[(i - 1) * width + j]};
 
-    int const gx0 = com1.x + com2.x + currRight.x - currLeft.x;
-    int const gx1 = com1.y + com2.y + currRight.y - currLeft.y;
-    int const gx2 = com1.z + com2.z + currRight.z - currLeft.z;
+    int const gx0 = com1.x + com2.x + right.x - left.x;
+    int const gx1 = com1.y + com2.y + right.y - left.y;
+    int const gx2 = com1.z + com2.z + right.z - left.z;
 
-    int const gy0 = com1.x + downCurr.x - com2.x - upCurr.x;
-    int const gy1 = com1.y + downCurr.y - com2.y - upCurr.y;
-    int const gy2 = com1.z + downCurr.z - com2.z - upCurr.z;
+    int const gy0 = com1.x + down.x - com2.x - up.x;
+    int const gy1 = com1.y + down.y - com2.y - up.y;
+    int const gy2 = com1.z + down.z - com2.z - up.z;
 
     int const gxx = gx0 * gx0 + gx1 * gx1 + gx2 * gx2;
     int const gyy = gy0 * gy0 + gy1 * gy1 + gy2 * gy2;
