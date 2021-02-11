@@ -82,7 +82,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
 
   std::vector<hpm::Ellipse> almostRoundEllipses;
   for (auto const &e : bigEllipses) {
-    if (e.m_minor * 1.2 > e.m_major) {
+    if (e.m_minor * 1.3 > e.m_major) {
       almostRoundEllipses.emplace_back(e);
     }
   }
