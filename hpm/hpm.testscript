@@ -26,26 +26,26 @@ EOE
 
 : End-as-expected
 : Checks what gets printed when run was successful
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png --no-fit-by-distance >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png --no-fit-by-distance >>~/END/
 Could not identify markers
 /\[\d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?, \d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
 
 : Non-existent-calibration-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* 'nonfile' $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
+$* 'nonfile' $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
 Failed to load cam params file: nonfile
 EOE
 
 : Non-existent-image-file
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml 'noimage' 2>>EOE != 0
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml 'noimage' 2>>EOE != 0
 Could not read the image: noimage
 EOE
 
 : Swaps-image-file-and-camera-parameters
 : Checks behviour when calibration coeffs file doesn't exist
-$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png $src_base/example-marker-params/my-marker-params.xml $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
+$* $src_base/test-images/ball_25_84_dist_1001_08_Z.png $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/example-cam-params/myExampleCamParams.xml 2>>~%EOE% != 0
 %Could not read camera parameters from file .+/test-images/ball_25_84_dist_1001_08_Z.png%
 %.+Input file is invalid.+%
 %%
@@ -78,24 +78,14 @@ EOE
 
 : Large-reprojection-error-warning
 : Checks that hpm warns user about a big reprojection error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png >>~/END/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\]/
 /Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
 END
 
-: Finds-all-markers-nozzle-position-01
-: Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_01.jpg -v >>~/END/
-Found 2 red markers, 2 green markers, and 2 blue markers
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
-/.*/
-END
-
 : Finds-all-markers-nozzle-position-02
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_02.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
@@ -105,7 +95,7 @@ END
 
 : Finds-all-markers-nozzle-position-03
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_03.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_03.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
@@ -115,7 +105,7 @@ END
 
 : Finds-all-markers-nozzle-position-04
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_04.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_04.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
@@ -125,7 +115,7 @@ END
 
 : Finds-all-markers-nozzle-position-05
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_05.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_05.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
@@ -135,7 +125,7 @@ END
 
 : Finds-all-markers-testing-02
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_02.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/testing_02.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
@@ -143,18 +133,9 @@ Found 2 red markers, 2 green markers, and 2 blue markers
 /.*/
 END
 
-: Finds-all-markers-testing-05
-: Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_05.jpg -v >>~/END/
-Found 2 red markers, 2 green markers, and 2 blue markers
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?e?\d?\d?/
-END
-
 : Finds-all-markers-calib_02
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_02.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_02.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -163,7 +144,7 @@ END
 
 : Finds-all-markers-calib_03
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_03.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_03.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -172,7 +153,7 @@ END
 
 : Finds-all-markers-calib_04
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_04.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_04.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -182,7 +163,7 @@ END
 
 : Finds-all-markers-calib_x0y-217z0
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_x0y-217z0.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_x0y-217z0.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -191,7 +172,7 @@ END
 
 : Finds-all-markers-calib_x0y-217z0_3
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_x0y-217z0_3.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_x0y-217z0_3.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -200,7 +181,7 @@ END
 
 : Finds-all-markers-calib_x0y-217z0_4
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/calib_x0y-217z0_4.jpg -v >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/calib_x0y-217z0_4.jpg -v >>~/END/
 Found 2 red markers, 2 green markers, and 2 blue markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
@@ -210,7 +191,7 @@ END
 
 : Finds-all-markers-no-cam-pos
 : Checks output when there's no cam pos in cam params file
-$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/testing_05.jpg >>~/END/
+$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/zeroed_1.jpg >>~/END/
 /Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
 <camera_rotation type_id="opencv-matrix">
   <rows>3</rows>
@@ -232,7 +213,7 @@ END
 
 : Tries-to-calibrate-cam-pos-based-on-too-bad-image-nozzle-position-01
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/nozzle_position_01.jpg --camera-position-calibration >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~/END/
 Reprojection error was too high to find good values for camera_rotation and camera_translation. This happens when camera_matrix, distortion_coefficients, marker_positions, and the image don't match up well enough.
 /Warning! High reprojection error: \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
 END

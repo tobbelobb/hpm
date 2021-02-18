@@ -42,13 +42,13 @@ auto main() -> int {
 
   "Billiard Circles from grey image"_test = [billiardGrey] {
     EDCircles edCirclesFromGreyImage{billiardGrey};
-    expect(edCirclesFromGreyImage.getCirclesNo() == 17_i);
+    expect(edCirclesFromGreyImage.getCirclesNo() == 16_i);
   };
 
   "Billiard Circles from parameter free segments"_test = [billiardGrey] {
     EDPF edpf{billiardGrey};
     EDCircles edCirclesFromEdpf{edpf};
-    expect(edCirclesFromEdpf.getCirclesNo() == 17_i);
+    expect(edCirclesFromEdpf.getCirclesNo() == 16_i);
   };
 
   "Billiard Segments from color image"_test = [billiardColor] {
@@ -77,7 +77,7 @@ auto main() -> int {
                          .blurSize = 1.5,
                          .filterSegments = true}};
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 49_i);
+    expect(colorCircle.getCirclesNo() == 47_i);
   };
 
   "Billiard color no validate segments"_test = [billiardColor] {
@@ -92,7 +92,7 @@ auto main() -> int {
     expect(colorLine.getLinesNo() == 571_i);
 
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 48_i);
+    expect(colorCircle.getCirclesNo() == 46_i);
   };
 
   "Circles from red filled circle"_test = [] {

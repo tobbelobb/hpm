@@ -22,7 +22,7 @@
   0.40 // Used for very short arcs (>= CANDIDATE_CIRCLE_RATIO1 && <
        // CANDIDATE_CIRCLE_RATIO2)
 #define SHORT_ARC_ERROR                                                        \
-  1.00 // Used for short arcs (>= CANDIDATE_CIRCLE_RATIO2 && <
+  0.85 // Used for short arcs (>= CANDIDATE_CIRCLE_RATIO2 && <
        // HALF_CIRCLE_RATIO)
 #define HALF_ARC_ERROR                                                         \
   1.25 // Used for arcs with length (>=HALF_CIRCLE_RATIO && < FULL_CIRCLE_RATIO)
