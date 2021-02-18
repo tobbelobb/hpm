@@ -40,5 +40,5 @@
 -170.010  -41.238  162.885 <!-- Marker 5 -->
   </data></marker_positions>
 <marker_diameter>31.8</marker_diameter>
-<background_diameter>62.8</marker_diameter>
+<background_diameter>62.8</background_diameter>
 </opencv_storage>
