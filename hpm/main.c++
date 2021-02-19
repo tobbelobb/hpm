@@ -237,7 +237,7 @@ auto main(int const argc, char **const argv) -> int {
         std::cout << worldPose << '\n';
       }
       if (not verbose and not cameraPositionCalibration) {
-        std::cout << worldPose.translation << '\n';
+        std::cout << worldPose.translation << ";\n";
       }
       double constexpr HIGH_REPROJECTION_ERROR{1.0};
       if (worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
