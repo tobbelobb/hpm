@@ -43,9 +43,9 @@ auto main(int const argc, char **const argv) -> int {
                    "found pose. The default is to only print the translation.");
   args.addArgument(
       {"-s", "--show"}, &show,
-      "<result|intermediate|all|none>. none is the default. During any pop up "
-      "you may press s to write the image, or q to stop showing images, or any "
-      "other key to continue.");
+      "<result|r|intermediate|i|all|a|none|n>. none is the default. During any "
+      "pop up you may press s to write the image, or q to stop showing images, "
+      "or any other key to continue.");
   args.addArgument({"-n", "--no-fit-by-distance"}, &noFitByDistance,
                    "Don't fit the mark detection results to only those marks "
                    "who match the marks' internal distance to each other.");
@@ -78,8 +78,12 @@ auto main(int const argc, char **const argv) -> int {
     std::cerr << e.what() << std::endl;
     return 1;
   }
-  showResultImage = (show == "result") or (show == "all");
-  showIntermediateImages = (show == "intermediate") or (show == "all");
+  {
+    bool const showAll{(show == "all") or (show == "a")};
+    showResultImage = (show == "result") or (show == "r") or showAll;
+    showIntermediateImages =
+        (show == "intermediate") or (show == "i") or showAll;
+  }
   bool const fitByDistance{not noFitByDistance};
 
   if (printHelp) {

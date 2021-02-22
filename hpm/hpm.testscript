@@ -15,8 +15,8 @@ $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-
 -h, --help                         Print this help.
 -v, --verbose                      Print rotation, translation, and reprojection_error of the found
                                    pose. The default is to only print the translation.
--s, --show                         <result|intermediate|all|none>. none is the default. During any
-                                   pop up you may press s to write the image, or q to stop showing
+-s, --show                         <result|r|intermediate|i|all|a|none|n>. none is the default. During
+                                   any pop up you may press s to write the image, or q to stop showing
                                    images, or any other key to continue.
 -n, --no-fit-by-distance           Don't fit the mark detection results to only those marks who match
                                    the marks' internal distance to each other.
@@ -79,7 +79,7 @@ EOE
 : Large-reprojection-error-warning
 : Checks that hpm warns user about a big reprojection error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png >>~/END/
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\];/
 /Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
 END
 
