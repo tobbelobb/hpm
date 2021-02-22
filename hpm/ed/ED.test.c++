@@ -77,7 +77,7 @@ auto main() -> int {
                          .blurSize = 1.5,
                          .filterSegments = true}};
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 47_i);
+    expect(colorCircle.getCirclesNo() == 46_i);
   };
 
   "Billiard color no validate segments"_test = [billiardColor] {
@@ -92,7 +92,7 @@ auto main() -> int {
     expect(colorLine.getLinesNo() == 571_i);
 
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 46_i);
+    expect(colorCircle.getCirclesNo() == 45_i);
   };
 
   "Circles from red filled circle"_test = [] {
