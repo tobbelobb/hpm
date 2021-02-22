@@ -17,6 +17,128 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
+static Marks sortBySmallestJumps(std::vector<size_t> const &smallestJumps,
+                                 std::vector<hpm::Mark> const &marks) {
+  std::array<std::vector<hpm::Mark>, 2> hueGroups;
+  std::vector<hpm::Mark> leastColorSortedGroup;
+  size_t groupIdx{0};
+  for (size_t i{0}; i < marks.size(); ++i) {
+    if (i == smallestJumps[0] or i == smallestJumps[1]) {
+      hueGroups[groupIdx % 3].emplace_back(marks[i]);
+      hueGroups[groupIdx % 3].emplace_back(marks[(i + 1) % marks.size()]);
+      groupIdx++;
+      i++;
+    } else {
+      leastColorSortedGroup.emplace_back(marks[i]);
+    }
+  }
+  Marks result{};
+  std::vector<hpm::Mark> nonRed;
+  if ((360.0 - hueGroups[1][0].m_hue) < hueGroups[0][0].m_hue) {
+    // hueGroup 1 is closer to 360 than hueGroup 0 is close to 0.
+    result.m_red = hueGroups[1];
+    nonRed = hueGroups[0];
+  } else {
+    result.m_red = hueGroups[0];
+    nonRed = hueGroups[1];
+  }
+
+  auto nonGreenNess = [](hpm::Mark const &mark) -> double {
+    return std::abs(120.0 - mark.m_hue);
+  };
+  auto moreGreen = [nonGreenNess](hpm::Mark const &markLeft,
+                                  hpm::Mark const &markRight) -> bool {
+    return nonGreenNess(markLeft) < nonGreenNess(markRight);
+  };
+
+  hpm::Mark const &nonGreenestLeastColorSorted{
+      *std::max_element(std::begin(leastColorSortedGroup),
+                        std::end(leastColorSortedGroup), moreGreen)};
+  hpm::Mark const &nonGreenestNonRed{
+      *std::max_element(std::begin(nonRed), std::end(nonRed), moreGreen)};
+
+  if (nonGreenNess(nonGreenestNonRed) <
+      nonGreenNess(nonGreenestLeastColorSorted)) {
+    result.m_green = nonRed;
+    result.m_blue = leastColorSortedGroup;
+  } else {
+    result.m_green = leastColorSortedGroup;
+    result.m_blue = nonRed;
+  }
+  return result;
+}
+
+static Marks sortByLargestJumps(std::vector<size_t> const &largestJumps,
+                                std::vector<hpm::Mark> const &marks) {
+  std::array<std::vector<hpm::Mark>, 3> hueGroups;
+  size_t groupIdx{0};
+  for (size_t i{0}; i < marks.size(); ++i) {
+    hueGroups[groupIdx % 3].emplace_back(marks[i]);
+    if (i == largestJumps[0] or i == largestJumps[1] or i == largestJumps[2]) {
+      // If the coming hue jump is one of the three largest ones, start
+      // emplacing marks into the next hue group from now on
+      groupIdx++;
+    }
+  }
+  Marks result{};
+  if (not(hueGroups[2].empty()) and not(hueGroups[0].empty()) and
+      (360.0 - hueGroups[2].back().m_hue) < hueGroups[0][0].m_hue) {
+    // hueGroup 2 is closer to 360 than hueGroup 0 is close to 0.
+    result.m_red = hueGroups[2];
+    result.m_green = hueGroups[0];
+    result.m_blue = hueGroups[1];
+  } else {
+    result.m_red = hueGroups[0];
+    result.m_green = hueGroups[1];
+    result.m_blue = hueGroups[2];
+  }
+
+  // In case one marker ended up in the wrong group
+  if (result.m_red.size() == 3 and result.m_blue.size() == 1) {
+    result.m_blue.emplace_back(result.m_red[0]);
+    result.m_red.erase(std::begin(result.m_red));
+  } else if (result.m_blue.size() == 3 and result.m_green.size() == 1) {
+    result.m_green.emplace_back(result.m_blue[0]);
+    result.m_blue.erase(std::begin(result.m_blue));
+  } else if (result.m_green.size() == 3 and result.m_red.size() == 1) {
+    result.m_red.emplace_back(result.m_green[0]);
+    result.m_green.erase(std::begin(result.m_green));
+  }
+
+  return result;
+}
+
+static auto getIndicesOfExtremes(std::vector<double> const &v,
+                                 int howManyToSort, bool const less)
+    -> std::vector<size_t> {
+  struct CompLess {
+    CompLess(const std::vector<double> &v) : _v(v) {}
+    bool operator()(size_t a, size_t b) { return _v[a] < _v[b]; }
+    const std::vector<double> &_v;
+  };
+  struct CompGreater {
+    CompGreater(const std::vector<double> &v) : _v(v) {}
+    bool operator()(size_t a, size_t b) { return _v[a] > _v[b]; }
+    const std::vector<double> &_v;
+  };
+  std::vector<size_t> sortedIndices;
+  sortedIndices.resize(v.size());
+  for (size_t i = 0; i < sortedIndices.size(); ++i) {
+    sortedIndices[i] = i;
+  }
+  if (less) {
+    std::partial_sort(sortedIndices.begin(),
+                      std::next(sortedIndices.begin(), howManyToSort),
+                      sortedIndices.end(), CompLess(v));
+  } else {
+    std::partial_sort(sortedIndices.begin(),
+                      std::next(sortedIndices.begin(), howManyToSort),
+                      sortedIndices.end(), CompGreater(v));
+  }
+  sortedIndices.resize(static_cast<size_t>(howManyToSort));
+  return sortedIndices;
+}
+
 auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
@@ -57,24 +179,6 @@ static auto bgr2hue(cv::Point3_<uint8_t> bgr) -> double {
   assert(hue < MAX_DEG);
   assert(hue >= 0.0);
   return hue;
-}
-
-static auto getLargest(std::vector<double> const &v, int howManyToSort)
-    -> std::vector<size_t> {
-  struct Comp {
-    Comp(const std::vector<double> &v) : _v(v) {}
-    bool operator()(size_t a, size_t b) { return _v[a] > _v[b]; }
-    const std::vector<double> &_v;
-  };
-  std::vector<size_t> largest;
-  largest.resize(v.size());
-  for (size_t i = 0; i < largest.size(); ++i) {
-    largest[i] = i;
-  }
-  std::partial_sort(largest.begin(), std::next(largest.begin(), howManyToSort),
-                    largest.end(), Comp(v));
-  largest.resize(static_cast<size_t>(howManyToSort));
-  return largest;
 }
 
 auto findMarks(cv::InputArray undistortedImage,
@@ -263,43 +367,18 @@ auto findMarks(cv::InputArray undistortedImage,
     hueDistances[i] = marks[i + 1].m_hue - marks[i].m_hue;
   }
   hueDistances.back() = marks[0].m_hue + (360.0 - marks.back().m_hue);
-  std::array<std::vector<hpm::Mark>, 3> hueGroups;
-
-  std::vector<size_t> const largestJumps = getLargest(hueDistances, 3);
-
-  size_t groupIdx{0};
-  for (size_t i{0}; i < marks.size(); ++i) {
-    hueGroups[groupIdx % 3].emplace_back(marks[i]);
-    if (i == largestJumps[0] or i == largestJumps[1] or i == largestJumps[2]) {
-      // If the coming hue jump is one of the three largest ones, start
-      // emplacing marks into the next hue group from now on
-      groupIdx++;
-    }
-  }
 
   Marks result{};
-  if (not(hueGroups[2].empty()) and not(hueGroups[0].empty()) and
-      (360.0 - hueGroups[2].back().m_hue) < hueGroups[0][0].m_hue) {
-    // hueGroup 2 is closer to 360 than hueGroup 0 is close to 0.
-    result.m_red = hueGroups[2];
-    result.m_green = hueGroups[0];
-    result.m_blue = hueGroups[1];
+  std::vector<size_t> const smallestJumps =
+      getIndicesOfExtremes(hueDistances, 3, true);
+  if (smallestJumps[0] != (smallestJumps[1] - 1) and
+      smallestJumps[1] != (smallestJumps[0] - 1) and
+      hueDistances[smallestJumps[2]] > 5.0) {
+    result = sortBySmallestJumps(smallestJumps, marks);
   } else {
-    result.m_red = hueGroups[0];
-    result.m_green = hueGroups[1];
-    result.m_blue = hueGroups[2];
-  }
-
-  // In case one marker ended up in the wrong group
-  if (result.m_red.size() == 3 and result.m_blue.size() == 1) {
-    result.m_blue.emplace_back(result.m_red[0]);
-    result.m_red.erase(std::begin(result.m_red));
-  } else if (result.m_blue.size() == 3 and result.m_green.size() == 1) {
-    result.m_green.emplace_back(result.m_blue[0]);
-    result.m_blue.erase(std::begin(result.m_blue));
-  } else if (result.m_green.size() == 3 and result.m_red.size() == 1) {
-    result.m_red.emplace_back(result.m_green[0]);
-    result.m_green.erase(std::begin(result.m_green));
+    std::vector<size_t> const largestJumps =
+        getIndicesOfExtremes(hueDistances, 3, false);
+    result = sortByLargestJumps(largestJumps, marks);
   }
 
   if (showIntermediateImages) {
