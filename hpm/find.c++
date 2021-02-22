@@ -232,6 +232,7 @@ auto findMarks(cv::InputArray undistortedImage,
           (bgr0 + bgrLeft + bgrRight + bgrUp + bgrDown) / 5);
 
       marks.emplace_back(e, bgr2hue(bgr));
+      // std::cout << bgr2hue(bgr) * CV_PI / 180.0 << ", 0, ";
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
@@ -287,6 +288,18 @@ auto findMarks(cv::InputArray undistortedImage,
     result.m_red = hueGroups[0];
     result.m_green = hueGroups[1];
     result.m_blue = hueGroups[2];
+  }
+
+  // In case one marker ended up in the wrong group
+  if (result.m_red.size() == 3 and result.m_blue.size() == 1) {
+    result.m_blue.emplace_back(result.m_red[0]);
+    result.m_red.erase(std::begin(result.m_red));
+  } else if (result.m_blue.size() == 3 and result.m_green.size() == 1) {
+    result.m_green.emplace_back(result.m_blue[0]);
+    result.m_blue.erase(std::begin(result.m_blue));
+  } else if (result.m_green.size() == 3 and result.m_red.size() == 1) {
+    result.m_red.emplace_back(result.m_green[0]);
+    result.m_green.erase(std::begin(result.m_green));
   }
 
   if (showIntermediateImages) {
