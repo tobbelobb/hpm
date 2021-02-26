@@ -41,4 +41,12 @@
   </data></marker_positions>
 <marker_diameter>31.8</marker_diameter>
 <background_diameter>62.8</background_diameter>
+<topleft_marker_center type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>2</cols>
+  <dt>d</dt>
+  <data>
+    75.7563 51.9041
+  </data>
+</topleft_marker_center>
 </opencv_storage>

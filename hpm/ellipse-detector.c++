@@ -10,24 +10,19 @@
 
 using namespace hpm;
 
-static auto getBigEllipses(EDCircles const &edCircles, double sizeThreshold)
-    -> std::vector<hpm::Ellipse> {
+static auto getBigEllipses(std::vector<hpm::Ellipse> const &ellipses,
+                           double sizeThreshold) -> std::vector<hpm::Ellipse> {
   std::vector<hpm::Ellipse> bigEllipses{};
-  for (auto const &circle : edCircles.getCirclesRef()) {
-    if (circle.r > sizeThreshold) {
-      bigEllipses.emplace_back(circle);
-    }
-  }
-  for (auto const &ellipse : edCircles.getEllipsesRef()) {
-    if (ellipse.axes.width > sizeThreshold and
-        ellipse.axes.height > sizeThreshold) {
+  for (auto const &ellipse : ellipses) {
+    if (ellipse.m_minor > sizeThreshold) {
       bigEllipses.emplace_back(ellipse);
     }
   }
   return bigEllipses;
 }
 
-auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
+auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
+                   PixelPosition const &expectedTopLeftestCenter)
     -> std::vector<hpm::Ellipse> {
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
@@ -64,13 +59,37 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
               "edCircles.png");
   }
 
+  std::vector<hpm::Ellipse> ellipses{};
+  for (auto const &circle : edCircles.getCirclesRef()) {
+    ellipses.emplace_back(circle);
+  }
+  for (auto const &ellipse : edCircles.getEllipsesRef()) {
+    ellipses.emplace_back(ellipse);
+  }
+
+  auto closerToTopLeft = [](hpm::Ellipse const &lhs, hpm::Ellipse const &rhs) {
+    return cv::norm(lhs.m_center) < cv::norm(rhs.m_center);
+  };
+  if (expectedTopLeftestCenter != PixelPosition(0.0, 0.0)) {
+    Ellipse const topLeftest{*std::min_element(
+        std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
+    PixelPosition const imageFrameShift{topLeftest.m_center -
+                                        expectedTopLeftestCenter};
+    // std::cout << "imageFrameShift=" << imageFrameShift << std::endl;
+    if (cv::norm(imageFrameShift) < 10.0) {
+      for (auto &e : ellipses) {
+        e.m_center -= imageFrameShift;
+      }
+    }
+  }
+
   // Size of a marker must be at least 1/250 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};
   double constexpr SIZE_THRESHOLD_DENOMINATOR{250.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
-  std::vector<hpm::Ellipse> bigEllipses{
-      getBigEllipses(edCircles, sizeThreshold)};
+  std::vector<hpm::Ellipse> const bigEllipses{
+      getBigEllipses(ellipses, sizeThreshold)};
 
   if (showIntermediateImages) {
     cv::Mat cpy = imageMat.clone();

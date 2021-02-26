@@ -141,8 +141,9 @@ auto main(int const argc, char **const argv) -> int {
             {cameraRotation_, cameraTranslation_}};
   }();
 
-  auto const [providedMarkerPositions, markerDiameter] =
-      [&markerParamsFileName]() -> std::tuple<ProvidedMarkerPositions, double> {
+  auto const [providedMarkerPositions, markerDiameter,
+              topLeftMarkerCenter] = [&markerParamsFileName]()
+      -> std::tuple<ProvidedMarkerPositions, double, PixelPosition> {
     try {
       cv::FileStorage const markerParamsFile(markerParamsFileName,
                                              cv::FileStorage::READ);
@@ -151,17 +152,24 @@ auto main(int const argc, char **const argv) -> int {
                   << markerParamsFileName << '\n';
         exit(1);
       }
-      return {[&markerParamsFile]() {
-                ProvidedMarkerPositions providedMarkerPositions_;
-                markerParamsFile["marker_positions"] >>
-                    providedMarkerPositions_;
-                return providedMarkerPositions_;
-              }(),
-              [&markerParamsFile]() {
-                double markerDiameter_ = 0.0;
-                markerParamsFile["marker_diameter"] >> markerDiameter_;
-                return markerDiameter_;
-              }()};
+      return {
+          [&markerParamsFile]() {
+            ProvidedMarkerPositions providedMarkerPositions_;
+            markerParamsFile["marker_positions"] >> providedMarkerPositions_;
+            return providedMarkerPositions_;
+          }(),
+          [&markerParamsFile]() {
+            double markerDiameter_ = 0.0;
+            markerParamsFile["marker_diameter"] >> markerDiameter_;
+            return markerDiameter_;
+          }(),
+          [&markerParamsFile]() {
+            cv::Matx<double, 1, 2> topLeftMarkerCenter_(0.0, 0.0);
+            markerParamsFile["topleft_marker_center"] >> topLeftMarkerCenter_;
+            PixelPosition const topLeftMarkerCenter_pp(topLeftMarkerCenter_(0),
+                                                       topLeftMarkerCenter_(1));
+            return topLeftMarkerCenter_pp;
+          }()};
     } catch (std::exception const &e) {
       std::cerr << "Could not read marker parameters from file "
                 << markerParamsFileName << '\n';
@@ -191,9 +199,10 @@ auto main(int const argc, char **const argv) -> int {
                            distortedImage.type());
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
-  auto const [points, marks] = find(
-      undistortedImage, providedMarkerPositions, meanFocalLength, imageCenter,
-      markerDiameter, showIntermediateImages, verbose, fitByDistance);
+  auto const [points, marks] =
+      find(undistortedImage, providedMarkerPositions, meanFocalLength,
+           imageCenter, markerDiameter, showIntermediateImages, verbose,
+           fitByDistance, topLeftMarkerCenter);
 
   if (points.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{

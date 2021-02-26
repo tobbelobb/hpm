@@ -19,6 +19,11 @@ using namespace hpm;
 
 static Marks sortBySmallestJumps(std::vector<size_t> const &smallestJumps,
                                  std::vector<hpm::Mark> const &marks) {
+  if (marks.size() == 1) {
+    Marks result{};
+    result.m_red.emplace_back(marks[0]);
+    return result;
+  }
   std::array<std::vector<hpm::Mark>, 2> hueGroups;
   std::vector<hpm::Mark> leastColorSortedGroup;
   size_t groupIdx{0};
@@ -142,11 +147,12 @@ static auto getIndicesOfExtremes(std::vector<double> const &v,
 auto find(cv::InputArray undistortedImage,
           hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
           hpm::PixelPosition const &imageCenter, double const markerDiameter,
-          bool showIntermediateImages, bool verbose, bool fitByDistance)
-    -> FindResult {
+          bool showIntermediateImages, bool verbose, bool fitByDistance,
+          PixelPosition const &expectedTopLeftestCenter) -> FindResult {
   Marks const marks{findMarks(undistortedImage, markPos, focalLength,
                               imageCenter, markerDiameter,
-                              showIntermediateImages, verbose, fitByDistance)};
+                              showIntermediateImages, verbose, fitByDistance,
+                              expectedTopLeftestCenter)};
   SolvePnpPoints const points{marks, markerDiameter / 2.0, focalLength,
                               imageCenter};
   return {points, marks};
@@ -185,12 +191,14 @@ auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,
                double const markerDiameter, bool showIntermediateImages,
-               bool verbose, bool fitByDistance) -> Marks {
-
-  auto ellipses{ellipseDetect(undistortedImage, showIntermediateImages)};
+               bool verbose, bool fitByDistance,
+               PixelPosition const &expectedTopLeftestCenter) -> Marks {
+  auto ellipses{ellipseDetect(undistortedImage, showIntermediateImages,
+                              expectedTopLeftestCenter)};
   if (ellipses.empty()) {
     return {};
   }
+
   cv::Mat imageMat{undistortedImage.getMat()};
 
   std::vector<hpm::CameraFramedPosition> positions;
@@ -358,8 +366,12 @@ auto findMarks(cv::InputArray undistortedImage,
 
   std::sort(marks.begin(), marks.end(), hueLessThan);
 
-  if (marks.empty()) {
-    return {};
+  if (marks.size() < 3) {
+    Marks result{};
+    if (marks.size() > 0) {
+      result.m_red.emplace_back(marks[0]);
+    }
+    return result;
   }
 
   std::vector<double> hueDistances(marks.size(), 0.0);
@@ -373,7 +385,7 @@ auto findMarks(cv::InputArray undistortedImage,
       getIndicesOfExtremes(hueDistances, 3, true);
   if (smallestJumps[0] != (smallestJumps[1] - 1) and
       smallestJumps[1] != (smallestJumps[0] - 1) and
-      hueDistances[smallestJumps[2]] > 5.0) {
+      hueDistances[smallestJumps[2]] > 10.0) {
     result = sortBySmallestJumps(smallestJumps, marks);
   } else {
     std::vector<size_t> const largestJumps =
