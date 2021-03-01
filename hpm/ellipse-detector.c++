@@ -21,8 +21,7 @@ static auto getBigEllipses(std::vector<hpm::Ellipse> const &ellipses,
   return bigEllipses;
 }
 
-auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
-                   PixelPosition const &expectedTopLeftestCenter)
+auto rawEllipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> std::vector<hpm::Ellipse> {
   cv::Mat imageMat{image.getMat()};
   EDColor const edColor{
@@ -66,16 +65,29 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
   for (auto const &ellipse : edCircles.getEllipsesRef()) {
     ellipses.emplace_back(ellipse);
   }
+  return ellipses;
+}
 
-  auto closerToTopLeft = [](hpm::Ellipse const &lhs, hpm::Ellipse const &rhs) {
-    return cv::norm(lhs.m_center) < cv::norm(rhs.m_center);
+auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
+                   PixelPosition const &expectedTopLeftestCenter)
+    -> std::vector<hpm::Ellipse> {
+  cv::Mat imageMat{image.getMat()};
+  const auto AQUA{cv::Scalar(255, 255, 0)};
+
+  std::vector<hpm::Ellipse> ellipses{
+      rawEllipseDetect(image, showIntermediateImages)};
+
+  auto closerToTopLeft = [&expectedTopLeftestCenter](hpm::Ellipse const &lhs,
+                                                     hpm::Ellipse const &rhs) {
+    return cv::norm(lhs.m_center - expectedTopLeftestCenter) <
+           cv::norm(rhs.m_center - expectedTopLeftestCenter);
   };
-  if (expectedTopLeftestCenter != PixelPosition(0.0, 0.0)) {
+  if (not ellipses.empty() and
+      expectedTopLeftestCenter != PixelPosition(0.0, 0.0)) {
     Ellipse const topLeftest{*std::min_element(
         std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
     PixelPosition const imageFrameShift{topLeftest.m_center -
                                         expectedTopLeftestCenter};
-    // std::cout << "imageFrameShift=" << imageFrameShift << std::endl;
     if (cv::norm(imageFrameShift) < 10.0) {
       for (auto &e : ellipses) {
         e.m_center -= imageFrameShift;
@@ -101,7 +113,7 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
 
   std::vector<hpm::Ellipse> almostRoundEllipses;
   for (auto const &e : bigEllipses) {
-    if (e.m_minor * 1.3 > e.m_major) {
+    if (e.m_minor * 1.4 > e.m_major) {
       almostRoundEllipses.emplace_back(e);
     }
   }

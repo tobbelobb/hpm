@@ -1,4 +1,5 @@
 #include <hpm/command-line.h++>
+#include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
 #include <hpm/hpm.h++>
 #include <hpm/simple-types.h++>
@@ -223,6 +224,7 @@ auto main(int const argc, char **const argv) -> int {
           SixDof const camTranslation{effectorWorldPose(
               effectorPoseRelativeToCamera.value(),
               {effectorPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
+
           std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
                        "  <rows>3</rows>\n"
                        "  <cols>1</cols>\n"
@@ -242,6 +244,26 @@ auto main(int const argc, char **const argv) -> int {
                     << -camTranslation.translation[1] << ' '
                     << -camTranslation.translation[2] << "\n  </data>\n"
                     << "</camera_translation>\n";
+
+          std::vector<hpm::Ellipse> const ellipses{
+              rawEllipseDetect(undistortedImage, false)};
+          if (not ellipses.empty()) {
+            auto closerToTopLeft = [](hpm::Ellipse const &lhs,
+                                      hpm::Ellipse const &rhs) {
+              return cv::norm(lhs.m_center) < cv::norm(rhs.m_center);
+            };
+            Ellipse const topLeftest{*std::min_element(
+                std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
+            std::cout << "<topleft_marker_center type_id=\"opencv-matrix\">\n"
+                      << "  <rows>1</rows>\n"
+                      << "  <cols>2</cols>\n"
+                      << "  <dt>d</dt>\n"
+                      << "  <data>\n"
+                      << "    " << topLeftest.m_center.x << ' '
+                      << topLeftest.m_center.y << '\n'
+                      << "  </data>\n"
+                      << "</topleft_marker_center>\n";
+          }
         }
       }
       SixDof const worldPose{effectorWorldPose(
