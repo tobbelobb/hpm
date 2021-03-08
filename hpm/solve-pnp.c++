@@ -12,15 +12,13 @@ using namespace hpm;
 SolvePnpPoints::SolvePnpPoints(Marks const &marks, double const markerR,
                                double const f,
                                PixelPosition const &imageCenter) {
-  if (marks.m_red.size() != 2 or marks.m_green.size() != 2 or
-      marks.m_blue.size() != 2) {
+  if (marks.size() != 6) {
     return;
   }
 
-  std::vector<hpm::Mark> all{marks.getFlatCopy()};
-
-  for (size_t i{0}; i < m_pixelPositions.size() and i < all.size(); ++i) {
-    m_pixelPositions[i] = all[i].getCenterRay(markerR, f, imageCenter);
+  for (size_t i{0}; i < m_pixelPositions.size() and i < marks.size(); ++i) {
+    m_pixelPositions[i] =
+        marks.m_marks[i].getCenterRay(markerR, f, imageCenter);
     m_identified[i] = true;
   }
 }

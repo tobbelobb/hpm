@@ -35,12 +35,10 @@ struct Mark {
 };
 
 struct Marks {
-  std::vector<Mark> m_red;
-  std::vector<Mark> m_green;
-  std::vector<Mark> m_blue;
+  std::vector<Mark> m_marks;
 
-  size_t size() const { return m_red.size() + m_green.size() + m_blue.size(); }
-  std::vector<Mark> getFlatCopy() const;
+  size_t size() const { return m_marks.size(); }
+  std::vector<Mark> getCopy() const { return m_marks; }
   double identify(hpm::ProvidedMarkerPositions const &markPos,
                   double const focalLength,
                   hpm::PixelPosition const &imageCenter,

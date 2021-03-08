@@ -49,23 +49,22 @@ auto main() -> int {
 
     // clang-format off
     Marks marks{{{{CENTER - PIX_DIST, CENTER - PIX_DIST}, MAJOR_DIAG, MINOR, 5.0*M_PI/4.0},
+                 {{CENTER - PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, M_PI},
                  {{CENTER + PIX_DIST, CENTER - PIX_DIST}, MAJOR_DIAG, MINOR, 7.0*M_PI/4.0},
-                 falsePositiveRed},
-                {{{CENTER + PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, 0.0},
-                 {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, M_PI/4.0}},
-                {{{CENTER - PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, 3.0*M_PI/4.0},
-                 falsePositiveBlue,
-                 {{CENTER - PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, M_PI}}};
+                 {{CENTER - PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, 3.0*M_PI/4.0},
+                 {{CENTER + PIX_DIST, CENTER + PIX_DIST}, MAJOR_DIAG, MINOR, M_PI/4.0},
+                 {{CENTER + PIX_DIST, CENTER}, MAJOR_STRAIGHT, MINOR, 0.0}}};
+    Marks const marksCpy{marks};
     // clang-format on
 
     double const err = marks.identify(providedPositions, focalLength,
                                       imageCenter, knownMarkerDiameter);
-    expect(marks.m_red.size() == 2_ul);
-    expect(marks.m_red[0] != falsePositiveRed);
-    expect(marks.m_red[1] != falsePositiveRed);
-    expect(marks.m_blue.size() == 2_ul);
-    expect(marks.m_blue[0] != falsePositiveBlue);
-    expect(marks.m_blue[1] != falsePositiveBlue);
+    expect(marks.m_marks[0] == marksCpy.m_marks[0]);
+    expect(marks.m_marks[1] == marksCpy.m_marks[5]);
+    expect(marks.m_marks[2] == marksCpy.m_marks[1]);
+    expect(marks.m_marks[3] == marksCpy.m_marks[4]);
+    expect(marks.m_marks[4] == marksCpy.m_marks[3]);
+    expect(marks.m_marks[5] == marksCpy.m_marks[2]);
     constexpr auto EPS{0.00000000001_d}; // 1e-11 precision
     expect(err < EPS);
   };

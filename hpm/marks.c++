@@ -1,28 +1,28 @@
 #include <hpm/marks.h++>
 
+#include <algorithm>
 #include <limits>
 
 using namespace hpm;
 
-std::vector<Mark> Marks::getFlatCopy() const {
-  std::vector<Mark> all{};
-  all.reserve(size());
-  all.insert(all.end(), m_red.begin(), m_red.end());
-  all.insert(all.end(), m_green.begin(), m_green.end());
-  all.insert(all.end(), m_blue.begin(), m_blue.end());
-  return all;
+static inline auto signed2DCross(PixelPosition const &v0,
+                                 PixelPosition const &v1,
+                                 PixelPosition const &v2) {
+  return (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y);
 }
 
-static std::vector<std::pair<size_t, size_t>> getIndexPairs(size_t sz) {
-  std::vector<std::pair<size_t, size_t>> indexPairs{};
-  for (size_t i{0}; i < sz; ++i) {
-    for (size_t j{0}; j < sz; ++j) {
-      if (i != j) {
-        indexPairs.emplace_back(i, j);
-      }
-    }
-  }
-  return indexPairs;
+static inline auto isRight(PixelPosition const &v0, PixelPosition const &v1,
+                           PixelPosition const &v2) -> bool {
+  return signed2DCross(v0, v1, v2) <= 0.0;
+}
+
+static void fanSort(std::vector<hpm::Mark> &fan) {
+  const auto &pivot = fan[0];
+  std::sort(std::next(fan.begin()), fan.end(),
+            [&pivot](hpm::Mark const &lhs, hpm::Mark const &rhs) -> bool {
+              return isRight(pivot.getCenter(), lhs.getCenter(),
+                             rhs.getCenter());
+            });
 }
 
 double Marks::identify(ProvidedMarkerPositions const &markPos,
@@ -30,79 +30,48 @@ double Marks::identify(ProvidedMarkerPositions const &markPos,
                        PixelPosition const &imageCenter,
                        double const markerDiameter) {
 
-  if (not(m_red.size() >= 2 and m_green.size() >= 2 and m_blue.size() >= 2)) {
+  if (not(size() >= NUMBER_OF_MARKERS)) {
     return std::numeric_limits<double>::max();
   }
 
-  auto getPositions =
-      [&](std::vector<Mark> const &marks) -> std::vector<CameraFramedPosition> {
-    std::vector<CameraFramedPosition> positions{};
-    for (auto const &mark : marks) {
-      positions.emplace_back(
-          mark.toPosition(focalLength, imageCenter, markerDiameter));
-    }
-    return positions;
-  };
+  fanSort(m_marks);
 
   std::vector<double> expectedDists;
-  expectedDists.reserve(NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1) / 2);
+  expectedDists.reserve(NUMBER_OF_MARKERS);
   for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-    for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
-      expectedDists.emplace_back(cv::norm(markPos.row(static_cast<int>(i)) -
-                                          markPos.row(static_cast<int>(j))));
-    }
+    expectedDists.emplace_back(
+        cv::norm(markPos.row(static_cast<int>(i)) -
+                 markPos.row(static_cast<int>((i + 1) % NUMBER_OF_MARKERS))));
   }
 
-  auto const redIndexPairs{getIndexPairs(m_red.size())};
-  auto const greenIndexPairs{getIndexPairs(m_green.size())};
-  auto const blueIndexPairs{getIndexPairs(m_blue.size())};
-  // These are all the possible ordered combinations of marks
-  // expressed as indices into the current red/green/blue vectors or marks.
-  std::vector<std::array<size_t, 6>> sixtuples{};
-  for (auto const &redPair : redIndexPairs) {
-    for (auto const &greenPair : greenIndexPairs) {
-      for (auto const &bluePair : blueIndexPairs) {
-        sixtuples.emplace_back(std::array<size_t, 6>{
-            redPair.first, redPair.second, greenPair.first, greenPair.second,
-            bluePair.first, bluePair.second});
-      }
-    }
+  std::vector<CameraFramedPosition> positions{};
+  for (auto const &mark : m_marks) {
+    positions.emplace_back(
+        mark.toPosition(focalLength, imageCenter, markerDiameter));
+  }
+  std::vector<double> foundDists;
+  foundDists.reserve(NUMBER_OF_MARKERS);
+  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+    foundDists.emplace_back(
+        cv::norm(positions[i] - positions[(i + 1) % NUMBER_OF_MARKERS]));
   }
 
-  std::array<std::vector<CameraFramedPosition>, 3> const positions = {
-      getPositions(m_red), getPositions(m_green), getPositions(m_blue)};
-
-  // Find the sixtuple that produces the smallest squared error
-  // but avoid calculating the full squared error for all sixtuples
-  size_t bestSixtupleIdx = 0;
-  double smallestErr = std::numeric_limits<double>::max();
-  for (size_t sixtupleIdx{0}; sixtupleIdx < sixtuples.size(); sixtupleIdx++) {
-    auto const sixtuple{sixtuples[sixtupleIdx]};
-    size_t idx{0};
+  std::vector<double> errs;
+  errs.reserve(NUMBER_OF_MARKERS);
+  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
     double err{0.0};
-    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-      for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
-        auto dist{cv::norm(positions[i / 2][sixtuple[i]] -
-                           positions[j / 2][sixtuple[j]])};
-        auto diff{dist - expectedDists[idx]};
-        idx++;
-        err = err + diff * diff;
-        if (err > smallestErr) { // short out of hot loop
-          i = NUMBER_OF_MARKERS;
-          j = NUMBER_OF_MARKERS;
-        }
-      }
+    for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
+      double const diff{foundDists[(i + j) % NUMBER_OF_MARKERS] -
+                        expectedDists[j]};
+      err += diff * diff;
     }
-    if (err < smallestErr) {
-      smallestErr = err;
-      bestSixtupleIdx = sixtupleIdx;
-    }
+    errs.emplace_back(err);
   }
 
-  std::array<size_t, 6> const winnerSixtuple = sixtuples[bestSixtupleIdx];
+  auto const bestErrIdx{std::distance(
+      std::begin(errs), std::min_element(std::begin(errs), std::end(errs)))};
+  std::rotate(std::begin(m_marks), std::begin(m_marks) + bestErrIdx,
+              std::end(m_marks));
 
-  m_red = {m_red[winnerSixtuple[0]], m_red[winnerSixtuple[1]]};
-  m_green = {m_green[winnerSixtuple[2]], m_green[winnerSixtuple[3]]};
-  m_blue = {m_blue[winnerSixtuple[4]], m_blue[winnerSixtuple[5]]};
-  return smallestErr;
+  return errs[static_cast<size_t>(bestErrIdx)];
 }

@@ -28,14 +28,8 @@ void draw(cv::InputOutputArray image, Mark const &mark,
 }
 
 void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
-  for (auto const &mark : marks.m_red) {
+  for (auto const &mark : marks.m_marks) {
     draw(image, mark, AQUA);
-  }
-  for (auto const &mark : marks.m_green) {
-    draw(image, mark, FUCHSIA);
-  }
-  for (auto const &mark : marks.m_blue) {
-    draw(image, mark, YELLOW);
   }
 }
 
@@ -50,7 +44,8 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
   double minCol{static_cast<double>(imageMat.cols)};
   for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
     auto const pos{points.get(i)};
-    cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH);
+    cv::circle(image, pos, LINE_WIDTH, BLACK, LINE_WIDTH_BOLD);
+    cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
     cv::putText(image, std::to_string(i + 1),
                 pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
                 cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);

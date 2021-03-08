@@ -4,22 +4,13 @@
      There are six markers:
      marker 0, marker 1, marker 2, marker 3, marker 4, and marker 5
 
-     They are ordered in counter clockwise order, and red-green-blue order,
-     starting with the two red markers:
-     marker 0 = red 0
-     marker 1 = red 1
-     marker 2 = green 0
-     marker 3 = green 1
-     marker 4 = blue 0
-     marker 5 = blue 1
-
-     The side with the red markers are directed straight towards
-     the A-anchor (which is on the negative y-axis).
-     Therefore the two red markers should have the same y-coordinate.
+     They are ordered in counter clockwise order starting with the
+     marker to the left (negative X-direction) of the two A-markers
+     (along the site that faces towards the A-anchor):
 
      We want the positions of the (centers of the) markers,
      expressed in the global coordinate system,
-     (that is the XYZ-coordinate system that the slicer uses),
+     (that is the XYZ-one that the slicer uses),
      measured when the nozzle is placed at the origin.
 
      The marker positions in this file were computed with
