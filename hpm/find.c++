@@ -113,6 +113,31 @@ static Marks sortByLargestJumps(std::vector<size_t> const &largestJumps,
   return result;
 }
 
+static auto extractSixtuples(std::vector<size_t> indices)
+    -> std::vector<std::array<size_t, 6>> {
+  if (indices.size() < 6) {
+    return {};
+  }
+
+  std::vector<std::array<size_t, 6>> sixtuples;
+  for (size_t a{0}; a < indices.size(); ++a) {
+    for (size_t b{a + 1}; b < indices.size(); ++b) {
+      for (size_t c{b + 1}; c < indices.size(); ++c) {
+        for (size_t d{c + 1}; d < indices.size(); ++d) {
+          for (size_t e{d + 1}; e < indices.size(); ++e) {
+            for (size_t f{e + 1}; f < indices.size(); ++f) {
+              sixtuples.emplace_back(
+                  std::array<size_t, 6>{indices[a], indices[b], indices[c],
+                                        indices[d], indices[e], indices[f]});
+            }
+          }
+        }
+      }
+    }
+  }
+  return sixtuples;
+}
+
 static auto
 distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
                      std::vector<hpm::Ellipse> const &ellipses,
@@ -285,47 +310,42 @@ auto findMarks(cv::InputArray undistortedImage,
     showImage(cpy, "distance-group-filtered-ones.png");
   }
 
-  std::vector<std::array<size_t, 6>> candidateSixtuples;
-  for (size_t a{0}; a < validEllipseIndices.size(); ++a) {
-    for (size_t b{a + 1}; b < validEllipseIndices.size(); ++b) {
-      for (size_t c{b + 1}; c < validEllipseIndices.size(); ++c) {
-        for (size_t d{c + 1}; d < validEllipseIndices.size(); ++d) {
-          for (size_t e{d + 1}; e < validEllipseIndices.size(); ++e) {
-            for (size_t f{e + 1}; f < validEllipseIndices.size(); ++f) {
-              candidateSixtuples.emplace_back(std::array<size_t, 6>{
-                  validEllipseIndices[a], validEllipseIndices[b],
-                  validEllipseIndices[c], validEllipseIndices[d],
-                  validEllipseIndices[e], validEllipseIndices[f]});
-            }
-          }
-        }
-      }
-    }
-  }
+  std::vector<std::array<size_t, 6>> const candidateSixtuples{
+      extractSixtuples(validEllipseIndices)};
 
   size_t bestSixtupleIdx{0UL};
   if (candidateSixtuples.size() > 1) {
-    double bestErr{std::numeric_limits<double>::max()};
-    for (size_t i{0}; i < candidateSixtuples.size(); ++i) {
-      auto const sixtuple{candidateSixtuples[i]};
-      std::vector<double> dists;
+    std::vector<std::vector<double>> distvs;
+    for (auto const &sixtuple : candidateSixtuples) {
+      std::vector<double> distv;
       for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
         for (size_t k{j + 1}; k < NUMBER_OF_MARKERS; ++k) {
           double const dist =
               cv::norm(positions[sixtuple[j]] - positions[sixtuple[k]]);
-          dists.emplace_back(dist);
+          distv.emplace_back(dist);
         }
       }
-      std::sort(std::begin(dists), std::end(dists));
-      double err{0.0};
-      for (size_t distIdx{0}; distIdx < dists.size(); distIdx++) {
-        err += pow(dists[distIdx] - expectedDists[distIdx], 2);
-      }
-      if (err < bestErr) {
-        bestSixtupleIdx = i;
-        bestErr = err;
-      }
+      std::sort(std::begin(distv), std::end(distv));
+      distvs.emplace_back(distv);
     }
+
+    auto distErr = [&expectedDists](std::vector<double> const &distv) {
+      double err{0.0};
+      for (size_t i{0}; i < distv.size(); ++i) {
+        double const diff{distv[i] - expectedDists[i]};
+        err += diff * diff;
+      }
+      return err;
+    };
+
+    std::vector<double> errs;
+    errs.reserve(distvs.size());
+    for (auto const &distv : distvs) {
+      errs.emplace_back(distErr(distv));
+    }
+
+    bestSixtupleIdx = static_cast<size_t>(std::distance(
+        std::begin(errs), std::min_element(std::begin(errs), std::end(errs))));
   }
 
   std::vector<hpm::Mark> marks;
