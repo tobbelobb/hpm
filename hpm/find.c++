@@ -206,20 +206,19 @@ auto findMarks(cv::InputArray undistortedImage,
     positions.emplace_back(
         e.toPosition(focalLength, imageCenter, markerDiameter));
   }
-  double bubbleSizeLimit{0.0};
   std::vector<double> expectedDists;
+  expectedDists.reserve(NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1) / 2);
   for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
     for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
       double const dist = cv::norm(markPos.row(static_cast<int>(i)) -
                                    markPos.row(static_cast<int>(j)));
       expectedDists.emplace_back(dist);
-      if (dist > bubbleSizeLimit) {
-        bubbleSizeLimit = dist;
-      }
     }
   }
   std::sort(std::begin(expectedDists), std::end(expectedDists));
-  bubbleSizeLimit *= 1.7;
+  double constexpr BUBBLE_SIZE_MARGIN_FACTOR{1.7};
+  double bubbleSizeLimit{expectedDists.back() * BUBBLE_SIZE_MARGIN_FACTOR};
+
   std::vector<size_t> validEllipseIndices;
   std::vector<std::vector<size_t>> ellipseNeighs(positions.size(),
                                                  std::vector<size_t>{});
@@ -229,8 +228,9 @@ auto findMarks(cv::InputArray undistortedImage,
       auto const pixDist{cv::norm(ellipses[i].m_center - ellipses[j].m_center)};
       if (i != j and pixDist > ellipses[i].m_minor and
           pixDist > ellipses[j].m_minor) {
-        // j is not i, and they don't overlap
-        // Are they close enough to each other to be counted as neighbors?
+        // j is not i, and one's center is not within a minor axis' distance
+        // from the other. Are they close enough to each other to be counted as
+        // neighbors?
         auto const diff(positions[i] - positions[j]);
         if (diff.dot(diff) < bubbleSizeLimitSq) {
           ellipseNeighs[i].emplace_back(j);

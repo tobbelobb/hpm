@@ -44,17 +44,12 @@ double Marks::identify(ProvidedMarkerPositions const &markPos,
     return positions;
   };
 
-  size_t constexpr NUMBER_OF_DISTANCES{NUMBER_OF_MARKERS *
-                                       (NUMBER_OF_MARKERS - 1) / 2};
-  cv::Vec<double, NUMBER_OF_DISTANCES> expectedDistances{};
-  {
-    int idx = 0;
-    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-      for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
-        expectedDistances[idx] = cv::norm(markPos.row(static_cast<int>(i)) -
-                                          markPos.row(static_cast<int>(j)));
-        idx++;
-      }
+  std::vector<double> expectedDists;
+  expectedDists.reserve(NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1) / 2);
+  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+    for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
+      expectedDists.emplace_back(cv::norm(markPos.row(static_cast<int>(i)) -
+                                          markPos.row(static_cast<int>(j))));
     }
   }
 
@@ -83,13 +78,13 @@ double Marks::identify(ProvidedMarkerPositions const &markPos,
   double smallestErr = std::numeric_limits<double>::max();
   for (size_t sixtupleIdx{0}; sixtupleIdx < sixtuples.size(); sixtupleIdx++) {
     auto const sixtuple{sixtuples[sixtupleIdx]};
-    int idx{0};
+    size_t idx{0};
     double err{0.0};
     for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
       for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
         auto dist{cv::norm(positions[i / 2][sixtuple[i]] -
                            positions[j / 2][sixtuple[j]])};
-        auto diff{dist - expectedDistances[idx]};
+        auto diff{dist - expectedDists[idx]};
         idx++;
         err = err + diff * diff;
         if (err > smallestErr) { // short out of hot loop
