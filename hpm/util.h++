@@ -67,3 +67,9 @@ sphereToEllipseWidthHeight(hpm::CameraFramedPosition const &sphereCenter,
 std::pair<double, double>
 sphereToEllipseWidthHeight2(hpm::CameraFramedPosition const &sphereCenter,
                             double focalLength, double sphereRadius);
+
+const auto AQUA{cv::Scalar(255, 255, 0)};
+const auto FUCHSIA{cv::Scalar(255, 0, 255)};
+const auto YELLOW{cv::Scalar(0, 255, 255)};
+const auto WHITE{cv::Scalar(255, 255, 255)};
+const auto BLACK{cv::Scalar(0, 0, 0)};

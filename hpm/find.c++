@@ -113,6 +113,55 @@ static Marks sortByLargestJumps(std::vector<size_t> const &largestJumps,
   return result;
 }
 
+static auto
+distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
+                     std::vector<hpm::Ellipse> const &ellipses,
+                     double const bubbleSizeLimit) -> std::vector<size_t> {
+  std::vector<size_t> group{};
+
+  double const limitSq{bubbleSizeLimit * bubbleSizeLimit};
+
+  std::vector<std::vector<size_t>> ellipseNeighs(positions.size(),
+                                                 std::vector<size_t>{});
+  for (size_t i{0}; i < positions.size(); ++i) {
+    for (size_t j{0}; j < positions.size(); ++j) {
+      auto const pixDist{cv::norm(ellipses[i].m_center - ellipses[j].m_center)};
+      if (i != j and pixDist > ellipses[i].m_minor and
+          pixDist > ellipses[j].m_minor) {
+        // j is not i, and they overlap less than half.
+        // Are they close enough to each other to be counted as neighbors?
+        auto const diff(positions[i] - positions[j]);
+        if (diff.dot(diff) < limitSq) {
+          ellipseNeighs[i].emplace_back(j);
+        }
+      }
+    }
+  }
+
+  for (size_t i{0}; i < ellipseNeighs.size(); ++i) {
+    if (ellipseNeighs[i].size() >= 5) {
+      size_t neighsWithFourOrMoreSharedNeighs{0};
+      for (auto const &neighIdx : ellipseNeighs[i]) {
+        size_t sharedNeighs = 0;
+        for (auto const &neighIdxInner : ellipseNeighs[i]) {
+          if (neighIdx != neighIdxInner and
+              std::find(std::begin(ellipseNeighs[neighIdx]),
+                        std::end(ellipseNeighs[neighIdx]),
+                        neighIdxInner) != std::end(ellipseNeighs[neighIdx]))
+            sharedNeighs++;
+        }
+        if (sharedNeighs >= 4) {
+          neighsWithFourOrMoreSharedNeighs++;
+        }
+      }
+      if (neighsWithFourOrMoreSharedNeighs >= 5) {
+        group.emplace_back(i);
+      }
+    }
+  }
+  return group;
+}
+
 static auto getIndicesOfExtremes(std::vector<double> const &v,
                                  int howManyToSort, bool const less)
     -> std::vector<size_t> {
@@ -193,8 +242,8 @@ auto findMarks(cv::InputArray undistortedImage,
                double const markerDiameter, bool showIntermediateImages,
                bool verbose, bool fitByDistance,
                PixelPosition const &expectedTopLeftestCenter) -> Marks {
-  auto ellipses{ellipseDetect(undistortedImage, showIntermediateImages,
-                              expectedTopLeftestCenter)};
+  std::vector<hpm::Ellipse> const ellipses{ellipseDetect(
+      undistortedImage, showIntermediateImages, expectedTopLeftestCenter)};
   if (ellipses.empty()) {
     return {};
   }
@@ -202,10 +251,12 @@ auto findMarks(cv::InputArray undistortedImage,
   cv::Mat imageMat{undistortedImage.getMat()};
 
   std::vector<hpm::CameraFramedPosition> positions;
+  positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
     positions.emplace_back(
         e.toPosition(focalLength, imageCenter, markerDiameter));
   }
+
   std::vector<double> expectedDists;
   expectedDists.reserve(NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1) / 2);
   for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
@@ -219,59 +270,19 @@ auto findMarks(cv::InputArray undistortedImage,
   double constexpr BUBBLE_SIZE_MARGIN_FACTOR{1.7};
   double bubbleSizeLimit{expectedDists.back() * BUBBLE_SIZE_MARGIN_FACTOR};
 
-  std::vector<size_t> validEllipseIndices;
-  std::vector<std::vector<size_t>> ellipseNeighs(positions.size(),
-                                                 std::vector<size_t>{});
-  double const bubbleSizeLimitSq{bubbleSizeLimit * bubbleSizeLimit};
-  for (size_t i{0}; i < positions.size(); ++i) {
-    for (size_t j{0}; j < positions.size(); ++j) {
-      auto const pixDist{cv::norm(ellipses[i].m_center - ellipses[j].m_center)};
-      if (i != j and pixDist > ellipses[i].m_minor and
-          pixDist > ellipses[j].m_minor) {
-        // j is not i, and one's center is not within a minor axis' distance
-        // from the other. Are they close enough to each other to be counted as
-        // neighbors?
-        auto const diff(positions[i] - positions[j]);
-        if (diff.dot(diff) < bubbleSizeLimitSq) {
-          ellipseNeighs[i].emplace_back(j);
-        }
-      }
-    }
-  }
-
-  for (size_t i{0}; i < ellipseNeighs.size(); ++i) {
-    if (ellipseNeighs[i].size() >= 5) {
-      size_t neighsWithFourOrMoreSharedNeighs{0};
-      for (auto const &neighIdx : ellipseNeighs[i]) {
-        size_t sharedNeighs = 0;
-        for (auto const &neighIdxInner : ellipseNeighs[i]) {
-          if (neighIdx != neighIdxInner and
-              std::find(std::begin(ellipseNeighs[neighIdx]),
-                        std::end(ellipseNeighs[neighIdx]),
-                        neighIdxInner) != std::end(ellipseNeighs[neighIdx]))
-            sharedNeighs++;
-        }
-        if (sharedNeighs >= 4) {
-          neighsWithFourOrMoreSharedNeighs++;
-        }
-      }
-      if (neighsWithFourOrMoreSharedNeighs >= 5) {
-        validEllipseIndices.emplace_back(i);
-      }
-    }
-  }
+  std::vector<size_t> validEllipseIndices{
+      distanceGroupIndices(positions, ellipses, bubbleSizeLimit)};
 
   if (showIntermediateImages and fitByDistance) {
-    std::vector<hpm::Ellipse> bubbleDistanceSorted;
+    std::vector<hpm::Ellipse> distanceGroupFiltered;
     for (auto const &ellipseIndex : validEllipseIndices) {
-      bubbleDistanceSorted.emplace_back(ellipses[ellipseIndex]);
+      distanceGroupFiltered.emplace_back(ellipses[ellipseIndex]);
     }
     cv::Mat cpy = imageMat.clone();
-    const auto AQUA{cv::Scalar(255, 255, 0)};
-    for (auto const &ellipse : bubbleDistanceSorted) {
+    for (auto const &ellipse : distanceGroupFiltered) {
       draw(cpy, ellipse, AQUA);
     }
-    showImage(cpy, "distance-bubble-sorted-ones.png");
+    showImage(cpy, "distance-group-filtered-ones.png");
   }
 
   std::vector<std::array<size_t, 6>> candidateSixtuples;
@@ -348,7 +359,6 @@ auto findMarks(cv::InputArray undistortedImage,
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
-      const auto AQUA{cv::Scalar(255, 255, 0)};
       for (auto const &mark : marks) {
         draw(cpy, mark, AQUA);
       }

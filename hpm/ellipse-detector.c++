@@ -31,7 +31,6 @@ auto rawEllipseDetect(cv::InputArray image, bool showIntermediateImages)
        .anchorThresh = 4,
        .blurSize = 1.5,
        .filterSegments = true}};
-  const auto AQUA{cv::Scalar(255, 255, 0)};
   if (showIntermediateImages) {
     showImage(edColor.getEdgeImage(), "edgeImage.png");
     cv::Mat cpy(imageMat.rows, imageMat.cols, CV_8UC3,
@@ -72,7 +71,6 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
                    PixelPosition const &expectedTopLeftestCenter)
     -> std::vector<hpm::Ellipse> {
   cv::Mat imageMat{image.getMat()};
-  const auto AQUA{cv::Scalar(255, 255, 0)};
 
   std::vector<hpm::Ellipse> ellipses{
       rawEllipseDetect(image, showIntermediateImages)};

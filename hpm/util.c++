@@ -28,9 +28,6 @@ void draw(cv::InputOutputArray image, Mark const &mark,
 }
 
 void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
-  const auto AQUA{cv::Scalar(255, 255, 0)};
-  const auto FUCHSIA{cv::Scalar(255, 0, 255)};
-  const auto YELLOW{cv::Scalar(0, 255, 255)};
   for (auto const &mark : marks.m_red) {
     draw(image, mark, AQUA);
   }
@@ -45,8 +42,6 @@ void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
 void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
           hpm::Vector3d const &position) {
   cv::Mat imageMat{image.getMat()};
-  const auto WHITE{cv::Scalar(255, 255, 255)};
-  const auto BLACK{cv::Scalar(0, 0, 0)};
   int constexpr LINE_WIDTH{2};
   int constexpr LINE_WIDTH_BOLD{7};
   double constexpr TEXT_OFFSET{5.0};
