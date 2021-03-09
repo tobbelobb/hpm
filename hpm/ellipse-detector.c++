@@ -93,9 +93,9 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
     }
   }
 
-  // Size of a marker must be at least 1/250 of the image width
+  // Size of a marker must be at least 1/220 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};
-  double constexpr SIZE_THRESHOLD_DENOMINATOR{250.0};
+  double constexpr SIZE_THRESHOLD_DENOMINATOR{220.0};
   double const sizeThreshold{sizeThresholdNominator /
                              SIZE_THRESHOLD_DENOMINATOR};
   std::vector<hpm::Ellipse> const bigEllipses{

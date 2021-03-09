@@ -9,9 +9,7 @@ namespace hpm {
 
 struct Mark {
   Ellipse m_ellipse;
-  double m_hue = -1.0;
 
-  Mark(Ellipse const e, double hue_in) : m_ellipse(e), m_hue(hue_in) {}
   Mark(Ellipse const e) : m_ellipse(e) {}
   Mark(PixelPosition const center, double major, double minor, double rot)
       : m_ellipse(center, major, minor, rot) {}

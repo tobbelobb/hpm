@@ -195,9 +195,7 @@ auto findMarks(cv::InputArray undistortedImage,
   std::vector<hpm::Mark> marks;
   if (fitByDistance and not candidateSixtuples.empty()) {
     for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
-      // clamp because the ellipse center might be outside of picture frame
-      auto const e{ellipses[ellipseIndex]};
-      marks.emplace_back(e, 0.0);
+      marks.emplace_back(ellipses[ellipseIndex]);
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
@@ -208,16 +206,12 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   } else {
     for (auto const &e : ellipses) {
-      marks.emplace_back(e, 0.0);
+      marks.emplace_back(e);
     }
   }
 
-  Marks result{marks};
-  if (result.size() < 3) {
-    return result;
-  }
-
-  if (fitByDistance) {
+  Marks result{std::move(marks)};
+  if (fitByDistance and result.size() == NUMBER_OF_MARKERS) {
     result.identify(markPos, focalLength, imageCenter, markerDiameter);
   }
   if (verbose) {

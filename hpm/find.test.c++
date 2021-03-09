@@ -32,18 +32,19 @@ auto main() -> int {
     double constexpr knownMarkerDiameter{32.0};
     std::string const imageFileName{hpm::getPath(
         "test-images/"
-        "generated_benchmark_nr2_double_res_32_0_0_0_0_0_0_755.png")};
+        "generated_benchmark_nr2_double_res_32_0_0_0_0_0_0_755_white.png")};
     cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
     expect((not image.empty()) >> fatal);
 
     ProvidedMarkerPositions const providedMarkerPositions{
-        -72.4478, -125.483, 0.0, 72.4478,  -125.483, 0.0, 144.8960,  0.0, 0.0,
-        72.4478,  125.483,  0.0, -72.4478, 125.483,  0.0, -144.8960, 0.0, 0.0};
+        -72.4478, -125.483, 0.0, 72.4478,  -125.483, 0.0,
+        146.895,  -3.4642,  0.0, 64.446,   139.34,   0.0,
+        -68.4476, 132.411,  0.0, -160.895, -27.7129, 0.0};
 
     std::vector<CameraFramedPosition> const knownPositions{
         {-72.4478, 125.483, 755},  {72.4478, 125.483, 755},
-        {144.896, 0, 755},         {72.4478, -125.483, 755},
-        {-72.4478, -125.483, 755}, {-144.896, 0, 755}};
+        {146.895, 3.4642, 755},    {64.446, -139.34, 755},
+        {-68.4476, -132.411, 755}, {-160.895, 27.7129, 755}};
 
     enum IDX : size_t {
       BOTTOMLEFT = 0,
@@ -81,7 +82,7 @@ auto main() -> int {
     // This is what we want to test.
     // Given all of the above, are we able to get back the
     // values that we fed into OpenScad?
-    auto constexpr EPS{1.4_d};
+    auto constexpr EPS{1.7_d};
     // Check the absolute positions first.
     for (gsl::index i{0}; i < std::ssize(positions); ++i) {
       expect((i < std::ssize(knownPositions) and i < std::ssize(idxNames)) >>
@@ -117,47 +118,8 @@ auto main() -> int {
     }
     expect(positions[TOPRIGHT].y < 0.0 and positions[TOPLEFT].y < 0.0)
         << "Top markers should have negative y";
-    expect(std::abs(positions[RIGHTEST].y) < EPS and
-           std::abs(positions[LEFTEST].y) < EPS)
-        << "Rightest/leftest markers must be near the xz plane";
     expect(positions[BOTTOMRIGHT].y > 0.0 and positions[BOTTOMLEFT].y > 0.0)
         << "Bottom (red) markers must have positive y";
-
-    // Check that we have some symmetrical properties
-    expect(std::abs(positions[RIGHTEST].x + positions[LEFTEST].x) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[RIGHTEST].y - positions[LEFTEST].y) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[RIGHTEST].z - positions[LEFTEST].z) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[TOPRIGHT].x + positions[TOPLEFT].x) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[TOPRIGHT].y - positions[TOPLEFT].y) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[TOPRIGHT].z - positions[TOPLEFT].z) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[BOTTOMRIGHT].x + positions[BOTTOMLEFT].x) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[BOTTOMRIGHT].y - positions[BOTTOMLEFT].y) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-    expect(std::abs(positions[BOTTOMRIGHT].z - positions[BOTTOMLEFT].z) < EPS)
-        << "Left/right positions should be mirrored over yz plane";
-
-    // Check that LEFT/RIGHT direction gets equal treatment as
-    // TOPLEFT/BOTTOMRIGHT direction
-    expect(std::abs(cv::norm(positions[RIGHTEST] - positions[LEFTEST]) -
-                    cv::norm(positions[TOPRIGHT] - positions[BOTTOMLEFT])) <
-           EPS)
-        << "Largest crossovers should be of equal length";
-    expect(std::abs(cv::norm(positions[TOPLEFT] - positions[BOTTOMRIGHT]) -
-                    cv::norm(positions[TOPRIGHT] - positions[BOTTOMLEFT])) <
-           EPS)
-        << "Largest crossovers should be of equal length";
-
-    expect(std::abs(cv::norm(positions[RIGHTEST] - positions[LEFTEST]) -
-                    cv::norm(knownPositions[RIGHTEST] -
-                             knownPositions[LEFTEST])) < EPS)
-        << "The largest crossovers should have the correct length";
   };
 
   return 0;

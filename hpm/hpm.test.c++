@@ -27,9 +27,10 @@ auto main() -> int {
   double constexpr markerDiameter{32.0};
 
   "Mover pose from OpenScad generated image"_test = [&openScadCameraMatrix] {
-    std::string const imageFileName{hpm::getPath(
-        "test-images/"
-        "generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500.png")};
+    std::string const imageFileName{
+        hpm::getPath("test-images/"
+                     "generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_"
+                     "1500_white.png")};
     cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
     expect((not image.empty()) >> fatal);
 
@@ -37,9 +38,9 @@ auto main() -> int {
     SixDof const cameraWorldPose{{2.61799387799149, 0.0, 0.0},
                                  {0, -750.0, 1299.03810567666}};
     ProvidedMarkerPositions const providedMarkerPositions{
-        -72.4478, -125.483, 150.43, 72.4478,   -125.483, 150.43,
-        144.8960, 0.0,      150.43, 72.4478,   125.483,  150.43,
-        -72.4478, 125.483,  150.43, -144.8960, 0.0,      150.43};
+        -72.4478, -125.483, 150.43, 72.4478,  -125.483, 150.43,
+        146.895,  -3.4642,  150.43, 64.446,   139.34,   150.43,
+        -68.4476, 132.411,  150.43, -160.895, -27.7129, 150.43};
     double const meanFocalLength{std::midpoint(cameraMatrix.at<double>(0, 0),
                                                cameraMatrix.at<double>(1, 1))};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
@@ -58,7 +59,7 @@ auto main() -> int {
     SixDof const pose{effectorWorldPose(effectorPoseRelativeToCamera.value(),
                                         cameraWorldPose)};
 
-    auto constexpr EPS{0.25_d};
+    auto constexpr EPS{0.11_d};
     expect(abs(pose.x()) < EPS) << "translation X";
     expect(abs(pose.y()) < EPS) << "translation Y";
     expect(abs(pose.z()) < EPS) << "translation Z";
