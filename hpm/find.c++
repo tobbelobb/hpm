@@ -91,20 +91,6 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
   return group;
 }
 
-auto find(cv::InputArray undistortedImage,
-          hpm::ProvidedMarkerPositions const &markPos, double const focalLength,
-          hpm::PixelPosition const &imageCenter, double const markerDiameter,
-          bool showIntermediateImages, bool verbose, bool fitByDistance,
-          PixelPosition const &expectedTopLeftestCenter) -> FindResult {
-  Marks const marks{findMarks(undistortedImage, markPos, focalLength,
-                              imageCenter, markerDiameter,
-                              showIntermediateImages, verbose, fitByDistance,
-                              expectedTopLeftestCenter)};
-  SolvePnpPoints const points{marks, markerDiameter / 2.0, focalLength,
-                              imageCenter};
-  return {points, marks};
-}
-
 auto findMarks(cv::InputArray undistortedImage,
                hpm::ProvidedMarkerPositions const &markPos,
                double const focalLength, PixelPosition const &imageCenter,

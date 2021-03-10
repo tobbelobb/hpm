@@ -12,23 +12,6 @@ ENABLE_WARNINGS
 #include <iostream>
 #include <vector>
 
-namespace hpm {
-struct FindResult {
-  SolvePnpPoints points;
-  Marks marks;
-};
-} // namespace hpm
-
-hpm::FindResult find(cv::InputArray undistortedImage,
-                     hpm::ProvidedMarkerPositions const &markPos,
-                     double const focalLength,
-                     hpm::PixelPosition const &imageCenter,
-                     double const markerDiameter,
-                     bool showIntermediateImages = false, bool verbose = false,
-                     bool fitByDistance = false,
-                     hpm::PixelPosition const &expectedTopLeftestCenter =
-                         hpm::PixelPosition(0.0, 0.0));
-
 hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::ProvidedMarkerPositions const &markPos,
                      double const focalLength,

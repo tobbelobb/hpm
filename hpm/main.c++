@@ -215,10 +215,13 @@ auto main(int const argc, char **const argv) -> int {
                            distortedImage.type());
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
-  auto const [points, marks] =
-      find(undistortedImage, providedMarkerPositions, meanFocalLength,
-           imageCenter, markerDiameter, showIntermediateImages, verbose,
-           fitByDistance, topLeftMarkerCenter);
+  Marks const marks{findMarks(undistortedImage, providedMarkerPositions,
+                              meanFocalLength, imageCenter, markerDiameter,
+                              showIntermediateImages, verbose, fitByDistance,
+                              topLeftMarkerCenter)};
+
+  SolvePnpPoints const points{marks, markerDiameter / 2.0, meanFocalLength,
+                              imageCenter};
 
   if (points.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{

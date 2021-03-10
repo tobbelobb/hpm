@@ -45,9 +45,13 @@ auto main() -> int {
                                                cameraMatrix.at<double>(1, 1))};
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
-    auto const [points, marks] =
-        find(image, providedMarkerPositions, meanFocalLength, imageCenter,
-             markerDiameter, false, false, true);
+
+    Marks const marks{findMarks(image, providedMarkerPositions, meanFocalLength,
+                                imageCenter, markerDiameter, false, false,
+                                true)};
+
+    SolvePnpPoints const points{marks, markerDiameter / 2.0, meanFocalLength,
+                                imageCenter};
 
     expect((points.allIdentified()) >> fatal);
 

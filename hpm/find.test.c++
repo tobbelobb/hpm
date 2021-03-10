@@ -70,10 +70,12 @@ auto main() -> int {
     PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                     cameraMatrix.at<double>(1, 2)};
 
-    auto const res{find(image, providedMarkerPositions, meanFocalLength,
-                        imageCenter, knownMarkerDiameter, false, false, true)};
-    SolvePnpPoints const points{res.points};
-    Marks const marks{res.marks};
+    Marks const marks{findMarks(image, providedMarkerPositions, meanFocalLength,
+                                imageCenter, knownMarkerDiameter, false, false,
+                                true)};
+    SolvePnpPoints const points{marks, knownMarkerDiameter / 2.0,
+                                meanFocalLength, imageCenter};
+
     expect((points.allIdentified()) >> fatal);
     std::vector<CameraFramedPosition> const positions{
         findIndividualMarkerPositions(marks, knownMarkerDiameter,
