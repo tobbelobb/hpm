@@ -54,6 +54,15 @@ struct Ellipse {
                              PixelPosition const &imageCenter) const;
 };
 
+CameraFramedPosition sphereToPosition(Ellipse const &ellipse,
+                                      double focalLength,
+                                      PixelPosition const &imageCenter,
+                                      double sphereDiameter);
+
+CameraFramedPosition diskToPosition(Ellipse const &ellipse, double focalLength,
+                                    PixelPosition const &imageCenter,
+                                    double diskDiameter);
+
 CameraFramedPosition toPosition(Ellipse const &ellipse, double focalLength,
                                 PixelPosition const &imageCenter,
                                 double markerDiameter, MarkerType markerType);

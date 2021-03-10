@@ -1,7 +1,12 @@
-#include <hpm/ellipse-detector.h++>
+#include <hpm/ellipse.h++>
 #include <hpm/util.h++>
 
 #include <boost/ut.hpp> //import boost.ut;
+
+#include <hpm/open-cv-warnings-disabler.h++>
+DISABLE_WARNINGS
+#include <opencv2/core.hpp>
+ENABLE_WARNINGS
 
 using namespace hpm;
 
@@ -9,6 +14,7 @@ auto main() -> int {
   using namespace boost::ut;
 
   double const focalLength{3000.0};
+  double const diskRadius{10.0};
   double const sphereRadius{10.0};
   PixelPosition const imageCenter{10000, 10000};
 
@@ -78,5 +84,17 @@ auto main() -> int {
       }
     }
   };
-  return 0;
+
+  "center flat disk position"_test = [&] {
+    double const zDist{1000.0};
+    double const projectionWidth{2 * diskRadius * focalLength / zDist};
+    double const projectionHeight{projectionWidth};
+    auto const gotPosition =
+        toPosition(Ellipse{imageCenter, projectionWidth, projectionHeight, 0.0},
+                   focalLength, imageCenter, diskRadius * 2, MarkerType::DISK);
+
+    expect(gotPosition.x == 0.0_d);
+    expect(gotPosition.y == 0.0_d);
+    expect(gotPosition.z == 1000.0_d);
+  };
 }

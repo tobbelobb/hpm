@@ -48,10 +48,9 @@ static auto angularRange(double f, double semiMinor, double c, double centerRay)
   return {smallestAng, largestAng};
 }
 
-static auto sphereToPosition(Ellipse const &ellipse, double focalLength,
-                             hpm::PixelPosition const &imageCenter,
-                             double sphereDiameter)
-    -> hpm::CameraFramedPosition {
+auto hpm::sphereToPosition(Ellipse const &ellipse, double focalLength,
+                           hpm::PixelPosition const &imageCenter,
+                           double sphereDiameter) -> hpm::CameraFramedPosition {
   // The ED ellipse detector is good at determining center and minor axes
   // of an ellipse, but very bad at determining the major axis and the rotation.
   // That made this function a bit hard to write.
@@ -103,15 +102,15 @@ static auto sphereToPosition(Ellipse const &ellipse, double focalLength,
   return {dxy * cos(rot), dxy * sin(rot), z};
 }
 
-static auto diskToPosition(Ellipse const &ellipse, double focalLength,
-                           hpm::PixelPosition const &imageCenter,
-                           double diskDiameter) {
+auto hpm::diskToPosition(Ellipse const &ellipse, double focalLength,
+                         hpm::PixelPosition const &imageCenter,
+                         double diskDiameter) -> hpm::CameraFramedPosition {
   return sphereToPosition(ellipse, focalLength, imageCenter, diskDiameter);
 }
 
 auto hpm::toPosition(Ellipse const &ellipse, double focalLength,
                      hpm::PixelPosition const &imageCenter,
-                     double markerDiameter, MarkerType markerType)
+                     double markerDiameter, MarkerType const markerType)
     -> hpm::CameraFramedPosition {
   switch (markerType) {
   case MarkerType::SPHERE:
