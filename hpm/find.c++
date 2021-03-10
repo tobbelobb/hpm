@@ -93,10 +93,10 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
 
 auto findMarks(cv::InputArray undistortedImage,
                MarkerParams const &markerParams, double const focalLength,
-               PixelPosition const &imageCenter, bool showIntermediateImages,
-               bool verbose, bool fitByDistance) -> Marks {
+               PixelPosition const &imageCenter, FinderConfig const &config)
+    -> Marks {
   std::vector<hpm::Ellipse> const ellipses{
-      ellipseDetect(undistortedImage, showIntermediateImages,
+      ellipseDetect(undistortedImage, config.m_showIntermediateImages,
                     markerParams.m_topLeftMarkerCenter)};
   if (ellipses.empty()) {
     return {};
@@ -128,7 +128,7 @@ auto findMarks(cv::InputArray undistortedImage,
   std::vector<size_t> validEllipseIndices{
       distanceGroupIndices(positions, ellipses, bubbleSizeLimit)};
 
-  if (showIntermediateImages and fitByDistance) {
+  if (config.m_showIntermediateImages and config.m_fitByDistance) {
     std::vector<hpm::Ellipse> distanceGroupFiltered;
     for (auto const &ellipseIndex : validEllipseIndices) {
       distanceGroupFiltered.emplace_back(ellipses[ellipseIndex]);
@@ -179,11 +179,11 @@ auto findMarks(cv::InputArray undistortedImage,
   }
 
   std::vector<hpm::Mark> marks;
-  if (fitByDistance and not candidateSixtuples.empty()) {
+  if (config.m_fitByDistance and not candidateSixtuples.empty()) {
     for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
       marks.emplace_back(ellipses[ellipseIndex], markerParams.m_type);
     }
-    if (showIntermediateImages) {
+    if (config.m_showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
       for (auto const &mark : marks) {
         draw(cpy, mark, AQUA);
@@ -197,11 +197,11 @@ auto findMarks(cv::InputArray undistortedImage,
   }
 
   Marks result{std::move(marks)};
-  if (fitByDistance and result.size() == NUMBER_OF_MARKERS) {
+  if (config.m_fitByDistance and result.size() == NUMBER_OF_MARKERS) {
     result.identify(markerParams.m_providedMarkerPositions, focalLength,
                     imageCenter, markerParams.m_diameter);
   }
-  if (verbose) {
+  if (config.m_verbose) {
     std::cout << "Found " << result.size() << " markers\n";
   }
 

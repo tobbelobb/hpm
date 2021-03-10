@@ -74,7 +74,10 @@ auto main() -> int {
                                     knownMarkerDiameter};
 
     Marks const marks{findMarks(image, markerParams, meanFocalLength,
-                                imageCenter, false, false, true)};
+                                imageCenter,
+                                {.m_showIntermediateImages = false,
+                                 .m_verbose = false,
+                                 .m_fitByDistance = true})};
     SolvePnpPoints const points{marks, knownMarkerDiameter / 2.0,
                                 meanFocalLength, imageCenter};
 

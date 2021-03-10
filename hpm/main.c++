@@ -89,6 +89,8 @@ auto main(int const argc, char **const argv) -> int {
         (show == "intermediate") or (show == "i") or showAll;
   }
   bool const fitByDistance{not noFitByDistance};
+  FinderConfig const finderConfig{showIntermediateImages, verbose,
+                                  fitByDistance};
 
   if (printHelp) {
     args.printHelp();
@@ -213,8 +215,7 @@ auto main(int const argc, char **const argv) -> int {
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
   Marks const marks{findMarks(undistortedImage, markerParams, meanFocalLength,
-                              imageCenter, showIntermediateImages, verbose,
-                              fitByDistance)};
+                              imageCenter, finderConfig)};
 
   SolvePnpPoints const points{marks, markerParams.m_diameter / 2.0,
                               meanFocalLength, imageCenter};

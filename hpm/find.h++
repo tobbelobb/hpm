@@ -19,14 +19,19 @@ struct MarkerParams {
   PixelPosition m_topLeftMarkerCenter{0.0, 0.0};
   Mark::Type m_type{Mark::Type::SPHERE};
 };
+
+struct FinderConfig {
+  bool m_showIntermediateImages{false};
+  bool m_verbose{false};
+  bool m_fitByDistance{false};
+};
 } // namespace hpm
 
 hpm::Marks findMarks(cv::InputArray undistortedImage,
                      hpm::MarkerParams const &markerParams,
                      double const focalLength,
                      hpm::PixelPosition const &imageCenter,
-                     bool showIntermediateImages = false, bool verbose = false,
-                     bool fitByDistance = false);
+                     hpm::FinderConfig const &config);
 
 std::vector<hpm::CameraFramedPosition>
 findIndividualMarkerPositions(hpm::Marks const &marks,
