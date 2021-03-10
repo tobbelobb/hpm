@@ -145,10 +145,7 @@ auto main(int const argc, char **const argv) -> int {
             {cameraRotation_, cameraTranslation_}};
   }();
 
-  auto const [providedMarkerPositions, markerDiameter, topLeftMarkerCenter,
-              markerType] =
-      [&markerParamsFileName]() -> std::tuple<ProvidedMarkerPositions, double,
-                                              PixelPosition, Mark::Type> {
+  auto const markerParams = [&markerParamsFileName]() -> MarkerParams {
     try {
       cv::FileStorage const markerParamsFile(markerParamsFileName,
                                              cv::FileStorage::READ);
@@ -199,9 +196,9 @@ auto main(int const argc, char **const argv) -> int {
   PixelPosition const imageCenter{cam.matrix.at<double>(0, 2),
                                   cam.matrix.at<double>(1, 2)};
 
-  if (markerDiameter <= 0.0) {
+  if (markerParams.m_diameter <= 0.0) {
     std::cerr << "Need a positive marker diameter. Can not use "
-              << markerDiameter << '\n';
+              << markerParams.m_diameter << '\n';
     return 1;
   }
 
@@ -215,17 +212,16 @@ auto main(int const argc, char **const argv) -> int {
                            distortedImage.type());
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
 
-  Marks const marks{findMarks(undistortedImage, providedMarkerPositions,
-                              meanFocalLength, imageCenter, markerDiameter,
-                              showIntermediateImages, verbose, fitByDistance,
-                              topLeftMarkerCenter)};
+  Marks const marks{findMarks(undistortedImage, markerParams, meanFocalLength,
+                              imageCenter, showIntermediateImages, verbose,
+                              fitByDistance)};
 
-  SolvePnpPoints const points{marks, markerDiameter / 2.0, meanFocalLength,
-                              imageCenter};
+  SolvePnpPoints const points{marks, markerParams.m_diameter / 2.0,
+                              meanFocalLength, imageCenter};
 
   if (points.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
-        solvePnp(cam.matrix, providedMarkerPositions, points)};
+        solvePnp(cam.matrix, markerParams.m_providedMarkerPositions, points)};
 
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (effectorPoseRelativeToCamera.has_value()) {
@@ -309,7 +305,7 @@ auto main(int const argc, char **const argv) -> int {
   }
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
-      marks, markerDiameter, meanFocalLength, imageCenter)};
+      marks, markerParams.m_diameter, meanFocalLength, imageCenter)};
 
   if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected";

@@ -14,6 +14,7 @@ struct Mark {
   Type m_type{Type::SPHERE};
 
   Mark(Ellipse const e) : m_ellipse(e) {}
+  Mark(Ellipse const e, Type const type) : m_ellipse(e), m_type(type) {}
   Mark(PixelPosition const center, double major, double minor, double rot)
       : m_ellipse(center, major, minor, rot) {}
   Mark(PixelPosition const &center, double size) : m_ellipse(center, size) {}

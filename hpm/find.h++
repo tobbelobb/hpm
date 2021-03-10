@@ -12,15 +12,21 @@ ENABLE_WARNINGS
 #include <iostream>
 #include <vector>
 
+namespace hpm {
+struct MarkerParams {
+  ProvidedMarkerPositions m_providedMarkerPositions{0.0};
+  double m_diameter{0.0};
+  PixelPosition m_topLeftMarkerCenter{0.0, 0.0};
+  Mark::Type m_type{Mark::Type::SPHERE};
+};
+} // namespace hpm
+
 hpm::Marks findMarks(cv::InputArray undistortedImage,
-                     hpm::ProvidedMarkerPositions const &markPos,
+                     hpm::MarkerParams const &markerParams,
                      double const focalLength,
                      hpm::PixelPosition const &imageCenter,
-                     double const markerDiameter,
                      bool showIntermediateImages = false, bool verbose = false,
-                     bool fitByDistance = false,
-                     hpm::PixelPosition const &expectedTopLeftestCenter =
-                         hpm::PixelPosition(0.0, 0.0));
+                     bool fitByDistance = false);
 
 std::vector<hpm::CameraFramedPosition>
 findIndividualMarkerPositions(hpm::Marks const &marks,

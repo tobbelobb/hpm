@@ -92,13 +92,12 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
 }
 
 auto findMarks(cv::InputArray undistortedImage,
-               hpm::ProvidedMarkerPositions const &markPos,
-               double const focalLength, PixelPosition const &imageCenter,
-               double const markerDiameter, bool showIntermediateImages,
-               bool verbose, bool fitByDistance,
-               PixelPosition const &expectedTopLeftestCenter) -> Marks {
-  std::vector<hpm::Ellipse> const ellipses{ellipseDetect(
-      undistortedImage, showIntermediateImages, expectedTopLeftestCenter)};
+               MarkerParams const &markerParams, double const focalLength,
+               PixelPosition const &imageCenter, bool showIntermediateImages,
+               bool verbose, bool fitByDistance) -> Marks {
+  std::vector<hpm::Ellipse> const ellipses{
+      ellipseDetect(undistortedImage, showIntermediateImages,
+                    markerParams.m_topLeftMarkerCenter)};
   if (ellipses.empty()) {
     return {};
   }
@@ -109,15 +108,16 @@ auto findMarks(cv::InputArray undistortedImage,
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
     positions.emplace_back(
-        e.toPosition(focalLength, imageCenter, markerDiameter));
+        e.toPosition(focalLength, imageCenter, markerParams.m_diameter));
   }
 
   std::vector<double> expectedDists;
   expectedDists.reserve(NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1) / 2);
   for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
     for (size_t j{i + 1}; j < NUMBER_OF_MARKERS; ++j) {
-      double const dist = cv::norm(markPos.row(static_cast<int>(i)) -
-                                   markPos.row(static_cast<int>(j)));
+      double const dist = cv::norm(
+          markerParams.m_providedMarkerPositions.row(static_cast<int>(i)) -
+          markerParams.m_providedMarkerPositions.row(static_cast<int>(j)));
       expectedDists.emplace_back(dist);
     }
   }
@@ -181,7 +181,7 @@ auto findMarks(cv::InputArray undistortedImage,
   std::vector<hpm::Mark> marks;
   if (fitByDistance and not candidateSixtuples.empty()) {
     for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
-      marks.emplace_back(ellipses[ellipseIndex]);
+      marks.emplace_back(ellipses[ellipseIndex], markerParams.m_type);
     }
     if (showIntermediateImages) {
       cv::Mat cpy = imageMat.clone();
@@ -192,13 +192,14 @@ auto findMarks(cv::InputArray undistortedImage,
     }
   } else {
     for (auto const &e : ellipses) {
-      marks.emplace_back(e);
+      marks.emplace_back(e, markerParams.m_type);
     }
   }
 
   Marks result{std::move(marks)};
   if (fitByDistance and result.size() == NUMBER_OF_MARKERS) {
-    result.identify(markPos, focalLength, imageCenter, markerDiameter);
+    result.identify(markerParams.m_providedMarkerPositions, focalLength,
+                    imageCenter, markerParams.m_diameter);
   }
   if (verbose) {
     std::cout << "Found " << result.size() << " markers\n";
