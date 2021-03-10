@@ -213,9 +213,9 @@ auto main(int const argc, char **const argv) -> int {
   cv::Mat undistortedImage(distortedImage.rows, distortedImage.cols,
                            distortedImage.type());
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
+  FinderImage const finderImage{undistortedImage, meanFocalLength, imageCenter};
 
-  Marks const marks{findMarks(undistortedImage, markerParams, meanFocalLength,
-                              imageCenter, finderConfig)};
+  Marks const marks{findMarks(finderImage, markerParams, finderConfig)};
 
   SolvePnpPoints const points{marks, markerParams.m_diameter / 2.0,
                               meanFocalLength, imageCenter};

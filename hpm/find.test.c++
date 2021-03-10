@@ -73,8 +73,9 @@ auto main() -> int {
     MarkerParams const markerParams{providedMarkerPositions,
                                     knownMarkerDiameter};
 
-    Marks const marks{findMarks(image, markerParams, meanFocalLength,
-                                imageCenter,
+    FinderImage const finderImage{image, meanFocalLength, imageCenter};
+
+    Marks const marks{findMarks(finderImage, markerParams,
                                 {.m_showIntermediateImages = false,
                                  .m_verbose = false,
                                  .m_fitByDistance = true})};

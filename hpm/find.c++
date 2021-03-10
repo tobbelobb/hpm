@@ -91,24 +91,20 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
   return group;
 }
 
-auto findMarks(cv::InputArray undistortedImage,
-               MarkerParams const &markerParams, double const focalLength,
-               PixelPosition const &imageCenter, FinderConfig const &config)
-    -> Marks {
+auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
+               FinderConfig const &config) -> Marks {
   std::vector<hpm::Ellipse> const ellipses{
-      ellipseDetect(undistortedImage, config.m_showIntermediateImages,
+      ellipseDetect(image.m_mat, config.m_showIntermediateImages,
                     markerParams.m_topLeftMarkerCenter)};
   if (ellipses.empty()) {
     return {};
   }
 
-  cv::Mat imageMat{undistortedImage.getMat()};
-
   std::vector<hpm::CameraFramedPosition> positions;
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
-    positions.emplace_back(
-        e.toPosition(focalLength, imageCenter, markerParams.m_diameter));
+    positions.emplace_back(e.toPosition(image.m_focalLength, image.m_center,
+                                        markerParams.m_diameter));
   }
 
   std::vector<double> expectedDists;
@@ -133,7 +129,7 @@ auto findMarks(cv::InputArray undistortedImage,
     for (auto const &ellipseIndex : validEllipseIndices) {
       distanceGroupFiltered.emplace_back(ellipses[ellipseIndex]);
     }
-    cv::Mat cpy = imageMat.clone();
+    cv::Mat cpy = image.m_mat.clone();
     for (auto const &ellipse : distanceGroupFiltered) {
       draw(cpy, ellipse, AQUA);
     }
@@ -184,7 +180,7 @@ auto findMarks(cv::InputArray undistortedImage,
       marks.emplace_back(ellipses[ellipseIndex], markerParams.m_type);
     }
     if (config.m_showIntermediateImages) {
-      cv::Mat cpy = imageMat.clone();
+      cv::Mat cpy = image.m_mat.clone();
       for (auto const &mark : marks) {
         draw(cpy, mark, AQUA);
       }
@@ -198,8 +194,8 @@ auto findMarks(cv::InputArray undistortedImage,
 
   Marks result{std::move(marks)};
   if (config.m_fitByDistance and result.size() == NUMBER_OF_MARKERS) {
-    result.identify(markerParams.m_providedMarkerPositions, focalLength,
-                    imageCenter, markerParams.m_diameter);
+    result.identify(markerParams.m_providedMarkerPositions, image.m_focalLength,
+                    image.m_center, markerParams.m_diameter);
   }
   if (config.m_verbose) {
     std::cout << "Found " << result.size() << " markers\n";

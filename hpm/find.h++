@@ -25,12 +25,16 @@ struct FinderConfig {
   bool m_verbose{false};
   bool m_fitByDistance{false};
 };
+
+struct FinderImage {
+  cv::Mat m_mat;
+  double m_focalLength;
+  PixelPosition m_center;
+};
 } // namespace hpm
 
-hpm::Marks findMarks(cv::InputArray undistortedImage,
+hpm::Marks findMarks(hpm::FinderImage const &image,
                      hpm::MarkerParams const &markerParams,
-                     double const focalLength,
-                     hpm::PixelPosition const &imageCenter,
                      hpm::FinderConfig const &config);
 
 std::vector<hpm::CameraFramedPosition>
