@@ -52,9 +52,10 @@ struct Ellipse {
 
   PixelPosition getCenterRay(double const markerR, double const f,
                              PixelPosition const &imageCenter) const;
-
-  hpm::CameraFramedPosition toPosition(double focalLength,
-                                       hpm::PixelPosition const &imageCenter,
-                                       double markerDiameter) const;
 };
+
+CameraFramedPosition toPosition(Ellipse const &ellipse, double focalLength,
+                                PixelPosition const &imageCenter,
+                                double markerDiameter, MarkerType markerType);
+
 } // namespace hpm

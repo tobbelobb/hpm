@@ -34,4 +34,5 @@ using Vector3d = cv::Vec3d;
 size_t constexpr NUMBER_OF_MARKERS{6};
 using ProvidedMarkerPositions = cv::Matx<double, NUMBER_OF_MARKERS, 3>;
 
+enum class MarkerType { SPHERE, DISK };
 } // namespace hpm

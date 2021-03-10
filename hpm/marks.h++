@@ -8,13 +8,9 @@
 namespace hpm {
 
 struct Mark {
-  enum class Type { SPHERE, DISK };
-
   Ellipse m_ellipse;
-  Type m_type{Type::SPHERE};
 
   Mark(Ellipse const e) : m_ellipse(e) {}
-  Mark(Ellipse const e, Type const type) : m_ellipse(e), m_type(type) {}
   Mark(PixelPosition const center, double major, double minor, double rot)
       : m_ellipse(center, major, minor, rot) {}
   Mark(PixelPosition const &center, double size) : m_ellipse(center, size) {}
@@ -22,12 +18,6 @@ struct Mark {
   explicit Mark(cv::KeyPoint const &keyPointIn) : m_ellipse(keyPointIn) {}
 
   bool operator==(Mark const &) const = default;
-
-  hpm::CameraFramedPosition toPosition(double focalLength,
-                                       hpm::PixelPosition const &imageCenter,
-                                       double markerDiameter) const {
-    return m_ellipse.toPosition(focalLength, imageCenter, markerDiameter);
-  }
 
   PixelPosition getCenter() const { return m_ellipse.m_center; }
   PixelPosition getCenterRay(double const markerR, double const f,
@@ -41,9 +31,12 @@ struct Marks {
 
   size_t size() const { return m_marks.size(); }
   std::vector<Mark> getCopy() const { return m_marks; }
-  double identify(hpm::ProvidedMarkerPositions const &markPos,
-                  double const focalLength,
-                  hpm::PixelPosition const &imageCenter,
-                  double const markerDiameter);
+  double identify(ProvidedMarkerPositions const &markPos,
+                  double const focalLength, PixelPosition const &imageCenter,
+                  double const markerDiameter, MarkerType markerType);
 };
+
+CameraFramedPosition toPosition(Mark const &mark, double focalLength,
+                                hpm::PixelPosition const &imageCenter,
+                                double markerDiameter, MarkerType markerType);
 } // namespace hpm

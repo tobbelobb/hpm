@@ -17,7 +17,7 @@ struct MarkerParams {
   ProvidedMarkerPositions m_providedMarkerPositions{0.0};
   double m_diameter{0.0};
   PixelPosition m_topLeftMarkerCenter{0.0, 0.0};
-  Mark::Type m_type{Mark::Type::SPHERE};
+  MarkerType m_type{MarkerType::SPHERE};
 };
 
 struct FinderConfig {
@@ -37,7 +37,6 @@ hpm::Marks findMarks(hpm::FinderImage const &image,
                      hpm::MarkerParams const &markerParams,
                      hpm::FinderConfig const &config);
 
-std::vector<hpm::CameraFramedPosition>
-findIndividualMarkerPositions(hpm::Marks const &marks,
-                              double knownMarkerDiameter, double focalLength,
-                              hpm::PixelPosition const &imageCenter);
+std::vector<hpm::CameraFramedPosition> findIndividualMarkerPositions(
+    hpm::Marks const &marks, double knownMarkerDiameter, double focalLength,
+    hpm::PixelPosition const &imageCenter, hpm::MarkerType markerType);

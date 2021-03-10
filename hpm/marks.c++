@@ -28,7 +28,7 @@ static void fanSort(std::vector<hpm::Mark> &fan) {
 double Marks::identify(ProvidedMarkerPositions const &markPos,
                        double const focalLength,
                        PixelPosition const &imageCenter,
-                       double const markerDiameter) {
+                       double const markerDiameter, MarkerType markerType) {
 
   if (not(size() >= NUMBER_OF_MARKERS)) {
     return std::numeric_limits<double>::max();
@@ -47,7 +47,7 @@ double Marks::identify(ProvidedMarkerPositions const &markPos,
   std::vector<CameraFramedPosition> positions{};
   for (auto const &mark : m_marks) {
     positions.emplace_back(
-        mark.toPosition(focalLength, imageCenter, markerDiameter));
+        toPosition(mark, focalLength, imageCenter, markerDiameter, markerType));
   }
   std::vector<double> foundDists;
   foundDists.reserve(NUMBER_OF_MARKERS);
@@ -74,4 +74,12 @@ double Marks::identify(ProvidedMarkerPositions const &markPos,
               std::end(m_marks));
 
   return errs[static_cast<size_t>(bestErrIdx)];
+}
+
+auto hpm::toPosition(Mark const &mark, double focalLength,
+                     hpm::PixelPosition const &imageCenter,
+                     double markerDiameter, MarkerType markerType)
+    -> CameraFramedPosition {
+  return toPosition(mark.m_ellipse, focalLength, imageCenter, markerDiameter,
+                    markerType);
 }

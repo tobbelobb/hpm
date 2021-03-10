@@ -103,8 +103,9 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   std::vector<hpm::CameraFramedPosition> positions;
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
-    positions.emplace_back(e.toPosition(image.m_focalLength, image.m_center,
-                                        markerParams.m_diameter));
+    positions.emplace_back(toPosition(e, image.m_focalLength, image.m_center,
+                                      markerParams.m_diameter,
+                                      markerParams.m_type));
   }
 
   std::vector<double> expectedDists;
@@ -177,7 +178,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   std::vector<hpm::Mark> marks;
   if (config.m_fitByDistance and not candidateSixtuples.empty()) {
     for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
-      marks.emplace_back(ellipses[ellipseIndex], markerParams.m_type);
+      marks.emplace_back(ellipses[ellipseIndex]);
     }
     if (config.m_showIntermediateImages) {
       cv::Mat cpy = image.m_mat.clone();
@@ -188,14 +189,15 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     }
   } else {
     for (auto const &e : ellipses) {
-      marks.emplace_back(e, markerParams.m_type);
+      marks.emplace_back(e);
     }
   }
 
   Marks result{std::move(marks)};
   if (config.m_fitByDistance and result.size() == NUMBER_OF_MARKERS) {
     result.identify(markerParams.m_providedMarkerPositions, image.m_focalLength,
-                    image.m_center, markerParams.m_diameter);
+                    image.m_center, markerParams.m_diameter,
+                    markerParams.m_type);
   }
   if (config.m_verbose) {
     std::cout << "Found " << result.size() << " markers\n";
@@ -207,13 +209,14 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
 auto findIndividualMarkerPositions(Marks const &marks,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
-                                   PixelPosition const &imageCenter)
+                                   PixelPosition const &imageCenter,
+                                   MarkerType markerType)
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
   for (auto const &detected : marks.m_marks) {
-    positions.emplace_back(
-        detected.toPosition(focalLength, imageCenter, knownMarkerDiameter));
+    positions.emplace_back(toPosition(detected, focalLength, imageCenter,
+                                      knownMarkerDiameter, markerType));
   }
 
   return positions;

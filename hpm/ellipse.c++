@@ -48,27 +48,28 @@ static auto angularRange(double f, double semiMinor, double c, double centerRay)
   return {smallestAng, largestAng};
 }
 
-auto hpm::Ellipse::toPosition(double focalLength,
-                              hpm::PixelPosition const &imageCenter,
-                              double markerDiameter) const
+static auto sphereToPosition(Ellipse const &ellipse, double focalLength,
+                             hpm::PixelPosition const &imageCenter,
+                             double sphereDiameter)
     -> hpm::CameraFramedPosition {
   // The ED ellipse detector is good at determining center and minor axes
   // of an ellipse, but very bad at determining the major axis and the rotation.
   // That made this function a bit hard to write.
-  double const markerR = markerDiameter / 2;
+  double const sphereR = sphereDiameter / 2;
   double const f = focalLength;
-  double const semiMinor = m_minor / 2;
+  double const semiMinor = ellipse.m_minor / 2;
 
-  // Luckily, the z position of the marker is determined by the
+  // Luckily, the z position of the sphere is determined by the
   // minor axis alone, no need for the major axis or rotation.
-  double const z = zFromSemiMinor(markerR, f, semiMinor);
+  double const z = zFromSemiMinor(sphereR, f, semiMinor);
 
-  // The center of the ellipse is not a projection of the center of the marker.
-  // Rather, the center of the marker projects into a point slightly closer
+  // The center of the ellipse is not a projection of the center of the sphere.
+  // Rather, the center of the sphere projects into a point slightly closer
   // to the center of the image, like this
-  PixelPosition const imageCenterToEllipseCenter = m_center - imageCenter;
+  PixelPosition const imageCenterToEllipseCenter =
+      ellipse.m_center - imageCenter;
   double const c = cv::norm(imageCenterToEllipseCenter);
-  double const centerRay = centerRayFromZ(c, markerR, z);
+  double const centerRay = centerRayFromZ(c, sphereR, z);
 
   // The center ray and the ellipse center give us the scaling
   // factor between minor and major axis, which lets
@@ -85,18 +86,38 @@ auto hpm::Ellipse::toPosition(double focalLength,
 
   // We know that
   //   theta = asin(r/d),
-  // where r is markerR,
-  // and d is the marker's total distance from the pinhole
-  double const d = markerR / sin(theta);
+  // where r is sphereR,
+  // and d is the sphere's total distance from the pinhole
+  double const d = sphereR / sin(theta);
 
   // Extracting the xy-distance using the angle between the center ray
   // and the image axis
   double const dxy = sin(alpha) * d;
 
-  // Since ed isn't good at finding m_rot, let's calculate the rotation
-  // based on the center point, which is more accurately detected by ed.
+  // Since ed isn't good at finding ellipse.m_rot for spheres, let's calculate
+  // the rotation based on the center point, which is more accurately detected
+  // by ed.
   double const rot =
       atan2(imageCenterToEllipseCenter.y, imageCenterToEllipseCenter.x);
 
   return {dxy * cos(rot), dxy * sin(rot), z};
+}
+
+static auto diskToPosition(Ellipse const &ellipse, double focalLength,
+                           hpm::PixelPosition const &imageCenter,
+                           double diskDiameter) {
+  return sphereToPosition(ellipse, focalLength, imageCenter, diskDiameter);
+}
+
+auto hpm::toPosition(Ellipse const &ellipse, double focalLength,
+                     hpm::PixelPosition const &imageCenter,
+                     double markerDiameter, MarkerType markerType)
+    -> hpm::CameraFramedPosition {
+  switch (markerType) {
+  case MarkerType::SPHERE:
+    return sphereToPosition(ellipse, focalLength, imageCenter, markerDiameter);
+  case MarkerType::DISK:
+    return diskToPosition(ellipse, focalLength, imageCenter, markerDiameter);
+  }
+  return {0.0, 0.0, 0.0};
 }

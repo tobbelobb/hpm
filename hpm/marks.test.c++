@@ -7,7 +7,7 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
 
-  "identify marks according to provided positions"_test = [] {
+  "identify sphere-marks according to provided positions"_test = [] {
     // clang-format off
     cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0, 1000.0,
                                                                0.0, 3000.0, 1000.0,
@@ -41,8 +41,9 @@ auto main() -> int {
     Marks const marksCpy{marks};
     // clang-format on
 
-    double const err = marks.identify(providedPositions, focalLength,
-                                      imageCenter, knownMarkerDiameter);
+    double const err =
+        marks.identify(providedPositions, focalLength, imageCenter,
+                       knownMarkerDiameter, MarkerType::SPHERE);
     expect(marks.m_marks[0] == marksCpy.m_marks[3]);
     expect(marks.m_marks[1] == marksCpy.m_marks[4]);
     expect(marks.m_marks[2] == marksCpy.m_marks[5]);

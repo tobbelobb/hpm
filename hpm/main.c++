@@ -181,9 +181,9 @@ auto main(int const argc, char **const argv) -> int {
                            std::begin(markerType_),
                            [](unsigned char c) { return std::tolower(c); });
             if (markerType_ == "disk" or markerType_ == "disc") {
-              return Mark::Type::DISK;
+              return MarkerType::DISK;
             }
-            return Mark::Type::SPHERE;
+            return MarkerType::SPHERE;
           }()};
     } catch (std::exception const &e) {
       std::cerr << "Could not read marker parameters from file "
@@ -218,7 +218,7 @@ auto main(int const argc, char **const argv) -> int {
   Marks const marks{findMarks(finderImage, markerParams, finderConfig)};
 
   SolvePnpPoints const points{marks, markerParams.m_diameter / 2.0,
-                              meanFocalLength, imageCenter};
+                              finderImage.m_focalLength, finderImage.m_center};
 
   if (points.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
@@ -306,7 +306,8 @@ auto main(int const argc, char **const argv) -> int {
   }
 
   auto const cameraFramedPositions{findIndividualMarkerPositions(
-      marks, markerParams.m_diameter, meanFocalLength, imageCenter)};
+      marks, markerParams.m_diameter, meanFocalLength, imageCenter,
+      markerParams.m_type)};
 
   if (cameraFramedPositions.empty()) {
     std::cout << "No markers detected";

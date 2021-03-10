@@ -85,7 +85,8 @@ auto main() -> int {
     expect((points.allIdentified()) >> fatal);
     std::vector<CameraFramedPosition> const positions{
         findIndividualMarkerPositions(marks, knownMarkerDiameter,
-                                      meanFocalLength, imageCenter)};
+                                      meanFocalLength, imageCenter,
+                                      MarkerType::SPHERE)};
 
     // This is what we want to test.
     // Given all of the above, are we able to get back the
