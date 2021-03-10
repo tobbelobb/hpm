@@ -30,14 +30,15 @@
  -48.645  167.742  162.885 <!-- Marker 4 -->
 -170.010  -41.238  162.885 <!-- Marker 5 -->
   </data></marker_positions>
-<marker_diameter>31.8</marker_diameter>
-<background_diameter>62.8</background_diameter>
+<marker_diameter>65.0</marker_diameter>
+<marker_type>disk</marker_type>
 <topleft_marker_center type_id="opencv-matrix">
   <rows>1</rows>
   <cols>2</cols>
   <dt>d</dt>
   <data>
-    75.7563 51.9041
+    <!--452.742 303.471-->
+    0 0
   </data>
 </topleft_marker_center>
 </opencv_storage>

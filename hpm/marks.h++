@@ -8,7 +8,10 @@
 namespace hpm {
 
 struct Mark {
+  enum class Type { SPHERE, DISK };
+
   Ellipse m_ellipse;
+  Type m_type{Type::SPHERE};
 
   Mark(Ellipse const e) : m_ellipse(e) {}
   Mark(PixelPosition const center, double major, double minor, double rot)

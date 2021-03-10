@@ -2,6 +2,7 @@
 #include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
 #include <hpm/hpm.h++>
+#include <hpm/marks.h++>
 #include <hpm/simple-types.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/util.h++>
@@ -16,9 +17,11 @@ DISABLE_WARNINGS
 #include <opencv2/imgcodecs.hpp>
 ENABLE_WARNINGS
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <numeric>
+#include <string>
 
 using namespace hpm;
 
@@ -142,9 +145,10 @@ auto main(int const argc, char **const argv) -> int {
             {cameraRotation_, cameraTranslation_}};
   }();
 
-  auto const [providedMarkerPositions, markerDiameter,
-              topLeftMarkerCenter] = [&markerParamsFileName]()
-      -> std::tuple<ProvidedMarkerPositions, double, PixelPosition> {
+  auto const [providedMarkerPositions, markerDiameter, topLeftMarkerCenter,
+              markerType] =
+      [&markerParamsFileName]() -> std::tuple<ProvidedMarkerPositions, double,
+                                              PixelPosition, Mark::Type> {
     try {
       cv::FileStorage const markerParamsFile(markerParamsFileName,
                                              cv::FileStorage::READ);
@@ -170,6 +174,17 @@ auto main(int const argc, char **const argv) -> int {
             PixelPosition const topLeftMarkerCenter_pp(topLeftMarkerCenter_(0),
                                                        topLeftMarkerCenter_(1));
             return topLeftMarkerCenter_pp;
+          }(),
+          [&markerParamsFile]() {
+            std::string markerType_;
+            markerParamsFile["marker_type"] >> markerType_;
+            std::transform(std::begin(markerType_), std::end(markerType_),
+                           std::begin(markerType_),
+                           [](unsigned char c) { return std::tolower(c); });
+            if (markerType_ == "disk" or markerType_ == "disc") {
+              return Mark::Type::DISK;
+            }
+            return Mark::Type::SPHERE;
           }()};
     } catch (std::exception const &e) {
       std::cerr << "Could not read marker parameters from file "
