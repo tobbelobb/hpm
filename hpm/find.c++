@@ -92,7 +92,7 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
 }
 
 auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
-               FinderConfig const &config) -> Marks {
+               FinderConfig const &config) -> std::vector<hpm::Ellipse> {
   std::vector<hpm::Ellipse> const ellipses{
       ellipseDetect(image.m_mat, config.m_showIntermediateImages,
                     markerParams.m_topLeftMarkerCenter)};
@@ -103,8 +103,8 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   std::vector<hpm::CameraFramedPosition> positions;
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
-    positions.emplace_back(toPosition(e, image.m_focalLength, image.m_center,
-                                      markerParams.m_diameter,
+    positions.emplace_back(toPosition(e, markerParams.m_diameter,
+                                      image.m_focalLength, image.m_center,
                                       markerParams.m_type));
   }
 
@@ -175,7 +175,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
         std::begin(errs), std::min_element(std::begin(errs), std::end(errs))));
   }
 
-  std::vector<hpm::Mark> marks;
+  std::vector<hpm::Ellipse> marks;
   if (config.m_fitByDistance and not candidateSixtuples.empty()) {
     for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
       marks.emplace_back(ellipses[ellipseIndex]);
@@ -193,20 +193,19 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     }
   }
 
-  Marks result{std::move(marks)};
-  if (config.m_fitByDistance and result.size() == NUMBER_OF_MARKERS) {
-    result.identify(markerParams.m_providedMarkerPositions, image.m_focalLength,
-                    image.m_center, markerParams.m_diameter,
-                    markerParams.m_type);
+  if (config.m_fitByDistance and marks.size() == NUMBER_OF_MARKERS) {
+    identify(marks, markerParams.m_diameter,
+             markerParams.m_providedMarkerPositions, image.m_focalLength,
+             image.m_center, markerParams.m_type);
   }
   if (config.m_verbose) {
-    std::cout << "Found " << result.size() << " markers\n";
+    std::cout << "Found " << marks.size() << " markers\n";
   }
 
-  return result;
+  return marks;
 }
 
-auto findIndividualMarkerPositions(Marks const &marks,
+auto findIndividualMarkerPositions(std::vector<hpm::Ellipse> const &marks,
                                    double const knownMarkerDiameter,
                                    double const focalLength,
                                    PixelPosition const &imageCenter,
@@ -214,9 +213,9 @@ auto findIndividualMarkerPositions(Marks const &marks,
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
-  for (auto const &detected : marks.m_marks) {
-    positions.emplace_back(toPosition(detected, focalLength, imageCenter,
-                                      knownMarkerDiameter, markerType));
+  for (auto const &detected : marks) {
+    positions.emplace_back(toPosition(detected, knownMarkerDiameter,
+                                      focalLength, imageCenter, markerType));
   }
 
   return positions;

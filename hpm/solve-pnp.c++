@@ -9,16 +9,18 @@ ENABLE_WARNINGS
 
 using namespace hpm;
 
-SolvePnpPoints::SolvePnpPoints(Marks const &marks, double const markerR,
-                               double const f,
-                               PixelPosition const &imageCenter) {
+SolvePnpPoints::SolvePnpPoints(std::vector<hpm::Ellipse> const &marks,
+                               double const markerDiameter,
+                               double const focalLength,
+                               PixelPosition const &imageCenter,
+                               MarkerType const markerType) {
   if (marks.size() != 6) {
     return;
   }
 
   for (size_t i{0}; i < m_pixelPositions.size() and i < marks.size(); ++i) {
-    m_pixelPositions[i] =
-        marks.m_marks[i].getCenterRay(markerR, f, imageCenter);
+    m_pixelPositions[i] = centerRay(marks[i], markerDiameter, focalLength,
+                                    imageCenter, markerType);
     m_identified[i] = true;
   }
 }

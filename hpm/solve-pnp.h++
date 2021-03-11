@@ -32,8 +32,10 @@ struct SolvePnpPoints {
     std::fill(m_identified.begin(), m_identified.end(), true);
   }
 
-  explicit SolvePnpPoints(Marks const &marks, double const markerR,
-                          double const f, PixelPosition const &imageCenter);
+  explicit SolvePnpPoints(std::vector<hpm::Ellipse> const &marks,
+                          double markerDiameter, double focalLength,
+                          PixelPosition const &imageCenter,
+                          MarkerType markerType);
 
   [[nodiscard]] bool isIdentified(size_t idx) const;
   [[nodiscard]] PixelPosition get(size_t idx) const;

@@ -33,10 +33,12 @@ struct FinderImage {
 };
 } // namespace hpm
 
-hpm::Marks findMarks(hpm::FinderImage const &image,
-                     hpm::MarkerParams const &markerParams,
-                     hpm::FinderConfig const &config);
+std::vector<hpm::Ellipse> findMarks(hpm::FinderImage const &image,
+                                    hpm::MarkerParams const &markerParams,
+                                    hpm::FinderConfig const &config);
 
-std::vector<hpm::CameraFramedPosition> findIndividualMarkerPositions(
-    hpm::Marks const &marks, double knownMarkerDiameter, double focalLength,
-    hpm::PixelPosition const &imageCenter, hpm::MarkerType markerType);
+std::vector<hpm::CameraFramedPosition>
+findIndividualMarkerPositions(std::vector<hpm::Ellipse> const &marks,
+                              double knownMarkerDiameter, double focalLength,
+                              hpm::PixelPosition const &imageCenter,
+                              hpm::MarkerType markerType);

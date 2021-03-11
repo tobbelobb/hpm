@@ -7,10 +7,6 @@ DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS
 
-double zFromSemiMinor(double markerR, double f, double semiMinor);
-
-double centerRayFromZ(double c, double markerR, double z);
-
 namespace hpm {
 struct Ellipse {
   PixelPosition m_center{0, 0};
@@ -49,22 +45,6 @@ struct Ellipse {
   };
 
   bool operator==(Ellipse const &) const = default;
-
-  PixelPosition getCenterRay(double const markerR, double const f,
-                             PixelPosition const &imageCenter) const;
 };
-
-CameraFramedPosition sphereToPosition(Ellipse const &ellipse,
-                                      double focalLength,
-                                      PixelPosition const &imageCenter,
-                                      double sphereDiameter);
-
-CameraFramedPosition diskToPosition(Ellipse const &ellipse, double focalLength,
-                                    PixelPosition const &imageCenter,
-                                    double diskDiameter);
-
-CameraFramedPosition toPosition(Ellipse const &ellipse, double focalLength,
-                                PixelPosition const &imageCenter,
-                                double markerDiameter, MarkerType markerType);
 
 } // namespace hpm

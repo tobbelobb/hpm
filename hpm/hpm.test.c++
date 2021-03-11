@@ -50,13 +50,13 @@ auto main() -> int {
 
     FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-    Marks const marks{findMarks(finderImage, markerParams,
-                                {.m_showIntermediateImages = false,
-                                 .m_verbose = false,
-                                 .m_fitByDistance = true})};
+    auto const marks{findMarks(finderImage, markerParams,
+                               {.m_showIntermediateImages = false,
+                                .m_verbose = false,
+                                .m_fitByDistance = true})};
 
-    SolvePnpPoints const points{marks, markerDiameter / 2.0, meanFocalLength,
-                                imageCenter};
+    SolvePnpPoints const points{marks, markerDiameter, meanFocalLength,
+                                imageCenter, MarkerType::SPHERE};
 
     expect((points.allIdentified()) >> fatal);
 

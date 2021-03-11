@@ -22,13 +22,8 @@ void draw(cv::InputOutputArray image, Ellipse const &ellipse,
   cv::circle(image, ellipse.m_center, LINE_WIDTH, color, LINE_WIDTH);
 }
 
-void draw(cv::InputOutputArray image, Mark const &mark,
-          cv::Scalar const &color) {
-  draw(image, mark.m_ellipse, color);
-}
-
-void draw(cv::InputOutputArray image, hpm::Marks const &marks) {
-  for (auto const &mark : marks.m_marks) {
+void draw(cv::InputOutputArray image, std::vector<hpm::Ellipse> const &marks) {
+  for (auto const &mark : marks) {
     draw(image, mark, AQUA);
   }
 }
@@ -69,7 +64,8 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
               cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
 }
 
-auto imageWith(cv::InputArray image, Marks const &marks) -> cv::Mat {
+auto imageWith(cv::InputArray image, std::vector<Ellipse> const &marks)
+    -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
   draw(imageCopy, marks);

@@ -75,12 +75,12 @@ auto main() -> int {
 
     FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-    Marks const marks{findMarks(finderImage, markerParams,
-                                {.m_showIntermediateImages = false,
-                                 .m_verbose = false,
-                                 .m_fitByDistance = true})};
-    SolvePnpPoints const points{marks, knownMarkerDiameter / 2.0,
-                                meanFocalLength, imageCenter};
+    auto const marks{findMarks(finderImage, markerParams,
+                               {.m_showIntermediateImages = false,
+                                .m_verbose = false,
+                                .m_fitByDistance = true})};
+    SolvePnpPoints const points{marks, knownMarkerDiameter, meanFocalLength,
+                                imageCenter, MarkerType::SPHERE};
 
     expect((points.allIdentified()) >> fatal);
     std::vector<CameraFramedPosition> const positions{

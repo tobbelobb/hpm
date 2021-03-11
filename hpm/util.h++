@@ -16,17 +16,13 @@ void showImage(cv::InputArray image, std::string const &name);
 void draw(cv::InputOutputArray image, hpm::Ellipse const &ellipse,
           cv::Scalar const &color);
 
-void draw(cv::InputOutputArray image, hpm::Mark const &mark,
-          cv::Scalar const &color);
+void draw(cv::InputOutputArray image, std::vector<hpm::Ellipse> const &marks);
 
 void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
           hpm::Vector3d const &position);
 
-void draw(cv::InputOutputArray image, hpm::Marks const &marks);
-
 cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
                   hpm::Vector3d const &position);
-cv::Mat imageWith(cv::InputArray image, hpm::Marks const &marks);
 
 cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
 
