@@ -1,6 +1,7 @@
 #include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 ENABLE_WARNINGS
 
 #include <hpm/marks.h++>
@@ -193,12 +194,35 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
     -> hpm::CameraFramedPosition {
-  // double const A{diskProjection.m_equation.A()};
-  // double const B{diskProjection.m_equation.B()};
-  // double const C{diskProjection.m_equation.C()};
-  // double const D{diskProjection.m_equation.D()};
-  // double const E{diskProjection.m_equation.E()};
-  // double const F{diskProjection.m_equation.F()};
+  double const A{diskProjection.m_equation.A()};
+  double const B{diskProjection.m_equation.B()};
+  double const C{diskProjection.m_equation.C()};
+  double const D{diskProjection.m_equation.D()};
+  double const E{diskProjection.m_equation.E()};
+  double const F{diskProjection.m_equation.F()};
+  Eigen::Matrix<double, 3, 3> Q;
+  Q(0, 0) = A;
+  Q(0, 1) = B;
+  Q(0, 2) = -D / focalLength;
+  Q(1, 0) = Q(0, 1);
+  Q(1, 1) = C;
+  Q(1, 2) = -E / focalLength;
+  Q(2, 0) = Q(0, 2);
+  Q(2, 1) = Q(1, 2);
+  Q(2, 2) = F / (focalLength * focalLength);
+  std::cout << "Q is:\n" << Q << '\n';
+  Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 3, 3>> eigensolver(Q);
+  if (eigensolver.info() != Eigen::Success) {
+    std::cout << "Could not find eigen values!\n";
+    return {0.0, 0.0, 0.0};
+  }
+  auto const eigenvalues = eigensolver.eigenvalues();
+  auto const eigenvectors = eigensolver.eigenvectors();
+  std::cout << "The eigenvalues of Q are:\n" << eigenvalues << '\n';
+  std::cout << "Here's a matrix whose columns are eigenvectors of Q \n"
+            << "corresponding to these eigenvalues:\n"
+            << eigenvectors << '\n';
+
   PixelPosition const imageCenterToEllipseCenter =
       diskProjection.m_center - imageCenter;
   double const factorMajor = (diskDiameter / diskProjection.m_major);
