@@ -62,35 +62,37 @@ struct mCircle {
       : center(std::move(_center)), r(_r), err(_err) {}
 };
 
-// Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
-struct mEllipse {
-  cv::Point2d center;
-  cv::Size axes;
-  double theta;
-  mEllipse(cv::Point2d _center, cv::Size _axes, double _theta)
-      : center(std::move(_center)), axes(std::move(_axes)), theta(_theta) {}
-};
-
+namespace ed {
 //----------------------------------------------------------
 // Ellipse Equation is of the form:
 // Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
 //
 struct EllipseEquation {
-  double coeff[7]{}; // coeff[1] = A
+  std::array<double, 6> coeff{0.0}; // coeff[0] = A
 
-  EllipseEquation() {
-    for (double &i : coeff) {
-      i = 0;
-    }
-  }
+  auto A() const -> double { return coeff[0]; }
+  auto B() const -> double { return coeff[1]; }
+  auto C() const -> double { return coeff[2]; }
+  auto D() const -> double { return coeff[3]; }
+  auto E() const -> double { return coeff[4]; }
+  auto F() const -> double { return coeff[5]; }
 
-  auto A() -> double { return coeff[1]; }
-  auto B() -> double { return coeff[2]; }
-  auto C() -> double { return coeff[3]; }
-  auto D() -> double { return coeff[4]; }
-  auto E() -> double { return coeff[5]; }
-  auto F() -> double { return coeff[6]; }
+  bool operator==(EllipseEquation const &) const = default;
 };
+
+// Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
+struct mEllipse {
+  cv::Point2d center;
+  cv::Size axes;
+  double theta;
+  ed::EllipseEquation equation{};
+
+  mEllipse(cv::Point2d _center, cv::Size _axes, double _theta,
+           ed::EllipseEquation _equation)
+      : center(std::move(_center)), axes(std::move(_axes)), theta(_theta),
+        equation(_equation) {}
+};
+} // namespace ed
 
 // ================================ CIRCLES ================================
 struct Circle {
@@ -106,7 +108,7 @@ struct Circle {
 
   // If this circle is better approximated by an ellipse, we set isEllipse to
   // true & eq contains the ellipse's equation
-  EllipseEquation eq;
+  ed::EllipseEquation eq;
   double ellipseFitError{}; // ellipse fit error
   bool isEllipse{};
   double majorAxisLength{}; // Length of the major axis
@@ -135,7 +137,7 @@ struct MyArc {
   int noPixels{};     // # of pixels making up the arc
 
   bool isEllipse{};         // Did we fit an ellipse to this arc?
-  EllipseEquation eq;       // If an ellipse, then the ellipse's equation
+  ed::EllipseEquation eq;   // If an ellipse, then the ellipse's equation
   double ellipseFitError{}; // Error during ellipse fit
 };
 
@@ -239,11 +241,11 @@ public:
   [[nodiscard]] auto getCircles() const -> std::vector<mCircle> {
     return circles;
   }
-  [[nodiscard]] auto getEllipses() const -> std::vector<mEllipse> {
+  [[nodiscard]] auto getEllipses() const -> std::vector<ed::mEllipse> {
     return ellipses;
   }
   auto getCirclesRef() const -> std::vector<mCircle> const & { return circles; }
-  auto getEllipsesRef() const -> std::vector<mEllipse> const & {
+  auto getEllipsesRef() const -> std::vector<ed::mEllipse> const & {
     return ellipses;
   }
 
@@ -255,7 +257,7 @@ private:
   int noEllipses;
   int noCircles;
   std::vector<mCircle> circles;
-  std::vector<mEllipse> ellipses;
+  std::vector<ed::mEllipse> ellipses;
 
   Circle *circles1;
   Circle *circles2{};
@@ -287,9 +289,9 @@ private:
                         double r, double circleFitError, double *x, double *y,
                         int noPixels) -> Circle *;
   static auto addCircle(Circle *circles, int &noCircles, double xc, double yc,
-                        double r, double circleFitError, EllipseEquation *pEq,
-                        double ellipseFitError, double *x, double *y,
-                        int noPixels) -> Circle *;
+                        double r, double circleFitError,
+                        ed::EllipseEquation *pEq, double ellipseFitError,
+                        double *x, double *y, int noPixels) -> Circle *;
   static void sortCircles(Circle *circles, int noCircles);
   static auto CircleFit(const double *x, const double *y, int N, double *pxc,
                         double *pyc, double *pr, double *pe) -> bool;
@@ -299,7 +301,7 @@ private:
 
   // ellipse utility functions
   static auto EllipseFit(const double *x, const double *y, int noPoints,
-                         EllipseEquation *pResult, int mode = FPF) -> bool;
+                         ed::EllipseEquation *pResult, int mode = FPF) -> bool;
   static auto AllocateMatrix(int noRows, int noColumns) -> double **;
   static void A_TperB(double **A, double **B, double **_res, int _righA,
                       int _colA, int _colB);
@@ -313,16 +315,16 @@ private:
   static void jacobi(double **a, int n, double d[], double **v, int nrot);
   static void ROTATE(double **a, int i, int j, int k, int l, double tau,
                      double s);
-  static auto computeEllipsePerimeter(EllipseEquation *eq) -> double;
-  static auto ComputeEllipseError(EllipseEquation *eq, const double *px,
+  static auto computeEllipsePerimeter(ed::EllipseEquation *eq) -> double;
+  static auto ComputeEllipseError(ed::EllipseEquation *eq, const double *px,
                                   const double *py, int noPoints) -> double;
-  static auto ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
+  static auto ComputeEllipseCenterAndAxisLengths(ed::EllipseEquation *eq,
                                                  double *pxc, double *pyc,
                                                  double *pmajorAxisLength,
                                                  double *pminorAxisLength)
       -> double;
-  static void ComputeEllipsePoints(const double *pvec, double *px, double *py,
-                                   int noPoints);
+  static void ComputeEllipsePoints(ed::EllipseEquation const &eq, double *px,
+                                   double *py, int noPoints);
 
   // arc utility functions
   static void joinLastTwoArcs(MyArc *arcs, int &noArcs);
@@ -334,7 +336,7 @@ private:
   static void addArc(MyArc *arcs, int &noArcs, double xc, double yc, double r,
                      double circleFitError, // Elliptic arc
                      double sTheta, double eTheta, int turn, int segmentNo,
-                     EllipseEquation *pEq, double ellipseFitError, int sx,
+                     ed::EllipseEquation *pEq, double ellipseFitError, int sx,
                      int sy, int ex, int ey, double *x, double *y, int noPixels,
                      double overlapRatio = 0.0);
 

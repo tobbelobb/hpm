@@ -188,11 +188,13 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
     -> hpm::CameraFramedPosition {
-  double const diskR = diskDiameter / 2;
   double const f = focalLength;
-  double const semiMinor = diskProjection.m_minor / 2;
-  (void)imageCenter;
-  return {diskR, f, semiMinor};
+  PixelPosition const imageCenterToEllipseCenter =
+      diskProjection.m_center - imageCenter;
+  double const factorMajor = (diskDiameter / diskProjection.m_major);
+  // double const factorMinor = (diskDiameter / diskProjection.m_minor);
+  return {imageCenterToEllipseCenter.x * factorMajor,
+          imageCenterToEllipseCenter.y * factorMajor, f * factorMajor};
 }
 
 auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,

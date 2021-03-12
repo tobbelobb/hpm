@@ -5,6 +5,7 @@
 
 using namespace cv;
 using namespace std;
+using namespace ed;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -227,7 +228,7 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta);
+                            theta, eq);
 
     } else {
       double r = circles3[i].r;
@@ -468,7 +469,7 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta);
+                            theta, eq);
 
     } else {
       double r = circles3[i].r;
@@ -684,7 +685,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
           ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
       ellipses.emplace_back(Point2d(xc, yc),
                             Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta);
+                            theta, eq);
 
     } else {
       double const r = circles1[i].r;
@@ -1242,7 +1243,7 @@ void EDCircles::ValidateCircles() {
       if ((noPoints % 2) != 0) {
         noPoints--;
       }
-      ComputeEllipsePoints(circle->eq.coeff, px, py, noPoints);
+      ComputeEllipsePoints(circle->eq, px, py, noPoints);
 
     } else {
       ComputeCirclePoints(xc, yc, radius, px, py, &noPoints);
@@ -2549,14 +2550,13 @@ void EDCircles::sortCircles(Circle *circles, int noCircles) {
 // ellipse Calculates the ellipse perimeter wrt the Ramajunan II formula
 //
 auto EDCircles::computeEllipsePerimeter(EllipseEquation *eq) -> double {
-  double mult = 1;
-
-  double A = eq->A() * mult;
-  double B = eq->B() * mult;
-  double C = eq->C() * mult;
-  double D = eq->D() * mult;
-  double E = eq->E() * mult;
-  double F = eq->F() * mult;
+  // Normalized coefficients
+  double const A = 1.0;
+  double const B = eq->B() / eq->A();
+  double const C = eq->C() / eq->A();
+  double const D = eq->D() / eq->A();
+  double const E = eq->E() / eq->A();
+  double const F = eq->F() / eq->A();
 
   double A2 = std::numeric_limits<double>::quiet_NaN();
   double C2 = std::numeric_limits<double>::quiet_NaN();
@@ -2579,14 +2579,6 @@ auto EDCircles::computeEllipsePerimeter(EllipseEquation *eq) -> double {
   bool rotation = false;
 
 #define pi 3.14159265
-
-  // Normalize coefficients
-  B /= A;
-  C /= A;
-  D /= A;
-  E /= A;
-  F /= A;
-  A /= A;
 
   if (B == 0) // Then not need to rotate the axes
   {
@@ -2950,8 +2942,8 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
 // on the ellipse periferi. These points can be used to draw the ellipse
 // noPoints must be an even number.
 //
-void EDCircles::ComputeEllipsePoints(const double *pvec, double *px, double *py,
-                                     int noPoints) {
+void EDCircles::ComputeEllipsePoints(EllipseEquation const &eq, double *px,
+                                     double *py, int noPoints) {
   if ((noPoints % 2) != 0) {
     noPoints--;
   }
@@ -2972,12 +2964,12 @@ void EDCircles::ComputeEllipsePoints(const double *pvec, double *px, double *py,
   double **Aib = AllocateMatrix(3, 2);
   double **b = AllocateMatrix(3, 2);
   double **r1 = AllocateMatrix(2, 2);
-  double Ao{};
-  double Ax{};
-  double Ay{};
-  double Axx{};
-  double Ayy{};
-  double Axy{};
+  double const Ao{eq.F()};
+  double const Ax{eq.D()};
+  double const Ay{eq.E()};
+  double const Axx{eq.A()};
+  double const Ayy{eq.C()};
+  double const Axy{eq.C()};
 
   double pi = 3.14781;
   double theta = std::numeric_limits<double>::quiet_NaN();
@@ -2986,13 +2978,6 @@ void EDCircles::ComputeEllipsePoints(const double *pvec, double *px, double *py,
   double kk = std::numeric_limits<double>::quiet_NaN();
 
   memset(lambda, 0, sizeof(double) * (npts + 1));
-
-  Ao = pvec[6];
-  Ax = pvec[4];
-  Ay = pvec[5];
-  Axx = pvec[1];
-  Ayy = pvec[3];
-  Axy = pvec[2];
 
   A[1][1] = Axx;
   A[1][2] = Axy / 2;
@@ -3140,9 +3125,6 @@ void EDCircles::joinLastTwoArcs(MyArc *arcs, int &noArcs) {
     arcs[prev].r = r;
     arcs[prev].ex = arcs[last].ex;
     arcs[prev].ey = arcs[last].ey;
-    //    arcs[prev].eTheta = arcs[last].eTheta;   -- Fails in a very nasty way
-    //    in a very special case (recall circles9 with cvsmooth(7x7)!) So, do
-    //    not use.
 
     AngleSet angles;
     angles.set(arcs[prev].sTheta, arcs[prev].eTheta);
@@ -3623,7 +3605,7 @@ auto EDCircles::EllipseFit(const double *x, const double *y, int noPoints,
   if (valid) {
     // Now fetch the right solution
     for (int j = 1; j <= 6; j++) {
-      pResult->coeff[j] = sol[j][solind];
+      pResult->coeff[j - 1] = sol[j][solind];
     }
   }
 

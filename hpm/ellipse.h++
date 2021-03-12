@@ -13,6 +13,7 @@ struct Ellipse {
   double m_major{0.0};
   double m_minor{0.0};
   double m_rot{0.0};
+  ed::EllipseEquation m_equation{};
 
   Ellipse(Ellipse const &ellipse) = default;
 
@@ -32,7 +33,7 @@ struct Ellipse {
         m_major(2.0 * (circle.r + (sqrt(3) * circle.err) + 0.5)),
         m_minor(2.0 * (circle.r - (sqrt(3) * circle.err) + 0.5)), m_rot(0.0) {}
 
-  Ellipse(mEllipse const &ellipse);
+  Ellipse(ed::mEllipse const &edEllipse);
 
   cv::KeyPoint toCvKeyPoint() const {
     return {static_cast<cv::Point2f>(m_center),

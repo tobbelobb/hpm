@@ -1,4 +1,6 @@
+#include <hpm/ellipse-detector.h++>
 #include <hpm/marks.h++>
+#include <hpm/test-util.h++>
 #include <hpm/util.h++>
 
 #include <boost/ut.hpp> //import boost.ut;
@@ -7,8 +9,10 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
 
-  auto constexpr EPS9{0.000000001_d};    // 1.0e-9 precision
-  auto constexpr EPS11{0.00000000001_d}; // 1e-11 precision
+  auto constexpr EPS2{0.01_d};
+  auto constexpr EPS4{0.0001_d};
+  auto constexpr EPS9{0.000000001_d};
+  auto constexpr EPS11{0.00000000001_d};
 
   "identify sphere-marks according to provided positions"_test = [&] {
     // clang-format off
@@ -60,7 +64,7 @@ auto main() -> int {
   };
 
   double const focalLength{3000.0};
-  double const markerRadius{10.0};
+  double const markerRadius{70.0 / 2};
   PixelPosition const imageCenter{10000, 10000};
 
   "center sphere position"_test = [&] {
@@ -141,6 +145,86 @@ auto main() -> int {
     expect(std::abs(gotPosition.x - 0.0) < EPS9);
     expect(std::abs(gotPosition.y - 0.0) < EPS9);
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
+  };
+
+  // clang-format off
+  cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 2 * 3375.85,        0.00, 2 * 1280.0,
+                                                                         0.00, 2 * 3375.85, 2 *  671.5,
+                                                                         0.00,        0.00,        1.0);
+  // clang-format on
+  "center flat disk position from render"_test = [&] {
+    std::string const imageFileName{hpm::getPath(
+        "test-images/central_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
+    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+    expect((not image.empty()) >> fatal);
+    auto const &cam = openScadCameraMatrix;
+    double const focalLength{
+        std::midpoint(cam.at<double>(0, 0), cam.at<double>(1, 1))};
+    PixelPosition const imageCenter{cam.at<double>(0, 2), cam.at<double>(1, 2)};
+    auto const marks{rawEllipseDetect(image, false)};
+    expect((marks.size() == 1) >> fatal);
+    auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
+                                        imageCenter, MarkerType::DISK);
+
+    std::cout << marks[0] << std::endl;
+    expect(std::abs(gotPosition.x - 0.0) < EPS4);
+    expect(std::abs(gotPosition.y - 0.0) < EPS4);
+    expect(std::abs(gotPosition.z - 1000.0) < 1.0_d);
+  };
+
+  "x-offset flat disk position"_test = [&] {
+    double const zDist{1000.0};
+    double const projectionWidth{2 * markerRadius * focalLength / zDist};
+    double const projectionHeight{projectionWidth};
+    auto const gotPosition = toPosition(
+        Ellipse{imageCenter +
+                    PixelPosition{markerRadius * focalLength / zDist, 0},
+                projectionWidth, projectionHeight, 0.0},
+        markerRadius * 2, focalLength, imageCenter, MarkerType::DISK);
+
+    expect(std::abs(gotPosition.x - markerRadius) < EPS9);
+    expect(std::abs(gotPosition.y - 0.0) < EPS9);
+    expect(std::abs(gotPosition.z - 1000.0) < EPS9);
+  };
+
+  "x-offset flat disk position from render"_test = [&] {
+    std::string const imageFileName{hpm::getPath(
+        "test-images/x_offset_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
+    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+    expect((not image.empty()) >> fatal);
+    auto const &cam = openScadCameraMatrix;
+    double const focalLength{
+        std::midpoint(cam.at<double>(0, 0), cam.at<double>(1, 1))};
+    PixelPosition const imageCenter{cam.at<double>(0, 2), cam.at<double>(1, 2)};
+    auto const marks{rawEllipseDetect(image, false)};
+    expect((marks.size() == 1) >> fatal);
+    auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
+                                        imageCenter, MarkerType::DISK);
+
+    expect(std::abs(gotPosition.x - markerRadius) < EPS2);
+    expect(std::abs(gotPosition.y - 0.0) < EPS2);
+    expect(std::abs(gotPosition.z - 1000.0) < 1);
+  };
+
+  "center 45-deg disk position from render"_test = [&] {
+    std::string const imageFileName{hpm::getPath(
+        "test-images/central_45_deg_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
+    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+    expect((not image.empty()) >> fatal);
+    auto const &cam = openScadCameraMatrix;
+    double const focalLength{
+        std::midpoint(cam.at<double>(0, 0), cam.at<double>(1, 1))};
+    PixelPosition const imageCenter{cam.at<double>(0, 2), cam.at<double>(1, 2)};
+    auto const marks{rawEllipseDetect(image, false)};
+    expect((marks.size() == 1) >> fatal);
+    auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
+                                        imageCenter, MarkerType::DISK);
+    std::cout << marks[0] << std::endl;
+    std::cout << gotPosition << std::endl;
+
+    expect(std::abs(gotPosition.x - 0.0) < EPS4);
+    expect(std::abs(gotPosition.y - 0.0) < EPS4);
+    expect(std::abs(gotPosition.z - 1000.0) < 1);
   };
 
   return 0;
