@@ -4,7 +4,7 @@
 #include <hpm/simple-types.h++>
 #include <hpm/six-dof.h++>
 
-#include <hpm/open-cv-warnings-disabler.h++>
+#include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 ENABLE_WARNINGS

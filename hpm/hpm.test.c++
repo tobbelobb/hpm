@@ -3,7 +3,7 @@
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
 
-#include <hpm/open-cv-warnings-disabler.h++>
+#include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>

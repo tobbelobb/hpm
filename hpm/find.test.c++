@@ -5,7 +5,7 @@
 
 #include <gsl/span_ext>
 
-#include <hpm/open-cv-warnings-disabler.h++>
+#include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>

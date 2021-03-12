@@ -9,7 +9,7 @@
 
 #include <gsl/span_ext>
 
-#include <hpm/open-cv-warnings-disabler.h++>
+#include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/calib3d.hpp> // undistort
 #include <opencv2/core.hpp>

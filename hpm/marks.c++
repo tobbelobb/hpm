@@ -1,3 +1,8 @@
+#include <hpm/warnings-disabler.h++>
+DISABLE_WARNINGS
+#include <Eigen/Core>
+ENABLE_WARNINGS
+
 #include <hpm/marks.h++>
 
 #include <algorithm>
@@ -188,13 +193,19 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
     -> hpm::CameraFramedPosition {
-  double const f = focalLength;
+  // double const A{diskProjection.m_equation.A()};
+  // double const B{diskProjection.m_equation.B()};
+  // double const C{diskProjection.m_equation.C()};
+  // double const D{diskProjection.m_equation.D()};
+  // double const E{diskProjection.m_equation.E()};
+  // double const F{diskProjection.m_equation.F()};
   PixelPosition const imageCenterToEllipseCenter =
       diskProjection.m_center - imageCenter;
   double const factorMajor = (diskDiameter / diskProjection.m_major);
   // double const factorMinor = (diskDiameter / diskProjection.m_minor);
   return {imageCenterToEllipseCenter.x * factorMajor,
-          imageCenterToEllipseCenter.y * factorMajor, f * factorMajor};
+          imageCenterToEllipseCenter.y * factorMajor,
+          focalLength * factorMajor};
 }
 
 auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,

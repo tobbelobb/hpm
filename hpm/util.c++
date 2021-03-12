@@ -1,6 +1,6 @@
 #include <hpm/util.h++>
 
-#include <hpm/open-cv-warnings-disabler.h++>
+#include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
