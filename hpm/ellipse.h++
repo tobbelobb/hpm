@@ -18,7 +18,8 @@ struct Ellipse {
   Ellipse(Ellipse const &ellipse) = default;
 
   Ellipse(PixelPosition const center, double major, double minor, double rot)
-      : m_center(center), m_major(major), m_minor(minor), m_rot(rot) {}
+      : m_center(center), m_major(major), m_minor(minor), m_rot(rot),
+        m_equation(computeEq()) {}
 
   Ellipse(cv::KeyPoint const &keyPointIn)
       : m_center(static_cast<PixelPosition>(keyPointIn.pt)),
@@ -26,14 +27,18 @@ struct Ellipse {
         m_rot(0.0) {}
 
   Ellipse(PixelPosition const &center_, double size_)
-      : m_center(center_), m_major(size_), m_minor(size_), m_rot(0.0) {}
+      : m_center(center_), m_major(size_), m_minor(size_), m_rot(0.0),
+        m_equation(computeEq()) {}
 
   Ellipse(mCircle const &circle)
       : m_center(circle.center),
         m_major(2.0 * (circle.r + (sqrt(3) * circle.err) + 0.5)),
-        m_minor(2.0 * (circle.r - (sqrt(3) * circle.err) + 0.5)), m_rot(0.0) {}
+        m_minor(2.0 * (circle.r - (sqrt(3) * circle.err) + 0.5)), m_rot(0.0),
+        m_equation(computeEq()) {}
 
   Ellipse(ed::mEllipse const &edEllipse);
+
+  ed::EllipseEquation computeEq() const;
 
   cv::KeyPoint toCvKeyPoint() const {
     return {static_cast<cv::Point2f>(m_center),

@@ -14,7 +14,7 @@ auto main() -> int {
   auto constexpr EPS9{0.000000001_d};
   auto constexpr EPS11{0.00000000001_d};
 
-  "identify sphere-marks according to provided positions"_test = [&] {
+  skip / "identify sphere-marks according to provided positions"_test = [&] {
     // clang-format off
     cv::Mat const cameraMatrix = (cv::Mat_<double>(3, 3) << 3000.0,    0.0,
     1000.0,
@@ -67,7 +67,7 @@ auto main() -> int {
   double const markerRadius{70.0 / 2};
   PixelPosition const imageCenter{10000, 10000};
 
-  "center sphere position"_test = [&] {
+  skip / "center sphere position"_test = [&] {
     double const zDist{1000.0};
 
     double const gamma1{asin(markerRadius / zDist)};
@@ -84,7 +84,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
   };
 
-  "x-offset sphere position"_test = [&] {
+  skip / "x-offset sphere position"_test = [&] {
     CameraFramedPosition const knownPos{10.0, 0.0, 1000.0};
     auto const [width, height, xt, yt] =
         sphereToEllipseWidthHeight(knownPos, focalLength, markerRadius);
@@ -98,7 +98,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
   };
 
-  "y-offset sphere position"_test = [&] {
+  skip / "y-offset sphere position"_test = [&] {
     CameraFramedPosition const knownPos{0.0, 10.0, 1000.0};
     auto const [width, height, xt, yt] =
         sphereToEllipseWidthHeight(knownPos, focalLength, markerRadius);
@@ -112,7 +112,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
   };
 
-  "xy-offset sphere positions"_test = [&] {
+  skip / "xy-offset sphere positions"_test = [&] {
     for (double dxy{5.0}; dxy <= 1000.0; dxy = dxy + 10.0) {
       for (double ang{0.0}; ang < 2 * M_PI; ang += M_PI / 6.0) {
         double const xDist{dxy * cos(ang)};
@@ -138,6 +138,7 @@ auto main() -> int {
     double const zDist{1000.0};
     double const projectionWidth{2 * markerRadius * focalLength / zDist};
     double const projectionHeight{projectionWidth};
+    std::cout << "projectionWidth=" << projectionWidth << '\n';
     auto const gotPosition = toPosition(
         Ellipse{imageCenter, projectionWidth, projectionHeight, 0.0},
         markerRadius * 2, focalLength, imageCenter, MarkerType::DISK);
@@ -152,7 +153,7 @@ auto main() -> int {
                                                                          0.00, 2 * 3375.85, 2 *  671.5,
                                                                          0.00,        0.00,        1.0);
   // clang-format on
-  "center flat disk position from render"_test = [&] {
+  skip / "center flat disk position from render"_test = [&] {
     std::string const imageFileName{hpm::getPath(
         "test-images/central_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
     cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
@@ -172,7 +173,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < 1.0_d);
   };
 
-  "x-offset flat disk position"_test = [&] {
+  skip / "x-offset flat disk position"_test = [&] {
     double const zDist{1000.0};
     double const projectionWidth{2 * markerRadius * focalLength / zDist};
     double const projectionHeight{projectionWidth};
@@ -187,7 +188,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
   };
 
-  "x-offset flat disk position from render"_test = [&] {
+  skip / "x-offset flat disk position from render"_test = [&] {
     std::string const imageFileName{hpm::getPath(
         "test-images/x_offset_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
     cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
@@ -206,7 +207,7 @@ auto main() -> int {
     expect(std::abs(gotPosition.z - 1000.0) < 1);
   };
 
-  "center 45-deg disk position from render"_test = [&] {
+  skip / "center 45-deg disk position from render"_test = [&] {
     std::string const imageFileName{hpm::getPath(
         "test-images/central_45_deg_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
     cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
@@ -219,8 +220,7 @@ auto main() -> int {
     expect((marks.size() == 1) >> fatal);
     auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
                                         imageCenter, MarkerType::DISK);
-    std::cout << marks[0] << std::endl;
-    std::cout << gotPosition << std::endl;
+    std::cout << "gotPosition=" << gotPosition << std::endl;
 
     expect(std::abs(gotPosition.x - 0.0) < EPS4);
     expect(std::abs(gotPosition.y - 0.0) < EPS4);
