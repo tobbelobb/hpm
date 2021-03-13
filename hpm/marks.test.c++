@@ -103,7 +103,7 @@ auto main() -> int {
     expect(std::abs(An - 1.0) < EPS9);
     expect(std::abs(Bn - 0.0) < EPS9);
     expect(std::abs(Cn - 1.0) < EPS9);
-    expect(std::abs(Dn - (-2 * r)) < EPS9);
+    expect(std::abs(Dn - (-r)) < EPS9);
     expect(std::abs(En - 0.0) < EPS9);
     expect(std::abs(Fn - 0.0) < EPS9);
   };
@@ -128,7 +128,7 @@ auto main() -> int {
     expect(std::abs(Bn - 0.0) < EPS9);
     expect(std::abs(Cn - 1.0) < EPS9);
     expect(std::abs(Dn - 0.0) < EPS9);
-    expect(std::abs(En - (-2.0)) < EPS9);
+    expect(std::abs(En - (-1.0)) < EPS9);
     expect(std::abs(Fn - (1 - r * r)) < EPS9);
   };
 
@@ -196,10 +196,12 @@ auto main() -> int {
     double constexpr expectedB{sqrt(3.0) / (2.0 * a * a) -
                                sqrt(3.0) / (2.0 * b * b)};
     double constexpr expectedC{1.0 / (4.0 * a * a) + 3.0 / (4.0 * b * b)};
-    double constexpr expectedD{-3.0 / (2.0 * a * a) - sqrt(3.0) / (a * a) -
-                               1.0 / (2.0 * b * b) + sqrt(3.0) / (b * b)};
-    double constexpr expectedE{-sqrt(3.0) / (2 * a * a) - 1.0 / (a * a) +
-                               sqrt(3.0) / (2 * b * b) - 3.0 / (b * b)};
+    double constexpr expectedD{(-3.0 / (2.0 * a * a) - sqrt(3.0) / (a * a) -
+                                1.0 / (2.0 * b * b) + sqrt(3.0) / (b * b)) /
+                               2.0};
+    double constexpr expectedE{(-sqrt(3.0) / (2 * a * a) - 1.0 / (a * a) +
+                                sqrt(3.0) / (2 * b * b) - 3.0 / (b * b)) /
+                               2.0};
     double constexpr expectedF{3.0 / (4.0 * a * a) + sqrt(3.0) / (a * a) +
                                1.0 / (a * a) + 1.0 / (4 * b * b) -
                                sqrt(3) / (b * b) + 3.0 / (b * b) - 1.0};
@@ -214,7 +216,7 @@ auto main() -> int {
     expect(std::abs(F - (expectedF)) < EPS9);
   };
 
-  skip / "center flat disk position"_test = [&] {
+  "center flat disk position"_test = [&] {
     double const zDist{1000.0};
     double const projectionDiameter{2 * markerRadius * focalLength / zDist};
     auto const gotPosition = toPosition(
@@ -224,6 +226,43 @@ auto main() -> int {
     expect(std::abs(gotPosition.x - 0.0) < EPS9);
     expect(std::abs(gotPosition.y - 0.0) < EPS9);
     expect(std::abs(gotPosition.z - 1000.0) < EPS9);
+  };
+
+  "x-offset flat disk position"_test = [&] {
+    double const zDist{1000.0};
+    double const projectionDiameter{2 * markerRadius * focalLength / zDist};
+    auto const gotPosition = toPosition(
+        Ellipse{imageCenter + PixelPosition{projectionDiameter / 2, 0},
+                projectionDiameter, projectionDiameter, 0.0},
+        markerRadius * 2, focalLength, imageCenter, MarkerType::DISK);
+
+    expect(std::abs(gotPosition.x - markerRadius) < EPS9);
+    expect(std::abs(gotPosition.y - 0.0) < EPS9);
+    expect(std::abs(gotPosition.z - 1000.0) < EPS9);
+  };
+
+  // clang-format off
+  cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 2 * 3375.85,        0.00, 2 * 1280.0,
+                                                                         0.00, 2 * 3375.85, 2 *  671.5,
+                                                                         0.00,        0.00,        1.0);
+  // clang-format on
+  skip / "center flat disk position from render"_test = [&] {
+    std::string const imageFileName{hpm::getPath(
+        "test-images/central_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
+    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+    expect((not image.empty()) >> fatal);
+    auto const &cam = openScadCameraMatrix;
+    double const focalLength{
+        std::midpoint(cam.at<double>(0, 0), cam.at<double>(1, 1))};
+    PixelPosition const imageCenter{cam.at<double>(0, 2), cam.at<double>(1, 2)};
+    auto const marks{rawEllipseDetect(image, false)};
+    expect((marks.size() == 1) >> fatal);
+    auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
+                                        imageCenter, MarkerType::DISK);
+
+    expect(std::abs(gotPosition.x - 0.0) < EPS4);
+    expect(std::abs(gotPosition.y - 0.0) < EPS4);
+    expect(std::abs(gotPosition.z - 1000.0) < 1.0_d);
   };
 
   skip / "center sphere position"_test = [&] {
@@ -291,31 +330,6 @@ auto main() -> int {
         expect(std::abs(gotPosition.z - zDist) < EPS);
       }
     }
-  };
-
-  // clang-format off
-  cv::Mat const openScadCameraMatrix = (cv::Mat_<double>(3, 3) << 2 * 3375.85,        0.00, 2 * 1280.0,
-                                                                         0.00, 2 * 3375.85, 2 *  671.5,
-                                                                         0.00,        0.00,        1.0);
-  // clang-format on
-  skip / "center flat disk position from render"_test = [&] {
-    std::string const imageFileName{hpm::getPath(
-        "test-images/central_flat_disk_d70_0_0_0_0_0_0_1000_5120_2686.png")};
-    cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
-    expect((not image.empty()) >> fatal);
-    auto const &cam = openScadCameraMatrix;
-    double const focalLength{
-        std::midpoint(cam.at<double>(0, 0), cam.at<double>(1, 1))};
-    PixelPosition const imageCenter{cam.at<double>(0, 2), cam.at<double>(1, 2)};
-    auto const marks{rawEllipseDetect(image, false)};
-    expect((marks.size() == 1) >> fatal);
-    auto const gotPosition = toPosition(marks[0], markerRadius * 2, focalLength,
-                                        imageCenter, MarkerType::DISK);
-
-    std::cout << marks[0] << std::endl;
-    expect(std::abs(gotPosition.x - 0.0) < EPS4);
-    expect(std::abs(gotPosition.y - 0.0) < EPS4);
-    expect(std::abs(gotPosition.z - 1000.0) < 1.0_d);
   };
 
   skip / "x-offset flat disk position"_test = [&] {

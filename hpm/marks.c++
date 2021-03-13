@@ -200,7 +200,7 @@ hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
                          1.0 / ((ellipse.m_minor / 2) * (ellipse.m_minor / 2)));
   cv::Matx22d const M{R_e * (temp * R_e.t())};
   cv::Matx21d const X_0(imageCenter - ellipse.m_center);
-  cv::Matx21d const C{2.0 * M * X_0};
+  cv::Matx21d const C{M * X_0};
   double const F{(X_0.t() * (M * X_0))(0, 0) - 1.0};
 
   // clang-format off
@@ -216,6 +216,11 @@ hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
 auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
+    // This whole algorithm was found in
+    // "Camera pose estimation with circular markers (2012)" by Joris Stork,
+    // which in turn found it in "Camera Calibration with Two Arbitrary Coplanar
+    // Circles (2004)" by Chen et. al.
+
     -> hpm::CameraFramedPosition {
   auto const [A, B, C, D, E, F] =
       ellipseEqInCamCoords(diskProjection, imageCenter);
@@ -229,26 +234,101 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
   Q(2, 0) = Q(0, 2);
   Q(2, 1) = Q(1, 2);
   Q(2, 2) = F / (focalLength * focalLength);
-  std::cout << "Q is:\n" << Q << '\n';
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 3, 3>> eigensolver(Q);
   if (eigensolver.info() != Eigen::Success) {
-    std::cout << "Could not find eigen values!\n";
+    std::cout << "Could not find eigenvalues!\n";
     return {0.0, 0.0, 0.0};
   }
   auto const eigenvalues = eigensolver.eigenvalues();
   auto const eigenvectors = eigensolver.eigenvectors();
-  std::cout << "The eigenvalues of Q are:\n" << eigenvalues << '\n';
-  std::cout << "Here's a matrix whose columns are eigenvectors of Q \n"
-            << "corresponding to these eigenvalues:\n"
-            << eigenvectors << '\n';
+  std::array<ssize_t, 3> indices{0, 1, 2};
+  ssize_t i{0};
+  while (i < 3 and not(std::abs(eigenvalues[indices[0]]) >=
+                           std::abs(eigenvalues[indices[1]]) and
+                       eigenvalues[indices[0]] * eigenvalues[indices[1]] > 0 and
+                       eigenvalues[indices[0]] * eigenvalues[indices[2]] < 0)) {
+    indices = {i, (i + 1) % 3, (i + 2) % 3};
+    i = i + 1;
+    // satisfy |lambda_0| >= |lambda_1|
+    if (not(std::abs(eigenvalues[indices[0]]) >=
+            std::abs(eigenvalues[indices[1]]))) {
+      std::swap(indices[0], indices[1]);
+    }
+    // try to satisfy lambda_0*lambda_1 > 0
+    if (not(eigenvalues[indices[0]] * eigenvalues[indices[1]] > 0.0)) {
+      std::swap(indices[1], indices[2]);
+    }
+  }
+  if (not(std::abs(eigenvalues[indices[0]]) >=
+              std::abs(eigenvalues[indices[1]]) and
+          eigenvalues[indices[0]] * eigenvalues[indices[1]] > 0 and
+          eigenvalues[indices[0]] * eigenvalues[indices[2]] < 0)) {
+    std::cout << "Could not satisfy Chen et al. eqn. 16\n";
+    return {0.0, 0.0, 0.0};
+  }
+  Eigen::Matrix<double, 3, 1> lambda{eigenvalues[indices[0]],
+                                     eigenvalues[indices[1]],
+                                     eigenvalues[indices[2]]};
+  Eigen::Matrix<double, 3, 3> V{};
+  V(0, 0) = eigenvectors.col(indices[0])[0];
+  V(0, 1) = eigenvectors.col(indices[0])[1];
+  V(0, 2) = eigenvectors.col(indices[0])[2];
+  V(1, 0) = eigenvectors.col(indices[1])[0];
+  V(1, 1) = eigenvectors.col(indices[1])[1];
+  V(1, 2) = eigenvectors.col(indices[1])[2];
+  V(2, 0) = eigenvectors.col(indices[2])[0];
+  V(2, 1) = eigenvectors.col(indices[2])[1];
+  V(2, 2) = eigenvectors.col(indices[2])[2];
 
-  PixelPosition const imageCenterToEllipseCenter =
-      diskProjection.m_center - imageCenter;
-  double const factorMajor = (diskDiameter / diskProjection.m_major);
-  // double const factorMinor = (diskDiameter / diskProjection.m_minor);
-  return {imageCenterToEllipseCenter.x * factorMajor,
-          imageCenterToEllipseCenter.y * factorMajor,
-          focalLength * factorMajor};
+  // std::cout << "The eigenvalues of Q are:\n" << eigenvalues << '\n';
+  // std::cout << "The sorted eigenvalues of Q are:\n" << lambda << '\n';
+  // std::cout << "Here's a matrix whose columns are eigenvectors of Q \n"
+  //           << "corresponding to these eigenvalues:\n"
+  //           << eigenvectors << '\n';
+  // std::cout << "The sorted eigenvectors:\n" << V << '\n';
+
+  double const diskRadius{diskDiameter / 2.0};
+  std::array<double, 2> constexpr SIGNS{1.0, -1.0};
+  Eigen::Matrix<double, 3, 8> Cs{};
+  Eigen::Matrix<double, 3, 8> Ns{};
+  ssize_t j{0};
+  for (auto const s1 : SIGNS) {
+    for (auto const s2 : SIGNS) {
+      for (auto const s3 : SIGNS) {
+        double const z0 =
+            s3 * lambda[1] * diskRadius / sqrt(-lambda[0] * lambda[2]);
+        Eigen::Matrix<double, 3, 1> const temp{
+            s2 * (lambda[2] / lambda[1]) *
+                sqrt((lambda[0] - lambda[1]) / (lambda[0] - lambda[2])),
+            0.0,
+            -s1 * (lambda[0] / lambda[1]) *
+                sqrt((lambda[1] - lambda[2]) / (lambda[0] - lambda[2]))};
+
+        Cs.col(j) = z0 * V * temp;
+
+        Eigen::Matrix<double, 3, 1> const temp2{
+            s2 * sqrt((lambda[0] - lambda[1]) / (lambda[0] - lambda[2])), 0.0,
+            -s1 * sqrt((lambda[1] - lambda[2]) / (lambda[0] - lambda[2]))};
+
+        Ns.col(j) = V * temp2;
+        j = j + 1;
+      }
+    }
+  }
+  std::array<ssize_t, 2> valids{};
+  size_t founds{0};
+  for (ssize_t k{0}; k < Cs.cols(); ++k) {
+    if (Cs.col(k)[2] > 0.0 and Ns.col(k)[2] < 0.0) {
+      valids[founds] = k;
+      founds = founds + 1;
+    }
+    if (founds == 2) {
+      break;
+    }
+  }
+  // The algorithm finds two pose candidates
+  // For now, we simply return one of them
+  return {Cs.col(valids[0])[0], Cs.col(valids[0])[1], Cs.col(valids[0])[2]};
 }
 
 auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,
