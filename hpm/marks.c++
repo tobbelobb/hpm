@@ -190,16 +190,35 @@ auto hpm::diskCenterRay(Ellipse const &diskProjection,
   return {0.0, 0.0};
 }
 
+std::array<double, 6>
+hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
+                          PixelPosition const &imageCenter) {
+  cv::Matx22d const R_e(cos(ellipse.m_rot), -sin(ellipse.m_rot),
+                        sin(ellipse.m_rot), cos(ellipse.m_rot));
+  cv::Matx22d const temp(1.0 / ((ellipse.m_major / 2) * (ellipse.m_major / 2)),
+                         0.0, 0.0,
+                         1.0 / ((ellipse.m_minor / 2) * (ellipse.m_minor / 2)));
+  cv::Matx22d const M{R_e * (temp * R_e.t())};
+  cv::Matx21d const X_0(imageCenter - ellipse.m_center);
+  cv::Matx21d const C{2.0 * M * X_0};
+  double const F{(X_0.t() * (M * X_0))(0, 0) - 1.0};
+
+  // clang-format off
+  return {M(0, 0),
+          M(0, 1),
+          M(1, 1),
+          C(0, 0),
+          C(1, 0),
+          F};
+  // clang-format on
+}
+
 auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
     -> hpm::CameraFramedPosition {
-  double const A{diskProjection.m_equation.A()};
-  double const B{diskProjection.m_equation.B()};
-  double const C{diskProjection.m_equation.C()};
-  double const D{diskProjection.m_equation.D()};
-  double const E{diskProjection.m_equation.E()};
-  double const F{diskProjection.m_equation.F()};
+  auto const [A, B, C, D, E, F] =
+      ellipseEqInCamCoords(diskProjection, imageCenter);
   Eigen::Matrix<double, 3, 3> Q;
   Q(0, 0) = A;
   Q(0, 1) = B;

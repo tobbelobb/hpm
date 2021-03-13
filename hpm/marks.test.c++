@@ -10,6 +10,7 @@ auto main() -> int {
   using namespace boost::ut;
 
   auto constexpr EPS2{0.01_d};
+  auto constexpr EPS3{0.001_d};
   auto constexpr EPS4{0.0001_d};
   auto constexpr EPS9{0.000000001_d};
   auto constexpr EPS11{0.00000000001_d};
@@ -66,6 +67,164 @@ auto main() -> int {
   double const focalLength{3000.0};
   double const markerRadius{70.0 / 2};
   PixelPosition const imageCenter{10000, 10000};
+
+  "compute ellipse equation of centered flat circle"_test = [&] {
+    double constexpr r{105.0};
+    double constexpr diameter{2.0 * r};
+    double constexpr rsq{r * r};
+    Ellipse const ellipse{imageCenter, diameter, diameter, 0.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+
+    expect(std::abs(A - 1.0 / rsq) < EPS9);
+    expect(std::abs(B) < EPS9);
+    expect(std::abs(C - 1.0 / rsq) < EPS9);
+    expect(std::abs(D) < EPS9);
+    expect(std::abs(E) < EPS9);
+    expect(std::abs(F + 1) < EPS9);
+  };
+
+  "compute ellipse equation of x-offset flat circle"_test = [&] {
+    double constexpr r{105.0};
+    double constexpr diameter{2.0 * r};
+    Ellipse const ellipse{imageCenter + PixelPosition{r, 0.0}, diameter,
+                          diameter, 0.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+    std::array<double, 6> normalizedCopy{A / A, B / A, C / A,
+                                         D / A, E / A, F / A};
+    double const An{normalizedCopy[0]};
+    double const Bn{normalizedCopy[1]};
+    double const Cn{normalizedCopy[2]};
+    double const Dn{normalizedCopy[3]};
+    double const En{normalizedCopy[4]};
+    double const Fn{normalizedCopy[5]};
+
+    expect(std::abs(An - 1.0) < EPS9);
+    expect(std::abs(Bn - 0.0) < EPS9);
+    expect(std::abs(Cn - 1.0) < EPS9);
+    expect(std::abs(Dn - (-2 * r)) < EPS9);
+    expect(std::abs(En - 0.0) < EPS9);
+    expect(std::abs(Fn - 0.0) < EPS9);
+  };
+
+  "compute ellipse equation of y-offset flat circle"_test = [&] {
+    double constexpr r{105.0};
+    double constexpr diameter{2.0 * r};
+    Ellipse const ellipse{imageCenter + PixelPosition{0.0, 1.0}, diameter,
+                          diameter, 0.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+    std::array<double, 6> normalizedCopy{A / A, B / A, C / A,
+                                         D / A, E / A, F / A};
+    double const An{normalizedCopy[0]};
+    double const Bn{normalizedCopy[1]};
+    double const Cn{normalizedCopy[2]};
+    double const Dn{normalizedCopy[3]};
+    double const En{normalizedCopy[4]};
+    double const Fn{normalizedCopy[5]};
+
+    expect(std::abs(An - 1.0) < EPS9);
+    expect(std::abs(Bn - 0.0) < EPS9);
+    expect(std::abs(Cn - 1.0) < EPS9);
+    expect(std::abs(Dn - 0.0) < EPS9);
+    expect(std::abs(En - (-2.0)) < EPS9);
+    expect(std::abs(Fn - (1 - r * r)) < EPS9);
+  };
+
+  "compute ellipse equation of simple x-ellipse"_test = [&] {
+    double constexpr a{105.0};
+    double constexpr b{50.0};
+
+    Ellipse const ellipse{imageCenter, 2 * a, 2 * b, 0.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+
+    expect(std::abs(A - (1.0 / (a * a))) < EPS9);
+    expect(std::abs(B - 0.0) < EPS9);
+    expect(std::abs(C - (1.0 / (b * b))) < EPS9);
+    expect(std::abs(D - 0.0) < EPS9);
+    expect(std::abs(E - 0.0) < EPS9);
+    expect(std::abs(F - (-1)) < EPS9);
+  };
+
+  "compute ellipse equation of simple y-ellipse"_test = [&] {
+    double constexpr a{105.0};
+    double constexpr b{50.0};
+
+    Ellipse const ellipse{imageCenter, 2 * a, 2 * b, CV_PI / 2.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+
+    expect(std::abs(A - (1.0 / (b * b))) < EPS9);
+    expect(std::abs(B - 0.0) < EPS9);
+    expect(std::abs(C - (1.0 / (a * a))) < EPS9);
+    expect(std::abs(D - 0.0) < EPS9);
+    expect(std::abs(E - 0.0) < EPS9);
+    expect(std::abs(F - (-1)) < EPS9);
+  };
+
+  "compute ellipse equation of 30-deg rotated ellipse"_test = [&] {
+    double constexpr a{105.0};
+    double constexpr b{50.0};
+
+    Ellipse const ellipse{imageCenter, 2 * a, 2 * b, CV_PI / 6.0};
+
+    double constexpr expectedA{3.0 / (4.0 * a * a) + 1.0 / (4.0 * b * b)};
+    double constexpr expectedB{sqrt(3.0) / (2.0 * a * a) -
+                               sqrt(3.0) / (2.0 * b * b)};
+    double constexpr expectedC{1.0 / (4.0 * a * a) + 3.0 / (4.0 * b * b)};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+
+    expect(std::abs(A - (expectedA)) < EPS9);
+    expect(std::abs(B - (expectedB)) < EPS3);
+    expect(std::abs(C - (expectedC)) < EPS9);
+    expect(std::abs(D - 0.0) < EPS9);
+    expect(std::abs(E - 0.0) < EPS9);
+    expect(std::abs(F - (-1)) < EPS9);
+  };
+
+  "compute ellipse equation of xy-offsdet 30-deg rotated ellipse"_test = [&] {
+    double constexpr a{105.0};
+    double constexpr b{50.0};
+
+    Ellipse const ellipse{imageCenter + PixelPosition{1.0, 2.0}, 2 * a, 2 * b,
+                          CV_PI / 6.0};
+
+    double constexpr expectedA{3.0 / (4.0 * a * a) + 1.0 / (4.0 * b * b)};
+    double constexpr expectedB{sqrt(3.0) / (2.0 * a * a) -
+                               sqrt(3.0) / (2.0 * b * b)};
+    double constexpr expectedC{1.0 / (4.0 * a * a) + 3.0 / (4.0 * b * b)};
+    double constexpr expectedD{-3.0 / (2.0 * a * a) - sqrt(3.0) / (a * a) -
+                               1.0 / (2.0 * b * b) + sqrt(3.0) / (b * b)};
+    double constexpr expectedE{-sqrt(3.0) / (2 * a * a) - 1.0 / (a * a) +
+                               sqrt(3.0) / (2 * b * b) - 3.0 / (b * b)};
+    double constexpr expectedF{3.0 / (4.0 * a * a) + sqrt(3.0) / (a * a) +
+                               1.0 / (a * a) + 1.0 / (4 * b * b) -
+                               sqrt(3) / (b * b) + 3.0 / (b * b) - 1.0};
+
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
+
+    expect(std::abs(A - (expectedA)) < EPS9);
+    expect(std::abs(B - (expectedB)) < EPS3);
+    expect(std::abs(C - (expectedC)) < EPS9);
+    expect(std::abs(D - (expectedD)) < EPS9);
+    expect(std::abs(E - (expectedE)) < EPS9);
+    expect(std::abs(F - (expectedF)) < EPS9);
+  };
+
+  skip / "center flat disk position"_test = [&] {
+    double const zDist{1000.0};
+    double const projectionDiameter{2 * markerRadius * focalLength / zDist};
+    auto const gotPosition = toPosition(
+        Ellipse{imageCenter, projectionDiameter, projectionDiameter, 0.0},
+        markerRadius * 2, focalLength, imageCenter, MarkerType::DISK);
+
+    expect(std::abs(gotPosition.x - 0.0) < EPS9);
+    expect(std::abs(gotPosition.y - 0.0) < EPS9);
+    expect(std::abs(gotPosition.z - 1000.0) < EPS9);
+  };
 
   skip / "center sphere position"_test = [&] {
     double const zDist{1000.0};
@@ -132,20 +291,6 @@ auto main() -> int {
         expect(std::abs(gotPosition.z - zDist) < EPS);
       }
     }
-  };
-
-  "center flat disk position"_test = [&] {
-    double const zDist{1000.0};
-    double const projectionWidth{2 * markerRadius * focalLength / zDist};
-    double const projectionHeight{projectionWidth};
-    std::cout << "projectionWidth=" << projectionWidth << '\n';
-    auto const gotPosition = toPosition(
-        Ellipse{imageCenter, projectionWidth, projectionHeight, 0.0},
-        markerRadius * 2, focalLength, imageCenter, MarkerType::DISK);
-
-    expect(std::abs(gotPosition.x - 0.0) < EPS9);
-    expect(std::abs(gotPosition.y - 0.0) < EPS9);
-    expect(std::abs(gotPosition.z - 1000.0) < EPS9);
   };
 
   // clang-format off
