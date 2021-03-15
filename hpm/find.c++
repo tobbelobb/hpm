@@ -92,7 +92,9 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
 }
 
 auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
-               FinderConfig const &config) -> std::vector<hpm::Ellipse> {
+               FinderConfig const &config,
+               CameraFramedPosition const &expectedNormalDirection)
+    -> std::vector<hpm::Ellipse> {
   std::vector<hpm::Ellipse> const ellipses{
       ellipseDetect(image.m_mat, config.m_showIntermediateImages,
                     markerParams.m_topLeftMarkerCenter)};
@@ -103,9 +105,9 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   std::vector<hpm::CameraFramedPosition> positions;
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {
-    positions.emplace_back(toPosition(e, markerParams.m_diameter,
-                                      image.m_focalLength, image.m_center,
-                                      markerParams.m_type));
+    positions.emplace_back(toPosition(
+        e, markerParams.m_diameter, image.m_focalLength, image.m_center,
+        markerParams.m_type, expectedNormalDirection));
   }
 
   std::vector<double> expectedDists;
@@ -205,17 +207,17 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   return marks;
 }
 
-auto findIndividualMarkerPositions(std::vector<hpm::Ellipse> const &marks,
-                                   double const knownMarkerDiameter,
-                                   double const focalLength,
-                                   PixelPosition const &imageCenter,
-                                   MarkerType markerType)
+auto findIndividualMarkerPositions(
+    std::vector<hpm::Ellipse> const &marks, double const knownMarkerDiameter,
+    double const focalLength, PixelPosition const &imageCenter,
+    MarkerType markerType, CameraFramedPosition const &expectedNormalDirection)
     -> std::vector<CameraFramedPosition> {
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
   for (auto const &detected : marks) {
     positions.emplace_back(toPosition(detected, knownMarkerDiameter,
-                                      focalLength, imageCenter, markerType));
+                                      focalLength, imageCenter, markerType,
+                                      expectedNormalDirection));
   }
 
   return positions;

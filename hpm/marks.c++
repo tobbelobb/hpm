@@ -182,9 +182,11 @@ auto hpm::sphereProjToPosition(Ellipse const &sphereProjection,
 
 auto hpm::diskCenterRay(Ellipse const &diskProjection,
                         double const diskDiameter, double const focalLength,
-                        PixelPosition const &imageCenter) -> PixelPosition {
+                        PixelPosition const &imageCenter,
+                        CameraFramedPosition const &expectedNormalDirection)
+    -> PixelPosition {
   auto const C{diskProjToPosition(diskProjection, diskDiameter, focalLength,
-                                  imageCenter)};
+                                  imageCenter, expectedNormalDirection)};
   double const factor{focalLength / C.z};
   return {imageCenter.x + factor * C.x, imageCenter.y + factor * C.y};
   //(void)diskDiameter;
@@ -242,7 +244,21 @@ hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
   // clang-format on
 }
 
-auto hpm::diskProjToPosition(Ellipse const &diskProjection,
+auto hpm::diskProjToPosition(
+    Ellipse const &diskProjection, double const diskDiameter,
+    double focalLength, PixelPosition const &imageCenter,
+    CameraFramedPosition const &expectedNormalDirection) {
+  TwoPoses const candidates{diskProjToTwoPoses(diskProjection, diskDiameter,
+                                               focalLength, imageCenter)};
+  if ((cv::norm(expectedNormalDirection.dot(candidates.normal0)) <
+       cv::norm(expectedNormalDirection.dot(candidates.normal1))) or
+      expectedNormalDirection == {0.0, 0.0, 0.0} {
+    return candidates.center0;
+  }
+  return candidates.center1;
+}
+
+auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
     // This whole algorithm was found in
@@ -250,7 +266,7 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
     // which in turn found it in "Camera Calibration with Two Arbitrary Coplanar
     // Circles (2004)" by Chen et. al.
 
-    -> hpm::CameraFramedPosition {
+    -> hpm::TwoPoses {
   auto const [A, B, C, D, E, F] =
       ellipseEqInCamCoords(diskProjection, imageCenter);
   Eigen::Matrix<double, 3, 3> Q;
@@ -344,32 +360,39 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
       }
     }
   }
-  std::array<ssize_t, 2> valids{};
+  std::array<ssize_t, 2> valid{};
   size_t founds{0};
   for (ssize_t k{0}; k < Cs.cols(); ++k) {
     if (Cs.col(k)[2] > 0.0 and Ns.col(k)[2] < 0.0) {
-      valids[founds] = k;
+      valid[founds] = k;
       founds = founds + 1;
     }
     if (founds == 2) {
       break;
     }
   }
+
   // The algorithm finds two pose candidates
-  // For now, we simply return one of them
-  return {Cs.col(valids[0])[0], Cs.col(valids[0])[1], Cs.col(valids[0])[2]};
+  ToPoses ret{};
+  ret.center0 = {Cs.col(valid[0])[0], Cs.col(valid[0])[1], Cs.col(valid[0])[2]};
+  ret.normal0 = {Ns.col(valid[0])[0], Ns.col(valid[0])[1], Ns.col(valid[0])[2]};
+  ret.center1 = {Cs.col(valid[1])[0], Cs.col(valid[1])[1], Cs.col(valid[1])[2]};
+  ret.normal1 = {Ns.col(valid[1])[0], Ns.col(valid[1])[1], Ns.col(valid[1])[2]};
+  return ret;
 }
 
 auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,
                      double focalLength, hpm::PixelPosition const &imageCenter,
-                     MarkerType const markerType) -> hpm::CameraFramedPosition {
+                     MarkerType const markerType,
+                     CameraFramedPosition const &expectedNormalDirection)
+    -> hpm::CameraFramedPosition {
   switch (markerType) {
   case MarkerType::SPHERE:
     return sphereProjToPosition(markerProjection, markerDiameter, focalLength,
                                 imageCenter);
   case MarkerType::DISK:
     return diskProjToPosition(markerProjection, markerDiameter, focalLength,
-                              imageCenter);
+                              imageCenter, expectedNormalDirection);
   }
   return {0.0, 0.0, 0.0};
 }
@@ -377,14 +400,16 @@ auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,
 auto hpm::centerRay(Ellipse const &markerProjection,
                     double const markerDiameter, double const focalLength,
                     PixelPosition const &imageCenter,
-                    MarkerType const markerType) -> PixelPosition {
+                    MarkerType const markerType,
+                    CameraFramedPosition const &expectedNormalDirection)
+    -> PixelPosition {
   switch (markerType) {
   case MarkerType::SPHERE:
     return sphereCenterRay(markerProjection, markerDiameter, focalLength,
                            imageCenter);
   case MarkerType::DISK:
     return diskCenterRay(markerProjection, markerDiameter, focalLength,
-                         imageCenter);
+                         imageCenter, expectedNormalDirection);
   }
   return {0.0, 0.0};
 }

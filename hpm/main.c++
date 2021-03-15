@@ -11,7 +11,7 @@
 
 #include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
-#include <opencv2/calib3d.hpp> // undistort
+#include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -184,7 +184,8 @@ auto main(int const argc, char **const argv) -> int {
               return MarkerType::DISK;
             }
             return MarkerType::SPHERE;
-          }()};
+          }(),
+      };
     } catch (std::exception const &e) {
       std::cerr << "Could not read marker parameters from file "
                 << markerParamsFileName << '\n';
@@ -215,11 +216,25 @@ auto main(int const argc, char **const argv) -> int {
   cv::undistort(distortedImage, undistortedImage, cam.matrix, cam.distortion);
   FinderImage const finderImage{undistortedImage, meanFocalLength, imageCenter};
 
-  auto const marks{findMarks(finderImage, markerParams, finderConfig)};
+  CameraFramedPosition expectedNormalDirection{0.0, 0.0, 0.0};
+  if (markerParams.m_type == MarkerType::DISK) {
+    if (not cameraPositionCalibration) {
+      cv::Matx33d rotationMatrix;
+      cv::Rodrigues(cam.worldPose.rotation, rotationMatrix);
+      expectedNormalDirection =
+          CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
+    }
+  }
 
-  SolvePnpPoints const points{marks, markerParams.m_diameter,
-                              finderImage.m_focalLength, finderImage.m_center,
-                              markerParams.m_type};
+  auto const marks{findMarks(finderImage, markerParams, finderConfig,
+                             expectedNormalDirection)};
+
+  SolvePnpPoints const points{marks,
+                              markerParams.m_diameter,
+                              finderImage.m_focalLength,
+                              finderImage.m_center,
+                              markerParams.m_type,
+                              expectedNormalDirection};
 
   if (points.allIdentified()) {
     std::optional<SixDof> const effectorPoseRelativeToCamera{
@@ -270,13 +285,17 @@ auto main(int const argc, char **const argv) -> int {
             };
             Ellipse const topLeftest{*std::min_element(
                 std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
+            (void)topLeftest;
             std::cout << "<topleft_marker_center type_id=\"opencv-matrix\">\n"
                       << "  <rows>1</rows>\n"
                       << "  <cols>2</cols>\n"
                       << "  <dt>d</dt>\n"
                       << "  <data>\n"
-                      << "    " << topLeftest.m_center.x << ' '
-                      << topLeftest.m_center.y << '\n'
+                      << "<!-- this feature is in development, and not ready. "
+                         "Fill zeros turns it off.-->\n"
+                      //<< "    " << topLeftest.m_center.x << ' '
+                      //<< topLeftest.m_center.y << '\n'
+                      << "    0 0\n"
                       << "  </data>\n"
                       << "</topleft_marker_center>\n";
           }

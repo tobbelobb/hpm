@@ -35,7 +35,8 @@ struct SolvePnpPoints {
   explicit SolvePnpPoints(std::vector<hpm::Ellipse> const &marks,
                           double markerDiameter, double focalLength,
                           PixelPosition const &imageCenter,
-                          MarkerType markerType);
+                          MarkerType markerType,
+                          CameraFramedPosition const &expectedNormalDirection);
 
   [[nodiscard]] bool isIdentified(size_t idx) const;
   [[nodiscard]] PixelPosition get(size_t idx) const;
