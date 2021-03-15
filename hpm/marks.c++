@@ -191,16 +191,42 @@ auto hpm::diskCenterRay(Ellipse const &diskProjection,
 }
 
 std::array<double, 6>
+hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
+                           PixelPosition const &imageCenter) {
+  double ang{ellipse.m_rot};
+
+  hpm::PixelPosition const mid{imageCenter - ellipse.m_center};
+  double const h{mid.x};
+  double const k{mid.y};
+  double const asqinv{4.0 / (ellipse.m_major * ellipse.m_major)};
+  double const bsqinv{4.0 / (ellipse.m_minor * ellipse.m_minor)};
+  double const cossq{cos(ang) * cos(ang)};
+  double const sinsq{sin(ang) * sin(ang)};
+  double const twocossin{2.0 * cos(ang) * sin(ang)};
+
+  double const A{cossq * asqinv + sinsq * bsqinv};
+  double const B{twocossin * asqinv - twocossin * bsqinv};
+  double const C{sinsq * asqinv + cossq * bsqinv};
+  double const D{-2.0 * h * cossq * asqinv - twocossin * k * asqinv -
+                 2.0 * h * sinsq * bsqinv + twocossin * k * bsqinv};
+  double const E{-twocossin * h * asqinv - 2.0 * k * sinsq * asqinv +
+                 2.0 * twocossin * h * bsqinv - 2.0 * k * cossq * bsqinv};
+  double const F{h * h * cossq * asqinv + twocossin * h * k * asqinv +
+                 k * k * sinsq * asqinv + h * h * sinsq * bsqinv -
+                 twocossin * h * k * bsqinv + k * k * cossq * bsqinv - 1.0};
+  return {A, B, C, D, E, F};
+}
+
+std::array<double, 6>
 hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
                           PixelPosition const &imageCenter) {
   cv::Matx22d const R_e(cos(ellipse.m_rot), -sin(ellipse.m_rot),
                         sin(ellipse.m_rot), cos(ellipse.m_rot));
-  cv::Matx22d const temp(1.0 / ((ellipse.m_major / 2) * (ellipse.m_major / 2)),
-                         0.0, 0.0,
-                         1.0 / ((ellipse.m_minor / 2) * (ellipse.m_minor / 2)));
+  cv::Matx22d const temp(4.0 / (ellipse.m_major * ellipse.m_major), 0.0, 0.0,
+                         4.0 / ((ellipse.m_minor * ellipse.m_minor)));
   cv::Matx22d const M{R_e * (temp * R_e.t())};
-  cv::Matx21d const X_0(imageCenter - ellipse.m_center);
-  cv::Matx21d const C{M * X_0};
+  cv::Matx21d const X_0(ellipse.m_center - imageCenter);
+  cv::Matx21d const C{2.0 * M * X_0};
   double const F{(X_0.t() * (M * X_0))(0, 0) - 1.0};
 
   // clang-format off
@@ -227,11 +253,11 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
   Eigen::Matrix<double, 3, 3> Q;
   Q(0, 0) = A;
   Q(0, 1) = B;
-  Q(0, 2) = -D / focalLength;
   Q(1, 0) = Q(0, 1);
-  Q(1, 1) = C;
-  Q(1, 2) = -E / focalLength;
+  Q(0, 2) = -D / (2.0 * focalLength);
   Q(2, 0) = Q(0, 2);
+  Q(1, 1) = C;
+  Q(1, 2) = -E / (2.0 * focalLength);
   Q(2, 1) = Q(1, 2);
   Q(2, 2) = F / (focalLength * focalLength);
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 3, 3>> eigensolver(Q);
@@ -271,13 +297,13 @@ auto hpm::diskProjToPosition(Ellipse const &diskProjection,
                                      eigenvalues[indices[2]]};
   Eigen::Matrix<double, 3, 3> V{};
   V(0, 0) = eigenvectors.col(indices[0])[0];
-  V(0, 1) = eigenvectors.col(indices[0])[1];
-  V(0, 2) = eigenvectors.col(indices[0])[2];
-  V(1, 0) = eigenvectors.col(indices[1])[0];
+  V(1, 0) = eigenvectors.col(indices[0])[1];
+  V(2, 0) = eigenvectors.col(indices[0])[2];
+  V(0, 1) = eigenvectors.col(indices[1])[0];
   V(1, 1) = eigenvectors.col(indices[1])[1];
-  V(1, 2) = eigenvectors.col(indices[1])[2];
-  V(2, 0) = eigenvectors.col(indices[2])[0];
-  V(2, 1) = eigenvectors.col(indices[2])[1];
+  V(2, 1) = eigenvectors.col(indices[1])[2];
+  V(0, 2) = eigenvectors.col(indices[2])[0];
+  V(1, 2) = eigenvectors.col(indices[2])[1];
   V(2, 2) = eigenvectors.col(indices[2])[2];
 
   // std::cout << "The eigenvalues of Q are:\n" << eigenvalues << '\n';

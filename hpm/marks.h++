@@ -7,6 +7,9 @@
 
 namespace hpm {
 
+std::array<double, 6> ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
+                                            PixelPosition const &imageCenter);
+
 std::array<double, 6> ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
                                            PixelPosition const &imageCenter);
 
