@@ -183,11 +183,14 @@ auto hpm::sphereProjToPosition(Ellipse const &sphereProjection,
 auto hpm::diskCenterRay(Ellipse const &diskProjection,
                         double const diskDiameter, double const focalLength,
                         PixelPosition const &imageCenter) -> PixelPosition {
-  (void)diskProjection;
-  (void)focalLength;
-  (void)imageCenter;
-  (void)diskDiameter;
-  return {0.0, 0.0};
+  auto const C{diskProjToPosition(diskProjection, diskDiameter, focalLength,
+                                  imageCenter)};
+  double const factor{focalLength / C.z};
+  return {imageCenter.x + factor * C.x, imageCenter.y + factor * C.y};
+  //(void)diskDiameter;
+  //(void)focalLength;
+  //(void)imageCenter;
+  // return diskProjection.m_center;
 }
 
 std::array<double, 6>
