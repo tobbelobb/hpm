@@ -40,7 +40,7 @@ struct Ellipse {
 
   friend std::ostream &operator<<(std::ostream &out, Ellipse const &ellipse) {
     return out << ellipse.m_center << ' ' << ellipse.m_major << ' '
-               << ellipse.m_minor;
+               << ellipse.m_minor << ' ' << ellipse.m_rot;
   };
 
   bool operator==(Ellipse const &) const = default;

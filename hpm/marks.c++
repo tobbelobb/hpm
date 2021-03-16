@@ -207,9 +207,10 @@ hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
   double const cossq{cos(ang) * cos(ang)};
   double const sinsq{sin(ang) * sin(ang)};
   double const twocossin{2.0 * cos(ang) * sin(ang)};
+  double const cossin{cos(ang) * sin(ang)};
 
   double const A{cossq * asqinv + sinsq * bsqinv};
-  double const B{twocossin * asqinv - twocossin * bsqinv};
+  double const B{cossin * (asqinv - bsqinv)};
   double const C{sinsq * asqinv + cossq * bsqinv};
   double const D{-2.0 * h * cossq * asqinv - twocossin * k * asqinv -
                  2.0 * h * sinsq * bsqinv + twocossin * k * bsqinv};
@@ -273,7 +274,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
   // Circles (2004)" by Chen et. al.
 
   auto const [A, B, C, D, E, F] =
-      ellipseEqInCamCoords2(diskProjection, imageCenter);
+      ellipseEqInCamCoords(diskProjection, imageCenter);
   Eigen::Matrix<double, 3, 3> Q;
   Q(0, 0) = A;
   Q(0, 1) = B;
@@ -297,7 +298,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
                            std::abs(eigenvalues[indices[1]]) and
                        eigenvalues[indices[0]] * eigenvalues[indices[1]] > 0 and
                        eigenvalues[indices[0]] * eigenvalues[indices[2]] < 0)) {
-    indices = {i, (i + 1) % 3, (i + 2) % 3};
+    indices = {i % 3, (i + 1) % 3, (i + 2) % 3};
     i = i + 1;
     // satisfy |lambda_0| >= |lambda_1|
     if (not(std::abs(eigenvalues[indices[0]]) >=

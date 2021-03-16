@@ -10,7 +10,6 @@ auto main() -> int {
   using namespace boost::ut;
 
   auto constexpr EPS2{0.01_d};
-  auto constexpr EPS3{0.001_d};
   auto constexpr EPS4{0.0001_d};
   auto constexpr EPS9{0.000000001_d};
   auto constexpr EPS11{0.00000000001_d};
@@ -209,14 +208,14 @@ auto main() -> int {
     Ellipse const ellipse{imageCenter, 2 * a, 2 * b, CV_PI / 6.0};
 
     double constexpr expectedA{3.0 / (4.0 * a * a) + 1.0 / (4.0 * b * b)};
-    double constexpr expectedB{sqrt(3.0) / (2.0 * a * a) -
-                               sqrt(3.0) / (2.0 * b * b)};
+    double constexpr expectedB{
+        0.5 * (sqrt(3.0) / (2.0 * a * a) - sqrt(3.0) / (2.0 * b * b))};
     double constexpr expectedC{1.0 / (4.0 * a * a) + 3.0 / (4.0 * b * b)};
 
     auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
 
     expect(std::abs(A - (expectedA)) < EPS9);
-    expect(std::abs(B - (expectedB)) < EPS3);
+    expect(std::abs(B - (expectedB)) < EPS9);
     expect(std::abs(C - (expectedC)) < EPS9);
     expect(std::abs(D - 0.0) < EPS9);
     expect(std::abs(E - 0.0) < EPS9);
@@ -231,8 +230,8 @@ auto main() -> int {
                           CV_PI / 6.0};
 
     double constexpr expectedA{3.0 / (4.0 * a * a) + 1.0 / (4.0 * b * b)};
-    double constexpr expectedB{sqrt(3.0) / (2.0 * a * a) -
-                               sqrt(3.0) / (2.0 * b * b)};
+    double constexpr expectedB{
+        0.5 * (sqrt(3.0) / (2.0 * a * a) - sqrt(3.0) / (2.0 * b * b))};
     double constexpr expectedC{1.0 / (4.0 * a * a) + 3.0 / (4.0 * b * b)};
     double constexpr expectedD{-3.0 / (2.0 * a * a) - sqrt(3.0) / (a * a) -
                                1.0 / (2.0 * b * b) + sqrt(3.0) / (b * b)};
@@ -245,7 +244,7 @@ auto main() -> int {
     auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
 
     expect(std::abs(A - (expectedA)) < EPS9);
-    expect(std::abs(B - (expectedB)) < EPS3);
+    expect(std::abs(B - (expectedB)) < EPS9);
     expect(std::abs(C - (expectedC)) < EPS9);
     expect(std::abs(D - (-expectedD)) < EPS9);
     expect(std::abs(E - (-expectedE)) < EPS9);
@@ -265,7 +264,22 @@ auto main() -> int {
     auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
 
     expect(std::abs(A - expA) < EPS9);
-    expect(std::abs(B - expB) < EPS3);
+    expect(std::abs(B - expB) < EPS9);
+    expect(std::abs(C - expC) < EPS9);
+    expect(std::abs(D - expD) < EPS9);
+    expect(std::abs(E - expE) < EPS9);
+    expect(std::abs(F - expF) < EPS9);
+  };
+
+  "compute ellipse equations edge case found in end use test"_test = [&] {
+    Ellipse const ellipse{{2756.69, 2288.41}, 42, 34, -0.783327};
+    PixelPosition imgCenter{1655.38, 1234.87};
+    auto [expA, expB, expC, expD, expE, expF] =
+        ellipseEqInCamCoords2(ellipse, imgCenter);
+    auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imgCenter);
+
+    expect(std::abs(A - expA) < EPS9);
+    expect(std::abs(B - expB) < EPS9);
     expect(std::abs(C - expC) < EPS9);
     expect(std::abs(D - expD) < EPS9);
     expect(std::abs(E - expE) < EPS9);
@@ -285,7 +299,7 @@ auto main() -> int {
     auto const [A, B, C, D, E, F] = ellipseEqInCamCoords(ellipse, imageCenter);
 
     expect(std::abs(A - expA) < EPS9);
-    expect(std::abs(B - expB) < EPS3);
+    expect(std::abs(B - expB) < EPS9);
     expect(std::abs(C - expC) < EPS9);
     expect(std::abs(D - expD) < EPS9);
     expect(std::abs(E - expE) < EPS9);
