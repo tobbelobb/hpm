@@ -23,16 +23,16 @@ CameraFramedPosition sphereProjToPosition(Ellipse const &sphereProjection,
                                           double focalLength,
                                           PixelPosition const &imageCenter);
 
-struct twoPoses {
+struct TwoPoses {
   CameraFramedPosition center0;
   CameraFramedPosition normal0;
   CameraFramedPosition center1;
   CameraFramedPosition normal1;
 };
 
-CameraFramedPosition diskProjToTwoPoses(Ellipse const &diskProjection,
-                                        double diskDiameter, double focalLength,
-                                        PixelPosition const &imageCenter);
+TwoPoses diskProjToTwoPoses(Ellipse const &diskProjection, double diskDiameter,
+                            double focalLength,
+                            PixelPosition const &imageCenter);
 
 CameraFramedPosition
 diskProjToPosition(Ellipse const &diskProjection, double diskDiameter,

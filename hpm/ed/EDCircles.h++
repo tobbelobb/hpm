@@ -78,6 +78,12 @@ struct EllipseEquation {
   auto F() const -> double { return coeff[5]; }
 
   bool operator==(EllipseEquation const &) const = default;
+
+  friend std::ostream &operator<<(std::ostream &out,
+                                  EllipseEquation const &eq) {
+    return out << '[' << eq.A() << ' ' << eq.B() << ' ' << eq.C() << ' '
+               << eq.D() << ' ' << eq.E() << ' ' << eq.F() << ']';
+  }
 };
 
 // Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0

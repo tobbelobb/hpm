@@ -218,12 +218,10 @@ auto main(int const argc, char **const argv) -> int {
 
   CameraFramedPosition expectedNormalDirection{0.0, 0.0, 0.0};
   if (markerParams.m_type == MarkerType::DISK) {
-    if (not cameraPositionCalibration) {
-      cv::Matx33d rotationMatrix;
-      cv::Rodrigues(cam.worldPose.rotation, rotationMatrix);
-      expectedNormalDirection =
-          CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
-    }
+    cv::Matx33d rotationMatrix;
+    cv::Rodrigues(cam.worldPose.rotation, rotationMatrix);
+    expectedNormalDirection =
+        CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
   }
 
   auto const marks{findMarks(finderImage, markerParams, finderConfig,

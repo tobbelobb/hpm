@@ -189,12 +189,11 @@ auto hpm::diskCenterRay(Ellipse const &diskProjection,
                                   imageCenter, expectedNormalDirection)};
   double const factor{focalLength / C.z};
   return {imageCenter.x + factor * C.x, imageCenter.y + factor * C.y};
-  //(void)diskDiameter;
-  //(void)focalLength;
-  //(void)imageCenter;
-  // return diskProjection.m_center;
 }
 
+// Double implementation of ellipseEqInCamCoords
+// to guard against typos. They should yield the exact
+// same results
 std::array<double, 6>
 hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
                            PixelPosition const &imageCenter) {
@@ -215,7 +214,7 @@ hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
   double const D{-2.0 * h * cossq * asqinv - twocossin * k * asqinv -
                  2.0 * h * sinsq * bsqinv + twocossin * k * bsqinv};
   double const E{-twocossin * h * asqinv - 2.0 * k * sinsq * asqinv +
-                 2.0 * twocossin * h * bsqinv - 2.0 * k * cossq * bsqinv};
+                 twocossin * h * bsqinv - 2.0 * k * cossq * bsqinv};
   double const F{h * h * cossq * asqinv + twocossin * h * k * asqinv +
                  k * k * sinsq * asqinv + h * h * sinsq * bsqinv -
                  twocossin * h * k * bsqinv + k * k * cossq * bsqinv - 1.0};
@@ -247,12 +246,18 @@ hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
 auto hpm::diskProjToPosition(
     Ellipse const &diskProjection, double const diskDiameter,
     double focalLength, PixelPosition const &imageCenter,
-    CameraFramedPosition const &expectedNormalDirection) {
+    hpm::CameraFramedPosition const &expectedNormalDirection)
+    -> CameraFramedPosition {
   TwoPoses const candidates{diskProjToTwoPoses(diskProjection, diskDiameter,
                                                focalLength, imageCenter)};
-  if ((cv::norm(expectedNormalDirection.dot(candidates.normal0)) <
-       cv::norm(expectedNormalDirection.dot(candidates.normal1))) or
-      expectedNormalDirection == {0.0, 0.0, 0.0} {
+  // std::cout << "candidates=" << '\n'
+  //          << candidates.center0 << '\n'
+  //          << candidates.normal0 << '\n'
+  //          << candidates.center1 << '\n'
+  //          << candidates.normal1 << '\n';
+  if (cv::norm(expectedNormalDirection) < 1e-9 or
+      (std::abs(expectedNormalDirection.dot(candidates.normal0)) >
+       std::abs(expectedNormalDirection.dot(candidates.normal1)))) {
     return candidates.center0;
   }
   return candidates.center1;
@@ -261,14 +266,14 @@ auto hpm::diskProjToPosition(
 auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
                              double const diskDiameter, double focalLength,
                              PixelPosition const &imageCenter)
-    // This whole algorithm was found in
-    // "Camera pose estimation with circular markers (2012)" by Joris Stork,
-    // which in turn found it in "Camera Calibration with Two Arbitrary Coplanar
-    // Circles (2004)" by Chen et. al.
-
     -> hpm::TwoPoses {
+  // This whole algorithm was found in
+  // "Camera pose estimation with circular markers (2012)" by Joris Stork,
+  // which in turn found it in "Camera Calibration with Two Arbitrary Coplanar
+  // Circles (2004)" by Chen et. al.
+
   auto const [A, B, C, D, E, F] =
-      ellipseEqInCamCoords(diskProjection, imageCenter);
+      ellipseEqInCamCoords2(diskProjection, imageCenter);
   Eigen::Matrix<double, 3, 3> Q;
   Q(0, 0) = A;
   Q(0, 1) = B;
@@ -282,7 +287,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 3, 3>> eigensolver(Q);
   if (eigensolver.info() != Eigen::Success) {
     std::cout << "Could not find eigenvalues!\n";
-    return {0.0, 0.0, 0.0};
+    return {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
   }
   auto const eigenvalues = eigensolver.eigenvalues();
   auto const eigenvectors = eigensolver.eigenvectors();
@@ -309,7 +314,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
           eigenvalues[indices[0]] * eigenvalues[indices[1]] > 0 and
           eigenvalues[indices[0]] * eigenvalues[indices[2]] < 0)) {
     std::cout << "Could not satisfy Chen et al. eqn. 16\n";
-    return {0.0, 0.0, 0.0};
+    return {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
   }
   Eigen::Matrix<double, 3, 1> lambda{eigenvalues[indices[0]],
                                      eigenvalues[indices[1]],
@@ -360,6 +365,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
       }
     }
   }
+  // std::cout << "Cs=\n" << Cs << "\nNs=\n" << Ns << '\n';
   std::array<ssize_t, 2> valid{};
   size_t founds{0};
   for (ssize_t k{0}; k < Cs.cols(); ++k) {
@@ -373,12 +379,10 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
   }
 
   // The algorithm finds two pose candidates
-  ToPoses ret{};
-  ret.center0 = {Cs.col(valid[0])[0], Cs.col(valid[0])[1], Cs.col(valid[0])[2]};
-  ret.normal0 = {Ns.col(valid[0])[0], Ns.col(valid[0])[1], Ns.col(valid[0])[2]};
-  ret.center1 = {Cs.col(valid[1])[0], Cs.col(valid[1])[1], Cs.col(valid[1])[2]};
-  ret.normal1 = {Ns.col(valid[1])[0], Ns.col(valid[1])[1], Ns.col(valid[1])[2]};
-  return ret;
+  return {{Cs.col(valid[0])[0], Cs.col(valid[0])[1], Cs.col(valid[0])[2]},
+          {Ns.col(valid[0])[0], Ns.col(valid[0])[1], Ns.col(valid[0])[2]},
+          {Cs.col(valid[1])[0], Cs.col(valid[1])[1], Cs.col(valid[1])[2]},
+          {Ns.col(valid[1])[0], Ns.col(valid[1])[1], Ns.col(valid[1])[2]}};
 }
 
 auto hpm::toPosition(Ellipse const &markerProjection, double markerDiameter,
