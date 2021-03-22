@@ -274,29 +274,6 @@ auto main(int const argc, char **const argv) -> int {
                     << -camTranslation.translation[2] << "\n  </data>\n"
                     << "</camera_translation>\n";
 
-          std::vector<hpm::Ellipse> const ellipses{
-              rawEllipseDetect(undistortedImage, false)};
-          if (not ellipses.empty()) {
-            auto closerToTopLeft = [](hpm::Ellipse const &lhs,
-                                      hpm::Ellipse const &rhs) {
-              return cv::norm(lhs.m_center) < cv::norm(rhs.m_center);
-            };
-            Ellipse const topLeftest{*std::min_element(
-                std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
-            (void)topLeftest;
-            std::cout << "<topleft_marker_center type_id=\"opencv-matrix\">\n"
-                      << "  <rows>1</rows>\n"
-                      << "  <cols>2</cols>\n"
-                      << "  <dt>d</dt>\n"
-                      << "  <data>\n"
-                      << "<!-- this feature is in development, and not ready. "
-                         "Fill zeros turns it off.-->\n"
-                      //<< "    " << topLeftest.m_center.x << ' '
-                      //<< topLeftest.m_center.y << '\n'
-                      << "    0 0\n"
-                      << "  </data>\n"
-                      << "</topleft_marker_center>\n";
-          }
         }
       }
       SixDof const worldPose{effectorWorldPose(
