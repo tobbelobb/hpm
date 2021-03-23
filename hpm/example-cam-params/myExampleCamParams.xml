@@ -25,7 +25,12 @@
   <cols>1</cols>
   <dt>d</dt>
   <data>
-    -2.70634 -1.82784 0.119121
+    <!--2.61462 1.338 -0.130517-->
+    <!--2.61577 1.33855 -0.146625-->
+    <!-- 2.59235 1.32298 -0.168172-->
+    <!--2.59732 1.32543 -0.162009  MxOsU.jpg calibrated for series: 3YIsz/ -->
+    2.58815 1.36692 -0.188184 <!-- MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
+    <!--2.5901 1.3297 -0.159254-->
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
@@ -33,7 +38,12 @@
   <cols>1</cols>
   <dt>d</dt>
   <data>
-    450.071 -159.276 2567.25
+    <!--534.724 -393.851 2582.67-->
+    <!--550.867 -370.607 2581.53-->
+    <!--617.324 -412.723 2560.95-->
+    <!--602.169 -405.804 2565.11  MxOsU.jpg calibrated for series: 3YIsz/ -->
+    633.227 -345.84 2566.42 <!-- MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
+    <!-- 606.692 -414.11 2563.36 -->
   </data>
 </camera_translation>
 </opencv_storage>
