@@ -81,8 +81,7 @@ EOE
 : Large-reprojection-error-warning
 : Checks that hpm warns user about a big reprojection error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/generated_benchmark_nr6_32_elevated_150p43_0_0_0_30_0_0_1500_white.png >>~/END/
-/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\];/
-/Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\]; Warning! High reprojection error: \d\d?\d?\d?.\d\d?\d?\d?\d?\d?/
 END
 
 : Finds-all-markers-nozzle-position-02
@@ -91,7 +90,6 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/
 END
 
@@ -101,7 +99,6 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/
 END
 
@@ -111,7 +108,6 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/
 END
 
@@ -121,7 +117,6 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/
 END
 
@@ -131,7 +126,6 @@ $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\]/
-/\d.\d\d?\d?\d?\d?\d?\d?/
 /.*/
 END
 
@@ -186,7 +180,6 @@ END
 
 : Tries-to-calibrate-cam-pos-based-on-too-bad-image-nozzle-position-01
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~/END/
-Reprojection error was too high to find good values for camera_rotation and camera_translation. This happens when camera_matrix, distortion_coefficients, marker_positions, and the image don't match up well enough.
-/Warning! High reprojection error: \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~%END%
+%Error: Reprojection error was \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?. That is too high for finding good camera_rotation and camera_translation values. A likely cause for the high reprojection error is that the configured camera_matrix, distortion_coefficients, and/or marker_positions don't match up well enough with what's found on the image. Another cause might be that the marker detector algorithm makes a mistake. Try re-running with '--show all' to verify if this is the case.%
 END

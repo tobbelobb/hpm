@@ -244,11 +244,16 @@ auto main(int const argc, char **const argv) -> int {
         if (effectorPoseRelativeToCamera.value().reprojectionError >
             HIGH_REPROJECTION_ERROR) {
           std::cout
-              << "Reprojection error was too high to find good values "
-                 "for camera_rotation and camera_translation. This happens "
-                 "when camera_matrix, distortion_coefficients, "
-                 "marker_positions, and the image don't match up well "
-                 "enough.\n";
+              << "Error: Reprojection error was "
+              << effectorPoseRelativeToCamera.value().reprojectionError
+              << ". That is too high for finding good camera_rotation and "
+                 "camera_translation values. A likely cause for the high "
+                 "reprojection error is that the configured camera_matrix, "
+                 "distortion_coefficients, and/or marker_positions don't match "
+                 "up well enough with what's found on the image. Another cause "
+                 "might be that the marker detector algorithm makes a mistake. "
+                 "Try re-running with '--show all' to verify if this is the "
+                 "case.";
         } else {
           SixDof const camTranslation{effectorWorldPose(
               effectorPoseRelativeToCamera.value(),
@@ -272,23 +277,24 @@ auto main(int const argc, char **const argv) -> int {
                     << -camTranslation.translation[0] << ' '
                     << -camTranslation.translation[1] << ' '
                     << -camTranslation.translation[2] << "\n  </data>\n"
-                    << "</camera_translation>\n";
-
+                    << "</camera_translation>";
         }
       }
       SixDof const worldPose{effectorWorldPose(
           effectorPoseRelativeToCamera.value(), cam.worldPose)};
       if (verbose) {
-        std::cout << worldPose << '\n';
+        std::cout << worldPose;
       }
       if (not verbose and not cameraPositionCalibration) {
-        std::cout << worldPose.translation << ";\n";
+        std::cout << worldPose.translation << ";";
       }
       double constexpr HIGH_REPROJECTION_ERROR{1.0};
-      if (worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
-        std::cout << "Warning! High reprojection error: "
-                  << worldPose.reprojectionError << '\n';
+      if (not(cameraPositionCalibration) and
+          worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
+        std::cout << " Warning! High reprojection error: "
+                  << worldPose.reprojectionError;
       }
+      std::cout << std::endl;
       if (showResultImage) {
         showImage(imageWith(undistortedImage, points, worldPose.translation),
                   "result.png");
