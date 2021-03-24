@@ -308,7 +308,7 @@ auto main(int const argc, char **const argv) -> int {
     std::cout << "No markers detected";
   }
 
-  if (not points.allIdentified()) {
+  if (not points.allIdentified() and verbose) {
     std::string delimeter{};
     for (auto const &cameraFramedPosition : cameraFramedPositions) {
       std::cout << delimeter << cameraFramedPosition;
