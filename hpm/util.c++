@@ -35,8 +35,6 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
   int constexpr LINE_WIDTH_BOLD{7};
   double constexpr TEXT_OFFSET{5.0};
   double constexpr TEXT_SIZE{2.0};
-  double maxRow{0.0};
-  double minCol{static_cast<double>(imageMat.cols)};
   for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
     auto const pos{points.get(i)};
     cv::circle(image, pos, LINE_WIDTH, BLACK, LINE_WIDTH_BOLD);
@@ -47,21 +45,15 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
     cv::putText(image, std::to_string(i + 1),
                 pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
                 cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
-    if (pos.x > maxRow) {
-      maxRow = pos.x;
-    }
-    if (pos.y < minCol) {
-      minCol = pos.y;
-    }
   }
+  int const posRow{imageMat.rows - 200};
+  int const posCol{200};
   std::stringstream ss;
   ss << std::setprecision(2) << std::fixed << position;
-  cv::putText(image, ss.str(),
-              {static_cast<int>(minCol), static_cast<int>(maxRow)},
-              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
-  cv::putText(image, ss.str(),
-              {static_cast<int>(minCol), static_cast<int>(maxRow)},
-              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, WHITE, LINE_WIDTH);
 }
 
 auto imageWith(cv::InputArray image, std::vector<Ellipse> const &marks)
