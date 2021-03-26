@@ -311,7 +311,7 @@ auto main(int const argc, char **const argv) -> int {
       markerParams.m_type)};
 
   if (cameraFramedPositions.empty()) {
-    std::cout << "No markers detected";
+    std::cout << "No markers detected\n";
   }
 
   if (not points.allIdentified() and verbose) {
