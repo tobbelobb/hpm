@@ -80,13 +80,16 @@ void showImage(cv::InputArray image, std::string const &name) {
     constexpr auto SHOW_PIXELS_Y{1500};
     cv::resizeWindow(name, SHOW_PIXELS_X, SHOW_PIXELS_Y);
     cv::imshow(name, image);
-    auto const key{cv::waitKey(0)};
-    if (key == 's') {
-      cv::imwrite(name, image);
-    }
-    if (key == 'q') {
-      userWantsMoreImages = false;
-    }
+    int key{0};
+    do {
+      key = cv::waitKey(0);
+      if (key == 's') {
+        cv::imwrite(name, image);
+      }
+      if (key == 'q') {
+        userWantsMoreImages = false;
+      }
+    } while (key != 's' and key != 'q' and key != '\r' and key != '\n');
   }
 }
 
