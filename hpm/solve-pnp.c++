@@ -14,32 +14,32 @@ SolvePnpPoints::SolvePnpPoints(
     double const focalLength, PixelPosition const &imageCenter,
     MarkerType const markerType,
     CameraFramedPosition const &expectedNormalDirection) {
-  if (marks.size() != 6) {
+  if (marks.size() != NUMBER_OF_MARKERS) {
     return;
   }
 
   for (size_t i{0}; i < m_pixelPositions.size() and i < marks.size(); ++i) {
-    m_pixelPositions[i] =
+    m_pixelPositions[i] = // NOLINT
         centerRay(marks[i], markerDiameter, focalLength, imageCenter,
                   markerType, expectedNormalDirection);
-    m_identified[i] = true;
+    m_identified[i] = true; // NOLINT
   }
 }
 
-bool SolvePnpPoints::isIdentified(size_t idx) const {
-  return idx < m_identified.size() and m_identified[idx];
+auto SolvePnpPoints::isIdentified(size_t idx) const -> bool {
+  return idx < m_identified.size() and m_identified[idx]; // NOLINT
 }
 
-PixelPosition SolvePnpPoints::get(size_t idx) const {
-  return m_pixelPositions[idx];
+auto SolvePnpPoints::get(size_t idx) const -> PixelPosition {
+  return m_pixelPositions[idx]; // NOLINT
 }
 
-bool SolvePnpPoints::allIdentified() const {
+auto SolvePnpPoints::allIdentified() const -> bool {
   return std::all_of(m_identified.begin(), m_identified.end(), std::identity());
 }
 
-std::ostream &operator<<(std::ostream &out,
-                         SolvePnpPoints const &solvePnpPoints) {
+auto operator<<(std::ostream &out, SolvePnpPoints const &solvePnpPoints)
+    -> std::ostream & {
   for (size_t i{0}; i < solvePnpPoints.m_pixelPositions.size(); ++i) {
     if (solvePnpPoints.isIdentified(i)) {
       out << solvePnpPoints.get(i);

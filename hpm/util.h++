@@ -24,8 +24,6 @@ void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
 cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
                   hpm::Vector3d const &position);
 
-cv::Scalar ScalarBGR2HSV(cv::Scalar const &bgr);
-
 cv::Mat getSingleChannelCopy(cv::InputArray image, int channel);
 
 cv::Mat getRedCopy(cv::InputArray image);

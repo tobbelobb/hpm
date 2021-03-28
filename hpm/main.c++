@@ -170,8 +170,8 @@ auto main(int const argc, char **const argv) -> int {
           [&markerParamsFile]() {
             cv::Matx<double, 1, 2> topLeftMarkerCenter_(0.0, 0.0);
             markerParamsFile["topleft_marker_center"] >> topLeftMarkerCenter_;
-            PixelPosition const topLeftMarkerCenter_pp(topLeftMarkerCenter_(0),
-                                                       topLeftMarkerCenter_(1));
+            PixelPosition topLeftMarkerCenter_pp(topLeftMarkerCenter_(0),
+                                                 topLeftMarkerCenter_(1));
             return topLeftMarkerCenter_pp;
           }(),
           [&markerParamsFile]() {
@@ -241,43 +241,49 @@ auto main(int const argc, char **const argv) -> int {
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (effectorPoseRelativeToCamera.has_value()) {
       if (cameraPositionCalibration) {
-        if (effectorPoseRelativeToCamera.value().reprojectionError >
-            HIGH_REPROJECTION_ERROR) {
-          std::cout
-              << "Error: Reprojection error was "
-              << effectorPoseRelativeToCamera.value().reprojectionError
-              << ". That is too high for finding good camera_rotation and "
-                 "camera_translation values. A likely cause for the high "
-                 "reprojection error is that the configured camera_matrix, "
-                 "distortion_coefficients, and/or marker_positions don't match "
-                 "up well enough with what's found on the image. Another cause "
-                 "might be that the marker detector algorithm makes a mistake. "
-                 "Try re-running with '--show all' to verify if this is the "
-                 "case.";
-        } else {
-          SixDof const camTranslation{effectorWorldPose(
-              effectorPoseRelativeToCamera.value(),
-              {effectorPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
+        try {
+          if (effectorPoseRelativeToCamera.value().reprojectionError >
+              HIGH_REPROJECTION_ERROR) {
+            std::cout
+                << "Error: Reprojection error was "
+                << effectorPoseRelativeToCamera.value().reprojectionError
+                << ". That is too high for finding good camera_rotation and "
+                   "camera_translation values. A likely cause for the high "
+                   "reprojection error is that the configured camera_matrix, "
+                   "distortion_coefficients, and/or marker_positions don't "
+                   "match up well enough with what's found on the image. "
+                   "Another cause might be that the marker detector algorithm "
+                   "makes a mistake. Try re-running with '--show all' to "
+                   "verify if this is the case.";
+          } else {
+            SixDof const camTranslation{effectorWorldPose(
+                effectorPoseRelativeToCamera.value(),
+                {effectorPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
 
-          std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
-                       "  <rows>3</rows>\n"
-                       "  <cols>1</cols>\n"
-                       "  <dt>d</dt>\n"
-                       "  <data>\n    "
-                    << effectorPoseRelativeToCamera.value().rotation[0] << ' '
-                    << effectorPoseRelativeToCamera.value().rotation[1] << ' '
-                    << effectorPoseRelativeToCamera.value().rotation[2]
-                    << "\n  </data>\n"
-                       "</camera_rotation>\n"
-                       "<camera_translation type_id=\"opencv-matrix\">\n"
-                       "  <rows>3</rows>\n"
-                       "  <cols>1</cols>\n"
-                       "  <dt>d</dt>\n"
-                       "  <data>\n    "
-                    << -camTranslation.translation[0] << ' '
-                    << -camTranslation.translation[1] << ' '
-                    << -camTranslation.translation[2] << "\n  </data>\n"
-                    << "</camera_translation>";
+            std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                         "  <rows>3</rows>\n"
+                         "  <cols>1</cols>\n"
+                         "  <dt>d</dt>\n"
+                         "  <data>\n    "
+                      << effectorPoseRelativeToCamera.value().rotation[0] << ' '
+                      << effectorPoseRelativeToCamera.value().rotation[1] << ' '
+                      << effectorPoseRelativeToCamera.value().rotation[2]
+                      << "\n  </data>\n"
+                         "</camera_rotation>\n"
+                         "<camera_translation type_id=\"opencv-matrix\">\n"
+                         "  <rows>3</rows>\n"
+                         "  <cols>1</cols>\n"
+                         "  <dt>d</dt>\n"
+                         "  <data>\n    "
+                      << -camTranslation.translation[0] << ' '
+                      << -camTranslation.translation[1] << ' '
+                      << -camTranslation.translation[2] << "\n  </data>\n"
+                      << "</camera_translation>";
+          }
+        } catch (std::exception const &e) {
+          std::cerr << "Catch\n";
+          std::cerr << e.what() << std::endl;
+          std::exit(1);
         }
       }
       SixDof const worldPose{effectorWorldPose(
@@ -305,7 +311,6 @@ auto main(int const argc, char **const argv) -> int {
   } else {
     std::cout << "Could not identify markers\n";
   }
-
   auto const cameraFramedPositions{findIndividualMarkerPositions(
       marks, markerParams.m_diameter, meanFocalLength, imageCenter,
       markerParams.m_type)};

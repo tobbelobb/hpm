@@ -16,9 +16,10 @@ void draw(cv::InputOutputArray image, Ellipse const &ellipse,
           cv::Scalar const &color) {
   int constexpr LINE_WIDTH{2};
   cv::ellipse(image, ellipse.m_center,
-              cv::Size{static_cast<int>(ellipse.m_major / 2.0),
-                       static_cast<int>(ellipse.m_minor / 2.0)},
-              ellipse.m_rot * 180.0 / M_PI, 0.0, 360.0, color, LINE_WIDTH);
+              cv::Size{static_cast<int>(ellipse.m_major / 2.0),  // NOLINT
+                       static_cast<int>(ellipse.m_minor / 2.0)}, // NOLINT
+              ellipse.m_rot * 180.0 / M_PI, 0.0, 360.0, color,   // NOLINT
+              LINE_WIDTH);
   cv::circle(image, ellipse.m_center, LINE_WIDTH, color, LINE_WIDTH);
 }
 
@@ -127,15 +128,6 @@ auto invertedCopy(cv::InputArray image) -> cv::Mat {
   cv::Mat inverted;
   cv::bitwise_not(image, inverted);
   return inverted;
-}
-
-auto ScalarBGR2HSV(cv::Scalar const &bgr) -> cv::Scalar {
-  cv::Mat const bgrMat{1, 1, CV_8UC3, bgr};
-  cv::Mat hsv{1, 1, CV_8UC3, bgr};
-  cv::cvtColor(bgrMat, hsv, cv::COLOR_BGR2HSV);
-  return cv::Scalar{static_cast<double>(hsv.data[0]),
-                    static_cast<double>(hsv.data[1]),
-                    static_cast<double>(hsv.data[2]), 1.0};
 }
 
 static inline auto sq(auto num) { return num * num; }

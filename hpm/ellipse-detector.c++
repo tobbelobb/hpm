@@ -33,12 +33,11 @@ auto rawEllipseDetect(cv::InputArray image, bool showIntermediateImages)
        .filterSegments = true}};
   if (showIntermediateImages) {
     showImage(edColor.getEdgeImage(), "edgeImage.png");
-    cv::Mat cpy(imageMat.rows, imageMat.cols, CV_8UC3,
-                cv::Scalar(255, 255, 255));
+    cv::Mat cpy(imageMat.rows, imageMat.cols, CV_8UC3, WHITE);
     std::random_device
         rd; // Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> distrib(0, 255);
+    std::uniform_int_distribution<> distrib(0, 255); // NOLINT
     for (auto const &segment : edColor.getSegments()) {
       uint8_t first{static_cast<uint8_t>(distrib(gen))};
       uint8_t second{static_cast<uint8_t>(distrib(gen))};
@@ -86,7 +85,8 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
         std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
     PixelPosition const imageFrameShift{topLeftest.m_center -
                                         expectedTopLeftestCenter};
-    if (cv::norm(imageFrameShift) < 10.0) {
+    double constexpr MAX_ACCEPTED_FRAME_SHIFT{10.0};
+    if (cv::norm(imageFrameShift) < MAX_ACCEPTED_FRAME_SHIFT) {
       for (auto &e : ellipses) {
         e.m_center -= imageFrameShift;
       }
@@ -111,7 +111,8 @@ auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
 
   std::vector<hpm::Ellipse> almostRoundEllipses;
   for (auto const &e : bigEllipses) {
-    if (e.m_minor * 1.4 > e.m_major) {
+    double constexpr MAX_MAJOR_MINOR_RATIO{1.4};
+    if (e.m_minor * MAX_MAJOR_MINOR_RATIO > e.m_major) {
       almostRoundEllipses.emplace_back(e);
     }
   }

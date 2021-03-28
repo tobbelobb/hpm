@@ -13,9 +13,8 @@ ENABLE_WARNINGS
 
 namespace hpm {
 struct SolvePnpPoints {
-  static size_t constexpr NUM_MARKERS{6};
-  std::array<PixelPosition, NUM_MARKERS> m_pixelPositions{};
-  std::array<bool, NUM_MARKERS> m_identified{false};
+  std::array<PixelPosition, NUMBER_OF_MARKERS> m_pixelPositions{};
+  std::array<bool, NUMBER_OF_MARKERS> m_identified{false};
 
   explicit SolvePnpPoints(PixelPosition const &red0_,
                           PixelPosition const &red1_,
@@ -27,7 +26,7 @@ struct SolvePnpPoints {
         m_identified{true, true, true, true, true, true} {}
 
   explicit SolvePnpPoints(
-      std::array<PixelPosition, NUM_MARKERS> const positions_)
+      std::array<PixelPosition, NUMBER_OF_MARKERS> const positions_)
       : m_pixelPositions{positions_} {
     std::fill(m_identified.begin(), m_identified.end(), true);
   }
@@ -49,5 +48,5 @@ struct SolvePnpPoints {
 
 std::optional<hpm::SixDof>
 solvePnp(cv::InputArray cameraMatrix,
-         cv::InputArray markerPositionsRelativeToNozzle,
+         cv::InputArray providedPositionsRelativeToNozzle,
          hpm::SolvePnpPoints const &points);

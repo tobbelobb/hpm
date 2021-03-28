@@ -30,10 +30,10 @@ static void fanSort(std::vector<hpm::Ellipse> &fan) {
             });
 }
 
-double hpm::identify(std::vector<Ellipse> &marks, double const markerDiameter,
-                     ProvidedMarkerPositions const &markPos,
-                     double const focalLength, PixelPosition const &imageCenter,
-                     MarkerType markerType) {
+auto hpm::identify(std::vector<Ellipse> &marks, double const markerDiameter,
+                   ProvidedMarkerPositions const &markPos,
+                   double const focalLength, PixelPosition const &imageCenter,
+                   MarkerType markerType) -> double {
 
   if (not(marks.size() >= NUMBER_OF_MARKERS)) {
     return std::numeric_limits<double>::max();
@@ -50,6 +50,7 @@ double hpm::identify(std::vector<Ellipse> &marks, double const markerDiameter,
   }
 
   std::vector<CameraFramedPosition> positions{};
+  positions.reserve(marks.size());
   for (auto const &mark : marks) {
     positions.emplace_back(
         toPosition(mark, markerDiameter, focalLength, imageCenter, markerType));
@@ -194,9 +195,9 @@ auto hpm::diskCenterRay(Ellipse const &diskProjection,
 // Double implementation of ellipseEqInCamCoords
 // to guard against typos. They should yield the exact
 // same results
-std::array<double, 6>
-hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
-                           PixelPosition const &imageCenter) {
+auto hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
+                                PixelPosition const &imageCenter)
+    -> std::array<double, NUMBER_OF_MARKERS> {
   double ang{ellipse.m_rot};
 
   hpm::PixelPosition const mid{imageCenter - ellipse.m_center};
@@ -222,9 +223,9 @@ hpm::ellipseEqInCamCoords2(hpm::Ellipse const &ellipse,
   return {A, B, C, D, E, F};
 }
 
-std::array<double, 6>
-hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
-                          PixelPosition const &imageCenter) {
+auto hpm::ellipseEqInCamCoords(hpm::Ellipse const &ellipse,
+                               PixelPosition const &imageCenter)
+    -> std::array<double, NUMBER_OF_MARKERS> {
   cv::Matx22d const R_e(cos(ellipse.m_rot), -sin(ellipse.m_rot),
                         sin(ellipse.m_rot), cos(ellipse.m_rot));
   cv::Matx22d const temp(4.0 / (ellipse.m_major * ellipse.m_major), 0.0, 0.0,
@@ -256,7 +257,8 @@ auto hpm::diskProjToPosition(
   //          << candidates.normal0 << '\n'
   //          << candidates.center1 << '\n'
   //          << candidates.normal1 << '\n';
-  if (cv::norm(expectedNormalDirection) < 1e-9 or
+  double constexpr EPS{1e-9};
+  if (cv::norm(expectedNormalDirection) < EPS or
       (std::abs(expectedNormalDirection.dot(candidates.normal0)) >
        std::abs(expectedNormalDirection.dot(candidates.normal1)))) {
     return candidates.center0;
@@ -279,10 +281,10 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
   Q(0, 0) = A;
   Q(0, 1) = B;
   Q(1, 0) = Q(0, 1);
-  Q(0, 2) = -D / (2.0 * focalLength);
+  Q(0, 2) = -D / (2.0 * focalLength); // NOLINT
   Q(2, 0) = Q(0, 2);
   Q(1, 1) = C;
-  Q(1, 2) = -E / (2.0 * focalLength);
+  Q(1, 2) = -E / (2.0 * focalLength); // NOLINT
   Q(2, 1) = Q(1, 2);
   Q(2, 2) = F / (focalLength * focalLength);
   Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 3, 3>> eigensolver(Q);
@@ -290,8 +292,8 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
     std::cout << "Could not find eigenvalues!\n";
     return {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
   }
-  auto const eigenvalues = eigensolver.eigenvalues();
-  auto const eigenvectors = eigensolver.eigenvectors();
+  auto const &eigenvalues = eigensolver.eigenvalues();
+  auto const &eigenvectors = eigensolver.eigenvectors();
   std::array<ssize_t, 3> indices{0, 1, 2};
   ssize_t i{0};
   while (i < 3 and not(std::abs(eigenvalues[indices[0]]) >=
@@ -340,8 +342,8 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
 
   double const diskRadius{diskDiameter / 2.0};
   std::array<double, 2> constexpr SIGNS{1.0, -1.0};
-  Eigen::Matrix<double, 3, 8> Cs{};
-  Eigen::Matrix<double, 3, 8> Ns{};
+  Eigen::Matrix<double, 3, 8> Cs{}; // NOLINT
+  Eigen::Matrix<double, 3, 8> Ns{}; // NOLINT
   ssize_t j{0};
   for (auto const s1 : SIGNS) {
     for (auto const s2 : SIGNS) {
@@ -371,7 +373,7 @@ auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,
   size_t founds{0};
   for (ssize_t k{0}; k < Cs.cols(); ++k) {
     if (Cs.col(k)[2] > 0.0 and Ns.col(k)[2] < 0.0) {
-      valid[founds] = k;
+      valid[founds] = k; // NOLINT
       founds = founds + 1;
     }
     if (founds == 2) {

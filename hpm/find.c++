@@ -18,21 +18,21 @@ ENABLE_WARNINGS
 using namespace hpm;
 
 static auto extractSixtuples(std::vector<size_t> indices)
-    -> std::vector<std::array<size_t, 6>> {
-  if (indices.size() < 6) {
+    -> std::vector<std::array<size_t, NUMBER_OF_MARKERS>> {
+  if (indices.size() < NUMBER_OF_MARKERS) {
     return {};
   }
 
-  std::vector<std::array<size_t, 6>> sixtuples;
+  std::vector<std::array<size_t, NUMBER_OF_MARKERS>> sixtuples;
   for (size_t a{0}; a < indices.size(); ++a) {
     for (size_t b{a + 1}; b < indices.size(); ++b) {
       for (size_t c{b + 1}; c < indices.size(); ++c) {
         for (size_t d{c + 1}; d < indices.size(); ++d) {
           for (size_t e{d + 1}; e < indices.size(); ++e) {
             for (size_t f{e + 1}; f < indices.size(); ++f) {
-              sixtuples.emplace_back(
-                  std::array<size_t, 6>{indices[a], indices[b], indices[c],
-                                        indices[d], indices[e], indices[f]});
+              sixtuples.emplace_back(std::array<size_t, NUMBER_OF_MARKERS>{
+                  indices[a], indices[b], indices[c], indices[d], indices[e],
+                  indices[f]});
             }
           }
         }
@@ -68,7 +68,7 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
   }
 
   for (size_t i{0}; i < ellipseNeighs.size(); ++i) {
-    if (ellipseNeighs[i].size() >= 5) {
+    if (ellipseNeighs[i].size() >= (NUMBER_OF_MARKERS - 1)) {
       size_t neighsWithFourOrMoreSharedNeighs{0};
       for (auto const &neighIdx : ellipseNeighs[i]) {
         size_t sharedNeighs = 0;
@@ -76,14 +76,15 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
           if (neighIdx != neighIdxInner and
               std::find(std::begin(ellipseNeighs[neighIdx]),
                         std::end(ellipseNeighs[neighIdx]),
-                        neighIdxInner) != std::end(ellipseNeighs[neighIdx]))
+                        neighIdxInner) != std::end(ellipseNeighs[neighIdx])) {
             sharedNeighs++;
+          }
         }
-        if (sharedNeighs >= 4) {
+        if (sharedNeighs >= (NUMBER_OF_MARKERS - 2)) {
           neighsWithFourOrMoreSharedNeighs++;
         }
       }
-      if (neighsWithFourOrMoreSharedNeighs >= 5) {
+      if (neighsWithFourOrMoreSharedNeighs >= (NUMBER_OF_MARKERS - 1)) {
         group.emplace_back(i);
       }
     }
@@ -129,6 +130,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
 
   if (config.m_showIntermediateImages and config.m_fitByDistance) {
     std::vector<hpm::Ellipse> distanceGroupFiltered;
+    distanceGroupFiltered.reserve(validEllipseIndices.size());
     for (auto const &ellipseIndex : validEllipseIndices) {
       distanceGroupFiltered.emplace_back(ellipses[ellipseIndex]);
     }
@@ -139,18 +141,20 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     showImage(cpy, "distance-group-filtered-ones.png");
   }
 
-  std::vector<std::array<size_t, 6>> const candidateSixtuples{
+  std::vector<std::array<size_t, NUMBER_OF_MARKERS>> const candidateSixtuples{
       extractSixtuples(validEllipseIndices)};
 
   size_t bestSixtupleIdx{0UL};
   if (candidateSixtuples.size() > 1) {
     std::vector<std::vector<double>> distvs;
+    distvs.reserve(candidateSixtuples.size());
     for (auto const &sixtuple : candidateSixtuples) {
       std::vector<double> distv;
+      distv.reserve((NUMBER_OF_MARKERS * (NUMBER_OF_MARKERS - 1)) / 2);
       for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
         for (size_t k{j + 1}; k < NUMBER_OF_MARKERS; ++k) {
-          double const dist =
-              cv::norm(positions[sixtuple[j]] - positions[sixtuple[k]]);
+          double const dist = cv::norm(positions[sixtuple[j]] - // NOLINT
+                                       positions[sixtuple[k]]); // NOLINT
           distv.emplace_back(dist);
         }
       }

@@ -54,8 +54,7 @@ auto main() -> int {
       TOPLEFT = 4,
       LEFTEST = 5,
     };
-    constexpr size_t NUM_MARKERS{6};
-    std::array<std::string, NUM_MARKERS> idxNames{};
+    std::array<std::string, NUMBER_OF_MARKERS> idxNames{};
     idxNames[BOTTOMLEFT] = "Bottomleft";
     idxNames[BOTTOMRIGHT] = "Bottomright";
     idxNames[RIGHTEST] = "Rightest";
