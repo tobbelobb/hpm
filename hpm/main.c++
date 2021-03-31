@@ -289,6 +289,9 @@ auto main(int const argc, char **const argv) -> int {
       SixDof const worldPose{effectorWorldPose(
           effectorPoseRelativeToCamera.value(), cam.worldPose)};
       if (verbose) {
+        if (cameraPositionCalibration) {
+          std::cout << '\n';
+        }
         std::cout << worldPose;
       }
       if (not verbose and not cameraPositionCalibration) {

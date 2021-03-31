@@ -9,8 +9,10 @@
   <cols>3</cols>
   <dt>d</dt>
   <data>
-    2.5722745050901103e+03 0. 1.6553767282038614e+03 0.
-    2.5725450091994112e+03 1.2348696487205043e+03 0. 0. 1.</data></camera_matrix>
+    2.5722745050901103e+03 0.                     1.6553767282038614e+03
+    0.                     2.5725450091994112e+03 1.2348696487205043e+03
+    0.                     0.                     1.
+</data></camera_matrix>
 <distortion_coefficients type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
@@ -29,8 +31,10 @@
     <!--2.61577 1.33855 -0.146625-->
     <!-- 2.59235 1.32298 -0.168172-->
     <!--2.59732 1.32543 -0.162009  MxOsU.jpg calibrated for series: 3YIsz/ -->
-    2.58815 1.36692 -0.188184 <!-- MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
+    <!-- 2.58815 1.36692 -0.188184 MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
     <!--2.5901 1.3297 -0.159254-->
+    <!-- 2.55733 1.37926 -0.176796 VHpPk.jpg calibrated for series  -->
+    2.80802 0.721309 -0.268025
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
@@ -42,8 +46,10 @@
     <!--550.867 -370.607 2581.53-->
     <!--617.324 -412.723 2560.95-->
     <!--602.169 -405.804 2565.11  MxOsU.jpg calibrated for series: 3YIsz/ -->
-    633.227 -345.84 2566.42 <!-- MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
+    <!-- 633.227 -345.84 2566.42  MxOsU.jpg calibrated for series: 3YIsz/ with rotated provided marker pos -->
     <!-- 606.692 -414.11 2563.36 -->
+    <!-- 601.486 -405.221 2558.63 VHpPk.jpg calibrated for series  -->
+    612.939 -383.181 2559
   </data>
 </camera_translation>
 </opencv_storage>
