@@ -19,25 +19,33 @@
 
 // Circular arc, circle thresholds
 #define VERY_SHORT_ARC_ERROR                                                   \
-  0.20 // Used for very short arcs (>= CANDIDATE_CIRCLE_RATIO1 && <
+  0.40 // Used for very short arcs (>= CANDIDATE_CIRCLE_RATIO1 && <
        // CANDIDATE_CIRCLE_RATIO2)
 #define SHORT_ARC_ERROR                                                        \
-  0.30 // Used for short arcs (>= CANDIDATE_CIRCLE_RATIO2 && <
-       // HALF_CIRCLE_RATIO)
+  0.775 // Used for short arcs (>= CANDIDATE_CIRCLE_RATIO2 && <
+        // HALF_CIRCLE_RATIO)
 #define HALF_ARC_ERROR                                                         \
-  0.40 // Used for arcs with length (>=HALF_CIRCLE_RATIO && < FULL_CIRCLE_RATIO)
-#define LONG_ARC_ERROR 0.51 // Used for long arcs (>= FULL_CIRCLE_RATIO)
+  1.25 // Used for arcs with length (>=HALF_CIRCLE_RATIO && < FULL_CIRCLE_RATIO)
+#define LONG_ARC_ERROR 1.50 // Used for long arcs (>= FULL_CIRCLE_RATIO)
 
-#define CANDIDATE_CIRCLE_RATIO1 0.30
-#define CANDIDATE_CIRCLE_RATIO2 0.40
-#define HALF_CIRCLE_RATIO 0.50
-#define FULL_CIRCLE_RATIO 0.51
+#define CANDIDATE_CIRCLE_RATIO1                                                \
+  0.25 // 25% -- If only 25% of the circle is detected, it may be a candidate
+       // for validation
+#define CANDIDATE_CIRCLE_RATIO2                                                \
+  0.33 // 33% -- If only 33% of the circle is detected, it may be a candidate
+       // for validation
+#define HALF_CIRCLE_RATIO                                                      \
+  0.50 // 50% -- If 50% of a circle is detected at any point during joins, we
+       // immediately make it a candidate
+#define FULL_CIRCLE_RATIO                                                      \
+  0.67 // 67% -- If 67% of the circle is detected, we assume that it is fully
+       // covered
 
 // Ellipse thresholds
 #define CANDIDATE_ELLIPSE_RATIO                                                \
   0.30 // If this much of the ellipse is detected, it may be candidate for
        // validation
-#define ELLIPSE_ERROR 1.80
+#define ELLIPSE_ERROR 1.30
 
 #define BOOKSTEIN 0 // method1 for ellipse fit
 #define FPF 1       // method2 for ellipse fit
@@ -282,9 +290,6 @@ private:
   void JoinArcs3();
 
   // circle utility functions
-  static auto addCircle(Circle *circles, int &noCircles, double xc, double yc,
-                        double r, double circleFitError, double *x, double *y,
-                        int noPixels) -> Circle *;
   static auto addCircle(Circle *circles, int &noCircles, double xc, double yc,
                         double r, double circleFitError,
                         ed::EllipseEquation *pEq, double ellipseFitError,

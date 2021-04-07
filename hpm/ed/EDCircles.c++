@@ -66,7 +66,7 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
 
       double maxDistanceBetweenEndPoints = MAX(3, r / 4);
 
-      // If almost closed loop, then try to fit a circle/ellipse
+      // If almost closed loop, then try to fit an ellipse
       if (d <= maxDistanceBetweenEndPoints) {
         double xc{};
         double yc{};
@@ -78,19 +78,10 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
         EllipseEquation eq;
         double ellipseFitError = 1e10;
 
-        if (circleFitError > LONG_ARC_ERROR) {
-          // Try fitting an ellipse
-          if (EllipseFit(x, y, noPixels, &eq)) {
-            ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-          }
+        if (EllipseFit(x, y, noPixels, &eq)) {
+          ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
         }
 
-        if (circleFitError <= LONG_ARC_ERROR) {
-          addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
-                    noPixels);
-          bm->move(noPixels);
-          continue;
-        }
         if (ellipseFitError <= ELLIPSE_ERROR) {
           double major{};
           double minor{};
@@ -319,19 +310,11 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
         EllipseEquation eq;
         double ellipseFitError = 1e10;
 
-        if (circleFitError > LONG_ARC_ERROR) {
-          // Try fitting an ellipse
-          if (EllipseFit(x, y, noPixels, &eq)) {
-            ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
-          }
+        // Try fitting an ellipse
+        if (EllipseFit(x, y, noPixels, &eq)) {
+          ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
         }
 
-        if (circleFitError <= LONG_ARC_ERROR) {
-          addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
-                    noPixels);
-          bm->move(noPixels);
-          continue;
-        }
         if (ellipseFitError <= ELLIPSE_ERROR) {
           double major = std::numeric_limits<double>::quiet_NaN();
           double minor = std::numeric_limits<double>::quiet_NaN();
@@ -558,12 +541,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
 
         CircleFit(x, y, segment.size(), &xc, &yc, &r, &circleFitError);
 
-        if (circleFitError <= LONG_ARC_ERROR) {
-          foundFullCircle = true;
-          addCircle(circles1, noCircles1, xc, yc, r, circleFitError, x, y,
-                    segment.size());
-          bm->move(segment.size());
-        } else if (EllipseEquation eq; EllipseFit(x, y, segment.size(), &eq)) {
+        if (EllipseEquation eq; EllipseFit(x, y, segment.size(), &eq)) {
           double const ellipseFitError =
               ComputeEllipseError(&eq, x, y, segment.size());
           if (ellipseFitError <= ELLIPSE_ERROR) {
@@ -761,51 +739,14 @@ void EDCircles::GenerateCandidateCircles() {
         addCircle(circles1, noCircles1, arcs[i].xc, arcs[i].yc, arcs[i].r,
                   arcs[i].circleFitError, &arcs[i].eq, arcs[i].ellipseFitError,
                   arcs[i].x, arcs[i].y, arcs[i].noPixels);
-
-      } else {
-        //        double coverRatio = arcs[i].coverRatio;
-        double coverRatio =
-            MAX(ArcLength(arcs[i].sTheta, arcs[i].eTheta) / TWOPI,
-                arcs[i].coverRatio);
-        if ((coverRatio >= FULL_CIRCLE_RATIO &&
-             arcs[i].circleFitError <= LONG_ARC_ERROR) ||
-            (coverRatio >= HALF_CIRCLE_RATIO &&
-             arcs[i].circleFitError <= HALF_ARC_ERROR) ||
-            (coverRatio >= CANDIDATE_CIRCLE_RATIO2 &&
-             arcs[i].circleFitError <= SHORT_ARC_ERROR)) {
-          addCircle(circles1, noCircles1, arcs[i].xc, arcs[i].yc, arcs[i].r,
-                    arcs[i].circleFitError, arcs[i].x, arcs[i].y,
-                    arcs[i].noPixels);
-        }
       }
-
     } else {
       // If a very short arc, ignore
       if (arcs[i].coverRatio < CANDIDATE_CIRCLE_RATIO1) {
         continue;
       }
 
-      // If the arc is long enough and the circleFitError is small enough,
-      // assume a circle
-      if ((arcs[i].coverRatio >= FULL_CIRCLE_RATIO &&
-           arcs[i].circleFitError <= LONG_ARC_ERROR) ||
-          (arcs[i].coverRatio >= HALF_CIRCLE_RATIO &&
-           arcs[i].circleFitError <= HALF_ARC_ERROR) ||
-          (arcs[i].coverRatio >= CANDIDATE_CIRCLE_RATIO2 &&
-           arcs[i].circleFitError <= SHORT_ARC_ERROR)) {
-
-        addCircle(circles1, noCircles1, arcs[i].xc, arcs[i].yc, arcs[i].r,
-                  arcs[i].circleFitError, arcs[i].x, arcs[i].y,
-                  arcs[i].noPixels);
-
-        continue;
-      }
-
-      if (arcs[i].coverRatio < CANDIDATE_CIRCLE_RATIO2) {
-        continue;
-      }
-
-      // Circle is not possible. Try an ellipse
+      // Try an ellipse anyways
       EllipseEquation eq;
       double ellipseFitError = 1e10;
       double coverRatio = 0.0;
@@ -988,23 +929,16 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
               noPixels -= lines[segmentStartLines[curSegmentNo]].len;
             }
 
-            if ((coverage >= FULL_CIRCLE_RATIO &&
-                 circleFitError <= LONG_ARC_ERROR)) {
-              addCircle(circles1, noCircles1, xc, yc, radius, circleFitError, x,
-                        y, noPixels);
+            double sTheta = std::numeric_limits<double>::quiet_NaN();
+            double eTheta = std::numeric_limits<double>::quiet_NaN();
+            ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels, &sTheta,
+                                     &eTheta);
 
-            } else {
-              double sTheta = std::numeric_limits<double>::quiet_NaN();
-              double eTheta = std::numeric_limits<double>::quiet_NaN();
-              ComputeStartAndEndAngles(xc, yc, radius, x, y, noPixels, &sTheta,
-                                       &eTheta);
-
-              addArc(edarcs1->arcs, edarcs1->noArcs, xc, yc, radius,
-                     circleFitError, sTheta, eTheta, info[firstLine].sign,
-                     curSegmentNo, static_cast<int>(x[0]),
-                     static_cast<int>(y[0]), static_cast<int>(x[noPixels - 1]),
-                     static_cast<int>(y[noPixels - 1]), x, y, noPixels);
-            }
+            addArc(edarcs1->arcs, edarcs1->noArcs, xc, yc, radius,
+                   circleFitError, sTheta, eTheta, info[firstLine].sign,
+                   curSegmentNo, static_cast<int>(x[0]), static_cast<int>(y[0]),
+                   static_cast<int>(x[noPixels - 1]),
+                   static_cast<int>(y[noPixels - 1]), x, y, noPixels);
 
             for (int m = firstLine; m < lastLine; m++) {
               info[m].taken = true;
@@ -1155,11 +1089,37 @@ void EDCircles::DetectArcs(vector<LineSegment> lines) {
             }
 
             double coverage = noPixels / (TWOPI * radius);
+            bool addedEllipse = false;
             if ((coverage >= FULL_CIRCLE_RATIO &&
                  circleFitError <= LONG_ARC_ERROR)) {
-              addCircle(circles1, noCircles1, XC, YC, R, Error, x, y, noPixels);
 
-            } else {
+              EllipseEquation eq;
+              double ellipseFitError = 1e10;
+              if (EllipseFit(x, y, noPixels, &eq)) {
+                ellipseFitError = ComputeEllipseError(&eq, x, y, noPixels);
+              }
+
+              if (ellipseFitError <= ELLIPSE_ERROR) {
+                double major{};
+                double minor{};
+                ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &major,
+                                                   &minor);
+
+                // Assume major is longer. Otherwise, swap
+                if (minor > major) {
+                  double tmp = major;
+                  major = minor;
+                  minor = tmp;
+                }
+
+                if (major < 8 * minor) {
+                  addedEllipse = true;
+                  addCircle(circles1, noCircles1, XC, YC, R, Error, &eq,
+                            ellipseFitError, x, y, noPixels);
+                }
+              }
+            }
+            if (not addedEllipse) {
               // Add this to the list of arcs
               double sTheta = std::numeric_limits<double>::quiet_NaN();
               double eTheta = std::numeric_limits<double>::quiet_NaN();
@@ -1558,7 +1518,6 @@ void EDCircles::JoinCircles() {
     double R = circles[i].r;
 
     double CircleFitError = circles[i].circleFitError;
-    bool CircleFitValid = false;
 
     EllipseEquation Eq;
     double EllipseFitError = 0.0;
@@ -1581,61 +1540,32 @@ void EDCircles::JoinCircles() {
                circles[CandidateArcNo].noPixels * sizeof(double));
         noPixels += circles[CandidateArcNo].noPixels;
 
-        bool circleFitOK = false;
-        if (!EllipseFitValid && !circles[i].isEllipse &&
-            !circles[CandidateArcNo].isEllipse) {
-          double xc = std::numeric_limits<double>::quiet_NaN();
-          double yc = std::numeric_limits<double>::quiet_NaN();
-          double r = std::numeric_limits<double>::quiet_NaN();
-          double error = 1e10;
-          CircleFit(x, y, noPixels, &xc, &yc, &r, &error);
-
-          if (error <= JOINED_SHORT_ARC_ERROR_THRESHOLD) {
-            taken[CandidateArcNo] = true;
-
-            XC = xc;
-            YC = yc;
-            R = r;
-            CircleFitError = error;
-
-            circleFitOK = true;
-            CircleFitValid = true;
-          }
-        }
-
         bool ellipseFitOK = false;
-        if (!circleFitOK) {
-          // Try to fit an ellipse
-          double error = 1e10;
-          EllipseEquation eq;
-          if (EllipseFit(x, y, noPixels, &eq)) {
-            error = ComputeEllipseError(&eq, x, y, noPixels);
-          }
-
-          if (error <= JOINED_SHORT_ARC_ERROR_THRESHOLD) {
-            taken[CandidateArcNo] = true;
-
-            Eq = eq;
-            EllipseFitError = error;
-
-            ellipseFitOK = true;
-            EllipseFitValid = true;
-            CircleFitValid = false;
-          }
+        // Try to fit an ellipse
+        double error = 1e10;
+        EllipseEquation eq;
+        if (EllipseFit(x, y, noPixels, &eq)) {
+          error = ComputeEllipseError(&eq, x, y, noPixels);
         }
 
-        if (!circleFitOK && !ellipseFitOK) {
+        if (error <= JOINED_SHORT_ARC_ERROR_THRESHOLD) {
+          taken[CandidateArcNo] = true;
+
+          Eq = eq;
+          EllipseFitError = error;
+
+          ellipseFitOK = true;
+          EllipseFitValid = true;
+        }
+
+        if (!ellipseFitOK) {
           noPixels = noPixelsSave;
         }
       }
     }
 
     // Add the new circle/ellipse to circles2
-    if (CircleFitValid) {
-      addCircle(circles3, noCircles3, XC, YC, R, CircleFitError, nullptr,
-                nullptr, 0);
-
-    } else if (EllipseFitValid) {
+    if (EllipseFitValid) {
       addCircle(circles3, noCircles3, XC, YC, R, CircleFitError, &Eq,
                 EllipseFitError, nullptr, nullptr, 0);
 
@@ -1907,15 +1837,8 @@ void EDCircles::JoinArcs1() {
       double eTheta = std::numeric_limits<double>::quiet_NaN();
       angles.computeStartEndTheta(sTheta, eTheta);
 
-      double coverage = ArcLength(sTheta, eTheta) / TWOPI;
-      if ((coverage >= FULL_CIRCLE_RATIO && CircleFitError <= LONG_ARC_ERROR)) {
-        addCircle(circles1, noCircles1, XC, YC, R, CircleFitError, x, y,
-                  NoPixels);
-      } else {
-        addArc(edarcs2->arcs, edarcs2->noArcs, XC, YC, R, CircleFitError,
-               sTheta, eTheta, Turn, arcs[i].segmentNo, SX, SY, EX, EY, x, y,
-               NoPixels);
-      }
+      addArc(edarcs2->arcs, edarcs2->noArcs, XC, YC, R, CircleFitError, sTheta,
+             eTheta, Turn, arcs[i].segmentNo, SX, SY, EX, EY, x, y, NoPixels);
 
       bm->move(NoPixels);
     }
@@ -2175,15 +2098,9 @@ void EDCircles::JoinArcs2() {
       double CircleFitError = std::numeric_limits<double>::quiet_NaN();
       CircleFit(x, y, NoPixels, &XC, &YC, &R, &CircleFitError);
 
-      double coverage = ArcLength(sTheta, eTheta) / TWOPI;
-      if ((coverage >= FULL_CIRCLE_RATIO && CircleFitError <= LONG_ARC_ERROR)) {
-        addCircle(circles1, noCircles1, XC, YC, R, CircleFitError, x, y,
-                  NoPixels);
-      } else {
-        addArc(edarcs3->arcs, edarcs3->noArcs, XC, YC, R, CircleFitError,
-               sTheta, eTheta, Turn, arcs[i].segmentNo, &Eq, EllipseFitError,
-               SX, SY, EX, EY, x, y, NoPixels, angles.overlapRatio());
-      }
+      addArc(edarcs3->arcs, edarcs3->noArcs, XC, YC, R, CircleFitError, sTheta,
+             eTheta, Turn, arcs[i].segmentNo, &Eq, EllipseFitError, SX, SY, EX,
+             EY, x, y, NoPixels, angles.overlapRatio());
 
       // Move buffer pointers
       bm->move(NoPixels);
@@ -2467,15 +2384,9 @@ void EDCircles::JoinArcs3() {
       double CircleFitError = std::numeric_limits<double>::quiet_NaN();
       CircleFit(x, y, NoPixels, &XC, &YC, &R, &CircleFitError);
 
-      double coverage = ArcLength(sTheta, eTheta) / TWOPI;
-      if ((coverage >= FULL_CIRCLE_RATIO && CircleFitError <= LONG_ARC_ERROR)) {
-        addCircle(circles1, noCircles1, XC, YC, R, CircleFitError, x, y,
-                  NoPixels);
-      } else {
-        addArc(edarcs4->arcs, edarcs4->noArcs, XC, YC, R, CircleFitError,
-               sTheta, eTheta, Turn, arcs[i].segmentNo, &Eq, EllipseFitError,
-               SX, SY, EX, EY, x, y, NoPixels, angles.overlapRatio());
-      }
+      addArc(edarcs4->arcs, edarcs4->noArcs, XC, YC, R, CircleFitError, sTheta,
+             eTheta, Turn, arcs[i].segmentNo, &Eq, EllipseFitError, SX, SY, EX,
+             EY, x, y, NoPixels, angles.overlapRatio());
 
       bm->move(NoPixels);
     }
@@ -2483,26 +2394,6 @@ void EDCircles::JoinArcs3() {
 
   delete[] taken;
   delete[] candidateArcs;
-}
-
-auto EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double yc,
-                          double r, double circleFitError, double *x, double *y,
-                          int noPixels) -> Circle * {
-  circles[noCircles].xc = xc;
-  circles[noCircles].yc = yc;
-  circles[noCircles].r = r;
-  circles[noCircles].circleFitError = circleFitError;
-  circles[noCircles].coverRatio = noPixels / (TWOPI * r);
-
-  circles[noCircles].x = x;
-  circles[noCircles].y = y;
-  circles[noCircles].noPixels = noPixels;
-
-  circles[noCircles].isEllipse = false;
-
-  noCircles++;
-
-  return &circles[noCircles - 1];
 }
 
 auto EDCircles::addCircle(Circle *circles, int &noCircles, double xc, double yc,
