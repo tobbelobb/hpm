@@ -6,6 +6,11 @@
 using namespace cv;
 using namespace std;
 
+// NOTE: This file is mostly here for the visual debugging possibility it gives
+// us Run like this to see  visually what ED's different functions do:
+//
+// $ ./ED.test.manual billiard.jpg --verbose --show
+
 auto main(int argc, char **argv) -> int {
   if (argc < 2) {
     std::cout << "Usage:\n" << argv[0] << " <image> [--verbose [--show]]\n";

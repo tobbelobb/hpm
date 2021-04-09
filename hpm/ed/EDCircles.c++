@@ -217,9 +217,7 @@ EDCircles::EDCircles(const Mat &srcImage) : EDPF(srcImage) {
       double a = std::numeric_limits<double>::quiet_NaN();
       double b = std::numeric_limits<double>::quiet_NaN();
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
-      ellipses.emplace_back(Point2d(xc, yc),
-                            Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta, eq);
+      ellipses.emplace_back(Point2d(xc, yc), Size2d(a, b), theta, eq);
 
     } else {
       double r = circles3[i].r;
@@ -450,9 +448,7 @@ EDCircles::EDCircles(const ED &obj) : EDPF(obj) {
       double a = std::numeric_limits<double>::quiet_NaN();
       double b = std::numeric_limits<double>::quiet_NaN();
       double theta = ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
-      ellipses.emplace_back(Point2d(xc, yc),
-                            Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta, eq);
+      ellipses.emplace_back(Point2d(xc, yc), Size2d(a, b), theta, eq);
 
     } else {
       double r = circles3[i].r;
@@ -661,9 +657,7 @@ EDCircles::EDCircles(const EDColor &obj) : EDPF(obj) {
       double b = std::numeric_limits<double>::quiet_NaN();
       double const theta =
           ComputeEllipseCenterAndAxisLengths(&eq, &xc, &yc, &a, &b);
-      ellipses.emplace_back(Point2d(xc, yc),
-                            Size(static_cast<int>(a), static_cast<int>(b)),
-                            theta, eq);
+      ellipses.emplace_back(Point2d(xc, yc), Size2d(a, b), theta, eq);
 
     } else {
       double const r = circles1[i].r;
@@ -1396,7 +1390,6 @@ void EDCircles::ValidateCircles() {
 
     if (isValid) {
       circles2[count++] = circles1[i];
-
     } else if (!circle->isEllipse &&
                circle->coverRatio >= CANDIDATE_ELLIPSE_RATIO) {
       // Fit an ellipse to this circle, and try to revalidate
@@ -2741,9 +2734,7 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
   double cX = std::numeric_limits<double>::quiet_NaN();
   double cY = std::numeric_limits<double>::quiet_NaN();
   double a = std::numeric_limits<double>::quiet_NaN();
-  double b =
-      std::numeric_limits<double>::quiet_NaN(); //(cX,cY) center, a & b:
-                                                // semimajor & semiminor axes
+  double b = std::numeric_limits<double>::quiet_NaN();
   bool rotation = false;
 
 #define pi 3.14159265
@@ -2797,9 +2788,9 @@ auto EDCircles::ComputeEllipseCenterAndAxisLengths(EllipseEquation *eq,
   F3 = A2 * pow(cX, 2.0) + C2 * pow(cY, 2.0) - F2;
 
   // semimajor axis
-  a = sqrt(F3 / A2) + 1.0;
+  a = sqrt(F3 / A2);
   // semiminor axis
-  b = sqrt(F3 / C2) + 1.0;
+  b = sqrt(F3 / C2);
 
   // Center coordinates have to be re-transformed if rotation is applied!
   if (rotation) {

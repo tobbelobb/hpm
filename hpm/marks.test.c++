@@ -9,8 +9,6 @@ auto main() -> int {
   using namespace hpm;
   using namespace boost::ut;
 
-  auto constexpr EPS2{0.01_d};
-  auto constexpr EPS4{0.0001_d};
   auto constexpr EPS9{0.000000001_d};
   auto constexpr EPS11{0.00000000001_d};
 
@@ -372,10 +370,9 @@ auto main() -> int {
         toPosition(marks[0], markerRadius * 2, focalLength, imageCenter,
                    MarkerType::DISK, {0.0, 0.0, -1.0});
 
-    auto constexpr EPS18{1.8_d};
-    expect(std::abs(gotPosition.x - 0.0) < EPS4);
-    expect(std::abs(gotPosition.y - 0.0) < EPS4);
-    expect(std::abs(gotPosition.z - Z) < EPS18);
+    expect(std::abs(gotPosition.x - 0.0) < 0.02_d);
+    expect(std::abs(gotPosition.y - 0.0) < 0.02_d);
+    expect(std::abs(gotPosition.z - Z) < 0.3_d);
   };
 
   "center sphere position"_test = [&] {
@@ -484,7 +481,7 @@ auto main() -> int {
                    MarkerType::DISK, {0.0, 0.0, -1.0});
 
     expect(std::abs(gotPosition.x - markerRadius) < 0.15_d);
-    expect(std::abs(gotPosition.y - 0.0) < EPS2);
+    expect(std::abs(gotPosition.y - 0.0) < 0.02_d);
     expect(std::abs(gotPosition.z - Z) < 2.1_d); // NOLINT
   };
 

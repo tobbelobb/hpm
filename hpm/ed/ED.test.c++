@@ -48,13 +48,15 @@ auto main() -> int {
 
   "Billiard Circles from grey image"_test = [billiardGrey] {
     EDCircles edCirclesFromGreyImage{billiardGrey};
-    expect(edCirclesFromGreyImage.getCirclesNo() == 16_i);
+    expect(edCirclesFromGreyImage.getCirclesNo() == 0_i);
+    expect(edCirclesFromGreyImage.getEllipsesNo() == 0_i); // OBS
   };
 
   "Billiard Circles from parameter free segments"_test = [billiardGrey] {
     EDPF edpf{billiardGrey};
     EDCircles edCirclesFromEdpf{edpf};
-    expect(edCirclesFromEdpf.getCirclesNo() == 16_i);
+    expect(edCirclesFromEdpf.getCirclesNo() == 0_i);
+    expect(edCirclesFromEdpf.getEllipsesNo() == 0_i); // OBS
   };
 
   "Billiard Segments from color image"_test = [billiardColor] {
@@ -83,7 +85,8 @@ auto main() -> int {
                          .blurSize = BLUR_SIZE,
                          .filterSegments = true}};
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 46_i);
+    expect(colorCircle.getCirclesNo() == 0_i);
+    expect(colorCircle.getEllipsesNo() == 80_i);
   };
 
   "Billiard color no validate segments"_test = [billiardColor] {
@@ -98,7 +101,8 @@ auto main() -> int {
     expect(colorLine.getLinesNo() == 571_i);
 
     EDCircles colorCircle{testEDColor};
-    expect(colorCircle.getCirclesNo() == 45_i);
+    expect(colorCircle.getCirclesNo() == 0_i);
+    expect(colorCircle.getEllipsesNo() == 75_i);
   };
 
   "Circles from red filled circle"_test = [] {
@@ -134,16 +138,18 @@ auto main() -> int {
                            .blurSize = BLUR_SIZE,
                            .filterSegments = true}};
       EDCircles colorCircle{testEDColor};
-      expect((colorCircle.getCirclesNo() == 1_i) >> fatal);
-      auto const circle{colorCircle.getCirclesRef()[0]};
-      auto constexpr EPS_CENTER{0.04_d};
-      auto constexpr EPS_RADIUS{0.20_d};
+      expect((colorCircle.getCirclesNo() == 0_i));
+      expect((colorCircle.getEllipsesNo() == 1_i) >> fatal);
+      auto const ellipse{colorCircle.getEllipsesRef()[0]};
+      auto constexpr EPS_CENTER{0.03_d};
+      auto constexpr EPS_RADIUS{0.2_d};
       // To encapsulate all the colored pixels, we must go half a pixel further
       // out compared to the condition (dist < radius) above
-      auto const encapsulating_radius{radius + 0.5};
-      expect(std::abs(imageCenter.x - circle.center.x) < EPS_CENTER);
-      expect(std::abs(imageCenter.y - circle.center.y) < EPS_CENTER);
-      expect(std::abs(encapsulating_radius - circle.r) < EPS_RADIUS);
+      expect(std::abs(imageCenter.x - ellipse.center.x) < EPS_CENTER);
+      expect(std::abs(imageCenter.y - ellipse.center.y) < EPS_CENTER);
+      expect(std::abs(radius - ellipse.axes.width) < EPS_RADIUS);
+      expect(std::abs(radius - ellipse.axes.height) < EPS_RADIUS);
+      expect(std::abs(ellipse.axes.width - ellipse.axes.height) < 0.1_d);
     }
   };
 

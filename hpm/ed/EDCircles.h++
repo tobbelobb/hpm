@@ -88,12 +88,12 @@ struct EllipseEquation {
 // Ellipse equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
 struct mEllipse {
   cv::Point2d center;
-  cv::Size axes;
+  cv::Size2d axes;
   double theta;
   ed::EllipseEquation equation{};
 
-  mEllipse(cv::Point2d _center, cv::Size _axes, double _theta,
-           ed::EllipseEquation _equation)
+  explicit mEllipse(cv::Point2d _center, cv::Size2d _axes, double _theta,
+                    ed::EllipseEquation _equation)
       : center(std::move(_center)), axes(std::move(_axes)), theta(_theta),
         equation(_equation) {}
 };

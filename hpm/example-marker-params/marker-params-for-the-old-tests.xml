@@ -31,4 +31,5 @@
   -160.4202408   -17.16617147  157.67675604 <!-- Marker 5 -->
   </data></marker_positions>
 <marker_diameter>31.8</marker_diameter>
+<marker_type>sphere</marker_type>
 </opencv_storage>

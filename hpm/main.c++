@@ -180,7 +180,8 @@ auto main(int const argc, char **const argv) -> int {
             std::transform(std::begin(markerType_), std::end(markerType_),
                            std::begin(markerType_),
                            [](unsigned char c) { return std::tolower(c); });
-            if (markerType_ == "disk" or markerType_ == "disc") {
+            if (markerType_ == "disk" or markerType_ == "disc" or
+                markerType_ == "disks" or markerType_ == "discs") {
               return MarkerType::DISK;
             }
             return MarkerType::SPHERE;
@@ -314,15 +315,14 @@ auto main(int const argc, char **const argv) -> int {
   } else {
     std::cout << "Could not identify markers\n";
   }
-  auto const cameraFramedPositions{findIndividualMarkerPositions(
-      marks, markerParams.m_diameter, meanFocalLength, imageCenter,
-      markerParams.m_type)};
-
-  if (cameraFramedPositions.empty()) {
-    std::cout << "No markers detected\n";
-  }
 
   if (not points.allIdentified() and verbose) {
+    auto const cameraFramedPositions{findIndividualMarkerPositions(
+        marks, markerParams.m_diameter, meanFocalLength, imageCenter,
+        markerParams.m_type, expectedNormalDirection)};
+    if (cameraFramedPositions.empty()) {
+      std::cout << "No markers detected\n";
+    }
     std::string delimeter{};
     for (auto const &cameraFramedPosition : cameraFramedPositions) {
       std::cout << delimeter << cameraFramedPosition;

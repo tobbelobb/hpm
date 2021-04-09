@@ -12,9 +12,9 @@ Segments from grey image: 415
 Lines from grey image: 518
 Lines from segments: 518
 Parameter free segments from grey image: 276
-Circles from grey image: 16
-Circles from parameter free segments: 16
+Circles from grey image: 0
+Circles from parameter free segments: 0
 Segments from color image: 212
 Lines from segments from color image: 585
-Circles from segments from color image: 46
+Circles from segments from color image: 0
 END

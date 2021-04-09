@@ -122,7 +122,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     }
   }
   std::sort(std::begin(expectedDists), std::end(expectedDists));
-  double constexpr BUBBLE_SIZE_MARGIN_FACTOR{1.7};
+  double constexpr BUBBLE_SIZE_MARGIN_FACTOR{2.0};
   double bubbleSizeLimit{expectedDists.back() * BUBBLE_SIZE_MARGIN_FACTOR};
 
   std::vector<size_t> validEllipseIndices{
