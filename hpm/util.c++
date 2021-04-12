@@ -16,9 +16,9 @@ void draw(cv::InputOutputArray image, Ellipse const &ellipse,
           cv::Scalar const &color) {
   int constexpr LINE_WIDTH{2};
   cv::ellipse(image, ellipse.m_center,
-              cv::Size{static_cast<int>(ellipse.m_major / 2.0),  // NOLINT
-                       static_cast<int>(ellipse.m_minor / 2.0)}, // NOLINT
-              ellipse.m_rot * 180.0 / M_PI, 0.0, 360.0, color,   // NOLINT
+              cv::Size2d{ellipse.m_major / 2.0,                // NOLINT
+                         ellipse.m_minor / 2.0},               // NOLINT
+              ellipse.m_rot * 180.0 / M_PI, 0.0, 360.0, color, // NOLINT
               LINE_WIDTH);
   cv::circle(image, ellipse.m_center, LINE_WIDTH, color, LINE_WIDTH);
 }

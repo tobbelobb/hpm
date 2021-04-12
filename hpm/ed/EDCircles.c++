@@ -711,7 +711,7 @@ auto EDCircles::drawResult(const cv::Mat &background, ImageStyle style) const
           (ell.theta * 180) / PI; // convert radian to degree (opencv's
                                   // ellipse function works with degree)
       ellipse(colorImage, Point(ell.center), ell.axes, degree, 0.0, 360.0,
-              Scalar(0, 0, 255), lineThickness, LINE_AA);
+              Scalar(0, 0, 255), lineThickness);
     }
   }
 

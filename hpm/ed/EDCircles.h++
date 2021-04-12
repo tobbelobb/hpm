@@ -24,15 +24,10 @@
 #define SHORT_ARC_ERROR                                                        \
   0.775 // Used for short arcs (>= CANDIDATE_CIRCLE_RATIO2 && <
         // HALF_CIRCLE_RATIO)
-#define HALF_ARC_ERROR                                                         \
-  1.25 // Used for arcs with length (>=HALF_CIRCLE_RATIO && < FULL_CIRCLE_RATIO)
 #define LONG_ARC_ERROR 1.50 // Used for long arcs (>= FULL_CIRCLE_RATIO)
 
 #define CANDIDATE_CIRCLE_RATIO1                                                \
   0.25 // 25% -- If only 25% of the circle is detected, it may be a candidate
-       // for validation
-#define CANDIDATE_CIRCLE_RATIO2                                                \
-  0.33 // 33% -- If only 33% of the circle is detected, it may be a candidate
        // for validation
 #define HALF_CIRCLE_RATIO                                                      \
   0.50 // 50% -- If 50% of a circle is detected at any point during joins, we
