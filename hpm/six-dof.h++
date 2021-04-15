@@ -21,6 +21,10 @@ struct SixDof {
                << sixDof.translation << '\n'
                << sixDof.reprojectionError;
   };
+
+  bool operator<(SixDof const &other) {
+    return reprojectionError < other.reprojectionError;
+  }
 };
 
 } // namespace hpm

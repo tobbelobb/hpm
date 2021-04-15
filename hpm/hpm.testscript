@@ -10,7 +10,7 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard]
 
 -h, --help                         Print this help.
 -v, --verbose                      Print rotation, translation, and reprojection_error of the found
@@ -22,6 +22,10 @@ $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-
                                    the marks' internal distance to each other.
 -c, --camera-position-calibration  Output the position of the camera in a way that can be pasted
                                    into the camera-parameters file.
+-t, --try-hard                     Try harder \(but slower\) to find a good position. If one marker
+                                   was slightly mis-detected, this option will make the program
+                                   find decent values based on the other markers, and ignore the
+                                   mis-detected one.
 EOE
 
 : End-as-expected

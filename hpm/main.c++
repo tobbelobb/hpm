@@ -31,7 +31,8 @@ auto main(int const argc, char **const argv) -> int {
         << *argv
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
-           "[-n|--no-fit-by-distance] [-c|--camera-position-calibration]\n";
+           "[-n|--no-fit-by-distance] [-c|--camera-position-calibration] "
+           "[-t|--try-hard]\n";
   CommandLine args(usage.str());
 
   std::string show{};
@@ -41,6 +42,7 @@ auto main(int const argc, char **const argv) -> int {
   bool showIntermediateImages{false};
   bool noFitByDistance{false};
   bool printHelp{false};
+  bool tryHard{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
   args.addArgument({"-v", "--verbose"}, &verbose,
                    "Print rotation, translation, and reprojection_error of the "
@@ -57,9 +59,14 @@ auto main(int const argc, char **const argv) -> int {
                    &cameraPositionCalibration,
                    "Output the position of the camera in a way that can be "
                    "pasted into the camera-parameters file.");
+  args.addArgument(
+      {"-t", "--try-hard"}, &tryHard,
+      "Try harder (but slower) to find a good position. If one marker was "
+      "slightly mis-detected, this option will make the program find decent "
+      "values based on the other markers, and ignore the mis-detected one.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
-  constexpr unsigned int NUM_OPTIONAL_ARGS = 4;
+  constexpr unsigned int NUM_OPTIONAL_ARGS = 5;
   constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS + 1};
   constexpr int MIN_ARGC{NUM_MANDATORY_ARGS + 1};
 
@@ -236,10 +243,16 @@ auto main(int const argc, char **const argv) -> int {
                               expectedNormalDirection};
 
   if (points.allIdentified()) {
-    std::optional<SixDof> const effectorPoseRelativeToCamera{
+    std::optional<SixDof> effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, markerParams.m_providedMarkerPositions, points)};
-
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
+    if (tryHard and effectorPoseRelativeToCamera.has_value() and
+        effectorPoseRelativeToCamera.value().reprojectionError >
+            HIGH_REPROJECTION_ERROR) {
+      effectorPoseRelativeToCamera = tryHardSolvePnp(
+          cam.matrix, markerParams.m_providedMarkerPositions, points);
+    }
+
     if (effectorPoseRelativeToCamera.has_value()) {
       if (cameraPositionCalibration) {
         try {

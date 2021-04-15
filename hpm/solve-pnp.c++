@@ -51,6 +51,26 @@ auto operator<<(std::ostream &out, SolvePnpPoints const &solvePnpPoints)
   return out;
 }
 
+auto tryHardSolvePnp(cv::InputArray cameraMatrix,
+                     cv::InputArray providedPositionsRelativeToNozzle,
+                     SolvePnpPoints const &points) -> std::optional<SixDof> {
+  if (not points.allIdentified()) {
+    return {};
+  }
+  std::vector<SixDof> results{};
+  results.reserve(NUMBER_OF_MARKERS);
+
+  SolvePnpPoints pointsCopy{points};
+  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+    pointsCopy.m_identified[i] = false;
+    results.emplace_back(
+        solvePnp(cameraMatrix, providedPositionsRelativeToNozzle, pointsCopy)
+            .value());
+    pointsCopy.m_identified[i] = true;
+  }
+  return {*std::min_element(std::begin(results), std::end(results))};
+}
+
 auto solvePnp(cv::InputArray cameraMatrix,
               cv::InputArray providedPositionsRelativeToNozzle,
               SolvePnpPoints const &points) -> std::optional<SixDof> {

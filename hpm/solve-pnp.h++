@@ -47,6 +47,11 @@ struct SolvePnpPoints {
 } // namespace hpm
 
 std::optional<hpm::SixDof>
+tryHardSolvePnp(cv::InputArray cameraMatrix,
+                cv::InputArray providedPositionsRelativeToNozzle,
+                hpm::SolvePnpPoints const &points);
+
+std::optional<hpm::SixDof>
 solvePnp(cv::InputArray cameraMatrix,
          cv::InputArray providedPositionsRelativeToNozzle,
          hpm::SolvePnpPoints const &points);
