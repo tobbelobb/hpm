@@ -232,8 +232,8 @@ auto main(int const argc, char **const argv) -> int {
         CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
   }
 
-  auto marks{findMarks(finderImage, markerParams, finderConfig,
-                       expectedNormalDirection)};
+  auto const marks{findMarks(finderImage, markerParams, finderConfig,
+                             expectedNormalDirection, tryHard)};
 
   SolvePnpPoints points{marks,
                         markerParams.m_diameter,
@@ -248,13 +248,9 @@ auto main(int const argc, char **const argv) -> int {
     std::optional<SixDof> effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, markerParams.m_providedMarkerPositions, points)};
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
-    if (tryHard and effectorPoseRelativeToCamera.has_value() and
-        effectorPoseRelativeToCamera.value().reprojectionError >
-            HIGH_REPROJECTION_ERROR) {
-
-      marks = findMarks(finderImage, markerParams,
-                        {finderConfig.m_showIntermediateImages, false, true},
-                        expectedNormalDirection, tryHard);
+    if (tryHard and (not effectorPoseRelativeToCamera.has_value() or
+                     effectorPoseRelativeToCamera.value().reprojectionError >
+                         HIGH_REPROJECTION_ERROR)) {
       points = SolvePnpPoints(marks, markerParams.m_diameter,
                               finderImage.m_focalLength, finderImage.m_center,
                               markerParams.m_type, expectedNormalDirection);
@@ -276,7 +272,8 @@ auto main(int const argc, char **const argv) -> int {
                    "reprojection error is that the configured camera_matrix, "
                    "distortion_coefficients, and/or marker_positions don't "
                    "match up well enough with what's found on the image. "
-                   "Another cause might be that the marker detector algorithm "
+                   "Another cause might be that the marker detector "
+                   "algorithm "
                    "makes a mistake. Try re-running with '--show all' to "
                    "verify if this is the case.";
           } else {

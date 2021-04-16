@@ -128,6 +128,18 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
 
   std::vector<size_t> validEllipseIndices{
       distanceGroupIndices(positions, ellipses, bubbleSizeLimit)};
+  if (tryHard and validEllipseIndices.empty()) {
+    for (size_t i{0}; i < ellipses.size(); ++i) {
+      validEllipseIndices.emplace_back(i);
+    }
+  }
+  size_t doublettes{0};
+  if (tryHard and validEllipseIndices.size() == NUMBER_OF_MARKERS - 1) {
+    // Insert a doublette as a workaround.
+    // Should be sorted out by later stages.
+    validEllipseIndices.emplace_back(0);
+    doublettes = 1;
+  }
 
   if (config.m_showIntermediateImages and config.m_fitByDistance) {
     std::vector<hpm::Ellipse> distanceGroupFiltered;
@@ -139,7 +151,11 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     for (auto const &ellipse : distanceGroupFiltered) {
       draw(cpy, ellipse, AQUA);
     }
-    showImage(cpy, "distance-group-filtered-ones.png");
+    std::string imageName{"distance-group-filtered-ones.png"};
+    if (tryHard) {
+      imageName = "distance-group-filtered-ones-try-hard.png";
+    }
+    showImage(cpy, imageName);
   }
 
   std::vector<std::array<size_t, NUMBER_OF_MARKERS>> const candidateSixtuples{
@@ -207,7 +223,12 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
       for (auto const &mark : marks) {
         draw(cpy, mark, AQUA);
       }
-      showImage(cpy, "total-distance-filtered-ones.png");
+
+      std::string imageName{"total-distance-filtered-ones.png"};
+      if (tryHard) {
+        imageName = "total-distance-filtered-ones-try-hard.png";
+      }
+      showImage(cpy, imageName);
     }
   } else {
     for (auto const &e : ellipses) {
@@ -220,10 +241,10 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
              markerParams.m_providedMarkerPositions, image.m_focalLength,
              image.m_center, markerParams.m_type, tryHard);
   }
-  if (config.m_verbose) {
-    std::cout << "Found " << marks.size() << " markers\n";
-  }
 
+  if (config.m_verbose) {
+    std::cout << "Found " << marks.size() - doublettes << " markers\n";
+  }
   return marks;
 }
 
