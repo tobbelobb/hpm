@@ -37,15 +37,30 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
   double constexpr TEXT_OFFSET{5.0};
   double constexpr TEXT_SIZE{2.0};
   for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
-    auto const pos{points.get(i)};
-    cv::circle(image, pos, LINE_WIDTH, BLACK, LINE_WIDTH_BOLD);
-    cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
-    cv::putText(image, std::to_string(i + 1),
-                pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
-                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
-    cv::putText(image, std::to_string(i + 1),
-                pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
-                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
+    if (not points.m_identified[i]) {
+      auto const pos{points.get(i)};
+      cv::circle(image, pos, LINE_WIDTH, BLACK, LINE_WIDTH_BOLD);
+      cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, RED, LINE_WIDTH);
+    }
+  }
+  for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
+    if (points.m_identified[i]) {
+      auto const pos{points.get(i)};
+      cv::circle(image, pos, LINE_WIDTH, BLACK, LINE_WIDTH_BOLD);
+      cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
+    }
   }
   int const posRow{imageMat.rows - 200};
   int const posCol{200};

@@ -66,3 +66,14 @@ const auto AQUA{cv::Scalar(255, 255, 0)};
 const auto WHITE{cv::Scalar(255, 255, 255)};
 const auto BLACK{cv::Scalar(0, 0, 0)};
 const auto RED{cv::Scalar(0, 0, 255)};
+
+template <typename t>
+void reorder(std::vector<t> &v, ssize_t oldIndex, ssize_t newIndex) {
+  if (oldIndex > newIndex) {
+    std::rotate(v.rend() - oldIndex - 1, v.rend() - oldIndex,
+                v.rend() - newIndex);
+  } else {
+    std::rotate(v.begin() + oldIndex, v.begin() + oldIndex + 1,
+                v.begin() + newIndex + 1);
+  }
+}

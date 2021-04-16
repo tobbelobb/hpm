@@ -30,9 +30,10 @@ static auto extractSixtuples(std::vector<size_t> indices)
         for (size_t d{c + 1}; d < indices.size(); ++d) {
           for (size_t e{d + 1}; e < indices.size(); ++e) {
             for (size_t f{e + 1}; f < indices.size(); ++f) {
-              sixtuples.emplace_back(std::array<size_t, NUMBER_OF_MARKERS>{
-                  indices[a], indices[b], indices[c], indices[d], indices[e],
-                  indices[f]});
+              std::array<size_t, NUMBER_OF_MARKERS> const candidate{
+                  indices[a], indices[b], indices[c],
+                  indices[d], indices[e], indices[f]};
+              sixtuples.emplace_back(candidate);
             }
           }
         }
@@ -94,8 +95,8 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
 
 auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
                FinderConfig const &config,
-               CameraFramedPosition const &expectedNormalDirection)
-    -> std::vector<hpm::Ellipse> {
+               CameraFramedPosition const &expectedNormalDirection,
+               bool tryHard) -> std::vector<hpm::Ellipse> {
   std::vector<hpm::Ellipse> const ellipses{
       ellipseDetect(image.m_mat, config.m_showIntermediateImages,
                     markerParams.m_topLeftMarkerCenter)};
@@ -172,9 +173,24 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
     };
 
     std::vector<double> errs;
-    errs.reserve(distvs.size());
+    errs.reserve(candidateSixtuples.size());
     for (auto const &distv : distvs) {
       errs.emplace_back(distErr(distv));
+    }
+
+    double constexpr OVERLAP_TAX{10000.0};
+    for (size_t cand{0}; cand < candidateSixtuples.size(); ++cand) {
+      auto const candidate{candidateSixtuples[cand]};
+      for (size_t i{0}; i < candidate.size() - 1; ++i) {
+        for (size_t j{i + 1}; j < candidate.size(); ++j) {
+          auto const pixDist{cv::norm(ellipses[candidate[i]].m_center -
+                                      ellipses[candidate[j]].m_center)};
+          if (pixDist < ellipses[candidate[i]].m_minor / 2.0 +
+                            ellipses[candidate[j]].m_minor / 2.0) {
+            errs[cand] += OVERLAP_TAX;
+          }
+        }
+      }
     }
 
     bestSixtupleIdx = static_cast<size_t>(std::distance(
@@ -202,7 +218,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
   if (config.m_fitByDistance and marks.size() == NUMBER_OF_MARKERS) {
     identify(marks, markerParams.m_diameter,
              markerParams.m_providedMarkerPositions, image.m_focalLength,
-             image.m_center, markerParams.m_type);
+             image.m_center, markerParams.m_type, tryHard);
   }
   if (config.m_verbose) {
     std::cout << "Found " << marks.size() << " markers\n";

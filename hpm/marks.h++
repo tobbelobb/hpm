@@ -56,5 +56,6 @@ diskCenterRay(Ellipse const &diskProjection, double diskDiameter,
 
 double identify(std::vector<Ellipse> &marks, double markerDiameter,
                 ProvidedMarkerPositions const &markPos, double focalLength,
-                PixelPosition const &imageCenter, MarkerType markerType);
+                PixelPosition const &imageCenter, MarkerType markerType,
+                bool tryHard = false);
 } // namespace hpm

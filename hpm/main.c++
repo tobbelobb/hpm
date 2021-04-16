@@ -232,23 +232,33 @@ auto main(int const argc, char **const argv) -> int {
         CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
   }
 
-  auto const marks{findMarks(finderImage, markerParams, finderConfig,
-                             expectedNormalDirection)};
+  auto marks{findMarks(finderImage, markerParams, finderConfig,
+                       expectedNormalDirection)};
 
-  SolvePnpPoints const points{marks,
-                              markerParams.m_diameter,
-                              finderImage.m_focalLength,
-                              finderImage.m_center,
-                              markerParams.m_type,
-                              expectedNormalDirection};
+  SolvePnpPoints points{marks,
+                        markerParams.m_diameter,
+                        finderImage.m_focalLength,
+                        finderImage.m_center,
+                        markerParams.m_type,
+                        expectedNormalDirection};
 
-  if (points.allIdentified()) {
+  bool const allPointsWereIdentified{points.allIdentified()};
+
+  if (allPointsWereIdentified) {
     std::optional<SixDof> effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, markerParams.m_providedMarkerPositions, points)};
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (tryHard and effectorPoseRelativeToCamera.has_value() and
         effectorPoseRelativeToCamera.value().reprojectionError >
             HIGH_REPROJECTION_ERROR) {
+
+      marks = findMarks(finderImage, markerParams,
+                        {finderConfig.m_showIntermediateImages, false, true},
+                        expectedNormalDirection, tryHard);
+      points = SolvePnpPoints(marks, markerParams.m_diameter,
+                              finderImage.m_focalLength, finderImage.m_center,
+                              markerParams.m_type, expectedNormalDirection);
+
       effectorPoseRelativeToCamera = tryHardSolvePnp(
           cam.matrix, markerParams.m_providedMarkerPositions, points);
     }
@@ -332,7 +342,7 @@ auto main(int const argc, char **const argv) -> int {
     }
   }
 
-  if (not points.allIdentified() and verbose) {
+  if (not(allPointsWereIdentified) and verbose) {
     auto const cameraFramedPositions{findIndividualMarkerPositions(
         marks, markerParams.m_diameter, meanFocalLength, imageCenter,
         markerParams.m_type, expectedNormalDirection)};

@@ -46,10 +46,12 @@ struct SolvePnpPoints {
 };
 } // namespace hpm
 
+// Note that points is an input/output parameter.
+// The excluded point will be set to not identified.
 std::optional<hpm::SixDof>
 tryHardSolvePnp(cv::InputArray cameraMatrix,
                 cv::InputArray providedPositionsRelativeToNozzle,
-                hpm::SolvePnpPoints const &points);
+                hpm::SolvePnpPoints &points);
 
 std::optional<hpm::SixDof>
 solvePnp(cv::InputArray cameraMatrix,

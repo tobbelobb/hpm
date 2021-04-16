@@ -53,7 +53,7 @@ auto operator<<(std::ostream &out, SolvePnpPoints const &solvePnpPoints)
 
 auto tryHardSolvePnp(cv::InputArray cameraMatrix,
                      cv::InputArray providedPositionsRelativeToNozzle,
-                     SolvePnpPoints const &points) -> std::optional<SixDof> {
+                     SolvePnpPoints &points) -> std::optional<SixDof> {
   if (not points.allIdentified()) {
     return {};
   }
@@ -68,7 +68,12 @@ auto tryHardSolvePnp(cv::InputArray cameraMatrix,
             .value());
     pointsCopy.m_identified[i] = true;
   }
-  return {*std::min_element(std::begin(results), std::end(results))};
+
+  auto const idxOfExcluded{static_cast<size_t>(
+      std::distance(std::begin(results),
+                    std::min_element(std::begin(results), std::end(results))))};
+  points.m_identified[idxOfExcluded] = false;
+  return {results[idxOfExcluded]};
 }
 
 auto solvePnp(cv::InputArray cameraMatrix,

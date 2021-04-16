@@ -5,6 +5,7 @@ DISABLE_WARNINGS
 ENABLE_WARNINGS
 
 #include <hpm/marks.h++>
+#include <hpm/util.h++>
 
 #include <algorithm>
 #include <limits>
@@ -33,21 +34,13 @@ static void fanSort(std::vector<hpm::Ellipse> &fan) {
 auto hpm::identify(std::vector<Ellipse> &marks, double const markerDiameter,
                    ProvidedMarkerPositions const &markPos,
                    double const focalLength, PixelPosition const &imageCenter,
-                   MarkerType markerType) -> double {
+                   MarkerType markerType, bool tryHard) -> double {
 
-  if (not(marks.size() >= NUMBER_OF_MARKERS)) {
+  if (marks.size() != NUMBER_OF_MARKERS) {
     return std::numeric_limits<double>::max();
   }
 
   fanSort(marks);
-
-  std::vector<double> expectedDists;
-  expectedDists.reserve(NUMBER_OF_MARKERS);
-  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-    expectedDists.emplace_back(
-        cv::norm(markPos.row(static_cast<int>(i)) -
-                 markPos.row(static_cast<int>((i + 1) % NUMBER_OF_MARKERS))));
-  }
 
   std::vector<CameraFramedPosition> positions{};
   positions.reserve(marks.size());
@@ -55,31 +48,114 @@ auto hpm::identify(std::vector<Ellipse> &marks, double const markerDiameter,
     positions.emplace_back(
         toPosition(mark, markerDiameter, focalLength, imageCenter, markerType));
   }
-  std::vector<double> foundDists;
-  foundDists.reserve(NUMBER_OF_MARKERS);
-  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-    foundDists.emplace_back(
-        cv::norm(positions[i] - positions[(i + 1) % NUMBER_OF_MARKERS]));
-  }
 
   std::vector<double> errs;
   errs.reserve(NUMBER_OF_MARKERS);
-  for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
-    double err{0.0};
-    for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
-      double const diff{foundDists[(i + j) % NUMBER_OF_MARKERS] -
-                        expectedDists[j]};
-      err += diff * diff;
+  ssize_t bestPivotIndex{0};
+  double globalBestErr{std::numeric_limits<double>::max()};
+  if (not tryHard) {
+    std::vector<double> expectedDists;
+    expectedDists.reserve(NUMBER_OF_MARKERS);
+    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+      expectedDists.emplace_back(
+          cv::norm(markPos.row(static_cast<int>(i)) -
+                   markPos.row(static_cast<int>((i + 1) % NUMBER_OF_MARKERS))));
     }
-    errs.emplace_back(err);
+
+    std::vector<double> foundDists;
+    foundDists.reserve(NUMBER_OF_MARKERS);
+    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+      foundDists.emplace_back(
+          cv::norm(positions[i] - positions[(i + 1) % NUMBER_OF_MARKERS]));
+    }
+
+    for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+      double err{0.0};
+      for (size_t j{0}; j < NUMBER_OF_MARKERS; ++j) {
+        double const diff{foundDists[(i + j) % NUMBER_OF_MARKERS] -
+                          expectedDists[j]};
+        err += diff * diff;
+      }
+      errs.emplace_back(err);
+    }
+
+    bestPivotIndex = std::distance(
+        std::begin(errs), std::min_element(std::begin(errs), std::end(errs)));
+    globalBestErr = errs[static_cast<size_t>(bestPivotIndex)];
+    std::rotate(std::begin(marks), std::begin(marks) + bestPivotIndex,
+                std::end(marks));
+  } else { // tryHard
+    ssize_t atWrongPosition{0};
+    ssize_t shouldHaveBeenAt{0};
+    for (size_t excluded{0}; excluded < NUMBER_OF_MARKERS; ++excluded) {
+      std::vector<CameraFramedPosition> excl_positions{};
+      excl_positions.reserve(NUMBER_OF_MARKERS - 1);
+      for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+        if (i != excluded) {
+          excl_positions.emplace_back(positions[i]);
+        }
+      }
+
+      std::vector<double> expectedDists;
+      expectedDists.reserve(NUMBER_OF_MARKERS - 1);
+      for (size_t excludedFromPosition{0};
+           excludedFromPosition < NUMBER_OF_MARKERS; ++excludedFromPosition) {
+        expectedDists.clear();
+        for (size_t i{0}; i < NUMBER_OF_MARKERS; ++i) {
+          if (i != excludedFromPosition) {
+            if (i + 1 == excludedFromPosition) {
+              expectedDists.emplace_back(cv::norm(
+                  markPos.row(static_cast<int>(i)) -
+                  markPos.row(static_cast<int>((i + 2) % NUMBER_OF_MARKERS))));
+            } else {
+              expectedDists.emplace_back(cv::norm(
+                  markPos.row(static_cast<int>(i)) -
+                  markPos.row(static_cast<int>((i + 1) % NUMBER_OF_MARKERS))));
+            }
+          }
+        }
+
+        std::vector<double> foundDists;
+        foundDists.reserve(NUMBER_OF_MARKERS - 1);
+        for (size_t i{0}; i < NUMBER_OF_MARKERS - 1; ++i) {
+          foundDists.emplace_back(
+              cv::norm(excl_positions[i] -
+                       excl_positions[(i + 1) % (NUMBER_OF_MARKERS - 1)]));
+        }
+
+        errs.clear();
+        for (size_t i{0}; i < NUMBER_OF_MARKERS - 1; ++i) {
+          double err{0.0};
+          for (size_t j{0}; j < NUMBER_OF_MARKERS - 1; ++j) {
+            double const diff{foundDists[(i + j) % (NUMBER_OF_MARKERS - 1)] -
+                              expectedDists[j]};
+            err += diff * diff;
+          }
+          errs.emplace_back(err);
+        }
+
+        auto const bestErr{std::min_element(std::begin(errs), std::end(errs))};
+        if (*bestErr < globalBestErr) {
+          atWrongPosition = static_cast<ssize_t>(excluded);
+          shouldHaveBeenAt = static_cast<ssize_t>(excludedFromPosition);
+          globalBestErr = *bestErr;
+          bestPivotIndex = std::distance(std::begin(errs), bestErr);
+          if (bestPivotIndex >= static_cast<ssize_t>(excluded)) {
+            bestPivotIndex = bestPivotIndex + 1;
+          }
+        }
+      }
+    }
+    std::rotate(std::begin(marks), std::begin(marks) + bestPivotIndex,
+                std::end(marks));
+    reorder(marks,
+            (atWrongPosition +
+             (static_cast<ssize_t>(NUMBER_OF_MARKERS) - bestPivotIndex)) %
+                static_cast<ssize_t>(NUMBER_OF_MARKERS),
+            shouldHaveBeenAt);
   }
 
-  auto const bestErrIdx{std::distance(
-      std::begin(errs), std::min_element(std::begin(errs), std::end(errs)))};
-  std::rotate(std::begin(marks), std::begin(marks) + bestErrIdx,
-              std::end(marks));
-
-  return errs[static_cast<size_t>(bestErrIdx)];
+  return globalBestErr;
 }
 
 static auto sphereZFromSemiMinor(Ellipse const &sphereProjection,

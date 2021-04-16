@@ -237,3 +237,21 @@ END
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~%END%
 %Error: Reprojection error was \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?. That is too high for finding good camera_rotation and camera_translation values. A likely cause for the high reprojection error is that the configured camera_matrix, distortion_coefficients, and/or marker_positions don't match up well enough with what's found on the image. Another cause might be that the marker detector algorithm makes a mistake. Try re-running with '--show all' to verify if this is the case.%
 END
+
+: One-marker-completely-covered-over-case-1
+: Checks that we still get a low reprojection error
+$* $src_base/example-cam-params/loDistCamParams2.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/try_hard_0001.jpg --try-hard --verbose >>~/END/
+Found 6 markers
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/0\..*/
+END
+
+: One-marker-completely-covered-over-case-5
+: Checks that we still get a low reprojection error
+$* $src_base/example-cam-params/loDistCamParams2.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/try_hard_0005.jpg --try-hard --verbose >>~/END/
+Found 6 markers
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/0\..*/
+END
