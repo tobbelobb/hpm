@@ -326,7 +326,10 @@ auto main(int const argc, char **const argv) -> int {
       std::cout << "Found no camera pose\n";
     }
   } else {
-    std::cout << "Could not identify markers\n";
+    std::cout << "Could not identify markers" << std::endl;
+    if (showResultImage) {
+      showImage(undistortedImage, "result.png");
+    }
   }
 
   if (not points.allIdentified() and verbose) {
