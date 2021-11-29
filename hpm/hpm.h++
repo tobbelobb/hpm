@@ -11,3 +11,7 @@ ENABLE_WARNINGS
 
 hpm::SixDof effectorWorldPose(hpm::SixDof const &effectorPoseRelativeToCamera,
                               hpm::SixDof const &cameraPoseRelativeToWorld);
+
+hpm::SixDof
+effectorPoseRelativeToBed(hpm::SixDof const &effectorPoseRelativeToCamera,
+                          hpm::SixDof const &bedPoseRelativeToCamera);

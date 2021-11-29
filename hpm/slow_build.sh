@@ -4,7 +4,7 @@ if ! compiler_loc="$(type -p "${CPPCOMPILER}")" || [[ -z $compiler_loc ]]; then
 	CPPCOMPILER="g++-10"
 fi
 
-if (( $# < 1 )); then
+if (($# < 1)); then
 	${CPPCOMPILER} -std=c++20 -Wno-psabi main.c++ command-line.c++ ellipse.c++ ellipse-detector.c++ find.c++ hpm.c++ marks.c++ solve-pnp.c++ util.c++ ed/ED.c++ ed/EDCircles.c++ ed/EDColor.c++ ed/EDCommon.c++ ed/EDLines.c++ ed/EDPF.c++ ed/NFA.c++ -I.. -I../extern/cppcore -I../extern/eigen -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -lopencv_features2d -o hpm &
 	${CPPCOMPILER} -std=c++20 -Wno-psabi find.test.c++ ellipse.c++ ellipse-detector.c++ find.c++ marks.c++ util.c++ solve-pnp.c++ ed/ED.c++ ed/EDCircles.c++ ed/EDColor.c++ ed/EDCommon.c++ ed/EDLines.c++ ed/EDPF.c++ ed/NFA.c++ -I.. -I../extern/cppcore -I../extern/boostut -I../extern/eigen -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -o find.test &
 	${CPPCOMPILER} -std=c++20 -Wno-psabi hpm.test.c++ hpm.c++ ellipse.c++ ellipse-detector.c++ find.c++ marks.c++ util.c++ solve-pnp.c++ ed/ED.c++ ed/EDCircles.c++ ed/EDColor.c++ ed/EDCommon.c++ ed/EDLines.c++ ed/EDPF.c++ ed/NFA.c++ -I.. -I../extern/cppcore -I../extern/boostut -I../extern/eigen -lopencv_core -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_calib3d -o hpm.test &

@@ -2,6 +2,7 @@
 #include <hpm/hpm.h++>
 #include <hpm/solve-pnp.h++>
 #include <hpm/test-util.h++> // getPath
+#include <hpm/util.h++>
 
 #include <hpm/warnings-disabler.h++>
 DISABLE_WARNINGS
@@ -135,6 +136,162 @@ auto main() -> int {
         expect(abs(pose.rotX()) < EPS) << "rotation X";
         expect(abs(pose.rotY()) < EPS) << "rotation Y";
         expect(abs(pose.rotZ()) < EPS) << "rotation Z";
+      };
+
+  "Mover pose relative to bed pose from OpenScad generated image white disks"_test =
+      [&openScadCameraMatrix2x] {
+        double constexpr markerDiameter{90.0};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2000_doubled.png")};
+        cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+        expect((not image.empty()) >> fatal);
+
+        auto const &cameraMatrix = openScadCameraMatrix2x;
+
+        ProvidedMarkerPositions const moverMarkerPositions{
+            -72.4478, -125.483, 136.03, 72.4478,  -125.483, 136.03,
+            146.895,  -3.4642,  136.03, 64.446,   139.34,   136.03,
+            -68.4476, 132.411,  136.03, -160.895, -27.7129, 136.03};
+
+        ProvidedMarkerPositions const bedMarkerPositions{
+            -300.0, -300.0, 0.0, 250.0, -300.0, 0.0, 250.0,  0.0,   0.0,
+            230.0,  380.0,  0.0, 0.0,   400.0,  0.0, -300.0, 380.0, 0.0};
+
+        double const meanFocalLength{std::midpoint(
+            cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
+        PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                        cameraMatrix.at<double>(1, 2)};
+
+        MarkerParams const moverMarkerParams{moverMarkerPositions,
+                                             markerDiameter};
+        MarkerParams const bedMarkerParams{bedMarkerPositions, markerDiameter};
+
+        FinderImage const finderImage{image, meanFocalLength, imageCenter};
+
+        auto const moverMarks{findMarks(finderImage, moverMarkerParams,
+                                        {.m_showIntermediateImages = false,
+                                         .m_verbose = false,
+                                         .m_fitByDistance = true})};
+
+        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+                                      {.m_showIntermediateImages = false,
+                                       .m_verbose = false,
+                                       .m_fitByDistance = true},
+                                      {0, 0, 0}, false, moverMarks)};
+
+        SolvePnpPoints const moverPoints{
+            moverMarks,  markerDiameter,   meanFocalLength,
+            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+
+        SolvePnpPoints const bedPoints{
+            bedMarks,    markerDiameter,   meanFocalLength,
+            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+
+        expect((moverPoints.allIdentified()) >> fatal);
+        expect((bedPoints.allIdentified()) >> fatal);
+
+        std::optional<SixDof> const effectorPoseRelativeToCamera{
+            solvePnp(cameraMatrix, moverMarkerPositions, moverPoints)};
+
+        std::optional<SixDof> const bedPoseRelativeToCamera{
+            solvePnp(cameraMatrix, bedMarkerPositions, bedPoints)};
+
+        expect((effectorPoseRelativeToCamera.has_value()) >> fatal);
+        expect((bedPoseRelativeToCamera.has_value()) >> fatal);
+
+        SixDof const pose{
+            effectorPoseRelativeToBed(effectorPoseRelativeToCamera.value(),
+                                      bedPoseRelativeToCamera.value())};
+
+        auto constexpr EPSX{0.023_d};
+        auto constexpr EPSY{0.079_d};
+        auto constexpr EPSZ{0.34_d};
+        auto constexpr EPSROT{0.023_d};
+        expect(abs(pose.x()) < EPSX) << "translation X";
+        expect(abs(pose.y()) < EPSY) << "translation Y";
+        expect(abs(pose.z() - 10.0) < EPSZ) << "translation Z";
+        expect(abs(pose.rotX()) < EPSROT) << "rotation X";
+        expect(abs(pose.rotY()) < EPSROT) << "rotation Y";
+        expect(abs(pose.rotZ()) < EPSROT) << "rotation Z";
+      };
+
+  "Mover pose relative to bed pose from OpenScad generated image white disks"_test =
+      [&openScadCameraMatrix2x] {
+        double constexpr markerDiameter{90.0};
+        std::string const imageFileName{hpm::getPath(
+            "test-images/"
+            "bed_markers_test_0_0_0_30_0_0_2500_doubled_10_deg_twist.png")};
+        cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
+        expect((not image.empty()) >> fatal);
+
+        auto const &cameraMatrix = openScadCameraMatrix2x;
+
+        ProvidedMarkerPositions const moverMarkerPositions{
+            -72.4478, -125.483, 136.03, 72.4478,  -125.483, 136.03,
+            146.895,  -3.4642,  136.03, 64.446,   139.34,   136.03,
+            -68.4476, 132.411,  136.03, -160.895, -27.7129, 136.03};
+
+        ProvidedMarkerPositions const bedMarkerPositions{
+            -300.0, -300.0, 0.0, 250.0, -300.0, 0.0, 250.0,  0.0,   0.0,
+            230.0,  380.0,  0.0, 0.0,   400.0,  0.0, -300.0, 380.0, 0.0};
+
+        double const meanFocalLength{std::midpoint(
+            cameraMatrix.at<double>(0, 0), cameraMatrix.at<double>(1, 1))};
+        PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
+                                        cameraMatrix.at<double>(1, 2)};
+
+        MarkerParams const moverMarkerParams{moverMarkerPositions,
+                                             markerDiameter};
+        MarkerParams const bedMarkerParams{bedMarkerPositions, markerDiameter};
+
+        FinderImage const finderImage{image, meanFocalLength, imageCenter};
+
+        auto const moverMarks{findMarks(finderImage, moverMarkerParams,
+                                        {.m_showIntermediateImages = false,
+                                         .m_verbose = false,
+                                         .m_fitByDistance = true})};
+
+        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+                                      {.m_showIntermediateImages = false,
+                                       .m_verbose = false,
+                                       .m_fitByDistance = true},
+                                      {0, 0, -1}, false, moverMarks)};
+
+        SolvePnpPoints const moverPoints{
+            moverMarks,  markerDiameter,   meanFocalLength,
+            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+
+        SolvePnpPoints const bedPoints{
+            bedMarks,    markerDiameter,   meanFocalLength,
+            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+
+        expect((moverPoints.allIdentified()) >> fatal);
+        expect((bedPoints.allIdentified()) >> fatal);
+
+        std::optional<SixDof> const effectorPoseRelativeToCamera{
+            solvePnp(cameraMatrix, moverMarkerPositions, moverPoints)};
+
+        std::optional<SixDof> const bedPoseRelativeToCamera{
+            solvePnp(cameraMatrix, bedMarkerPositions, bedPoints)};
+
+        expect((effectorPoseRelativeToCamera.has_value()) >> fatal);
+        expect((bedPoseRelativeToCamera.has_value()) >> fatal);
+
+        SixDof const pose{
+            effectorPoseRelativeToBed(effectorPoseRelativeToCamera.value(),
+                                      bedPoseRelativeToCamera.value())};
+
+        auto constexpr EPSX{0.11_d};
+        auto constexpr EPSY{0.12_d};
+        auto constexpr EPSZ{0.34_d};
+        auto constexpr EPSROT{0.023_d};
+        expect(abs(pose.x() - 20.0) < EPSX) << "translation X";
+        expect(abs(pose.y() - 60.0) < EPSY) << "translation Y";
+        expect(abs(pose.z() - 10.0) < EPSZ) << "translation Z";
+        expect(abs(pose.rotX()) < EPSROT) << "rotation X";
+        expect(abs(pose.rotY()) < EPSROT) << "rotation Y";
+        expect(abs(pose.rotZ()) < EPSROT) << "rotation Z";
       };
 
   return 0;
