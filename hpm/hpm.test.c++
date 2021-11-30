@@ -29,7 +29,7 @@ auto main() -> int {
                                                                        0.00*2.0,    0.00*2.0,    1.0);
   // clang-format on
 
-  "Mover pose from OpenScad generated image white spheres"_test =
+  "Effector pose from OpenScad generated image white spheres"_test =
       [&openScadCameraMatrix] {
         double constexpr markerDiameter{32.0};
         std::string const imageFileName{hpm::getPath(
@@ -83,7 +83,7 @@ auto main() -> int {
         expect(abs(pose.rotZ()) < EPS) << "rotation Z";
       };
 
-  "Mover pose from OpenScad generated image white disks"_test =
+  "Effector pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{70.0};
         std::string const imageFileName{hpm::getPath(
@@ -138,7 +138,7 @@ auto main() -> int {
         expect(abs(pose.rotZ()) < EPS) << "rotation Z";
       };
 
-  "Mover pose relative to bed pose from OpenScad generated image white disks"_test =
+  "Effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
         std::string const imageFileName{
@@ -149,7 +149,7 @@ auto main() -> int {
 
         auto const &cameraMatrix = openScadCameraMatrix2x;
 
-        ProvidedMarkerPositions const moverMarkerPositions{
+        ProvidedMarkerPositions const effectorMarkerPositions{
             -72.4478, -125.483, 136.03, 72.4478,  -125.483, 136.03,
             146.895,  -3.4642,  136.03, 64.446,   139.34,   136.03,
             -68.4476, 132.411,  136.03, -160.895, -27.7129, 136.03};
@@ -163,36 +163,36 @@ auto main() -> int {
         PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                         cameraMatrix.at<double>(1, 2)};
 
-        MarkerParams const moverMarkerParams{moverMarkerPositions,
-                                             markerDiameter};
+        MarkerParams const effectorMarkerParams{effectorMarkerPositions,
+                                                markerDiameter};
         MarkerParams const bedMarkerParams{bedMarkerPositions, markerDiameter};
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const moverMarks{findMarks(finderImage, moverMarkerParams,
-                                        {.m_showIntermediateImages = false,
-                                         .m_verbose = false,
-                                         .m_fitByDistance = true})};
+        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+                                           {.m_showIntermediateImages = false,
+                                            .m_verbose = false,
+                                            .m_fitByDistance = true})};
 
         auto const bedMarks{findMarks(finderImage, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, 0}, false, moverMarks)};
+                                      {0, 0, 0}, false, effectorMarks)};
 
-        SolvePnpPoints const moverPoints{
-            moverMarks,  markerDiameter,   meanFocalLength,
-            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+        SolvePnpPoints const effectorPoints{
+            effectorMarks, markerDiameter,   meanFocalLength,
+            imageCenter,   MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
 
         SolvePnpPoints const bedPoints{
             bedMarks,    markerDiameter,   meanFocalLength,
             imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
 
-        expect((moverPoints.allIdentified()) >> fatal);
+        expect((effectorPoints.allIdentified()) >> fatal);
         expect((bedPoints.allIdentified()) >> fatal);
 
         std::optional<SixDof> const effectorPoseRelativeToCamera{
-            solvePnp(cameraMatrix, moverMarkerPositions, moverPoints)};
+            solvePnp(cameraMatrix, effectorMarkerPositions, effectorPoints)};
 
         std::optional<SixDof> const bedPoseRelativeToCamera{
             solvePnp(cameraMatrix, bedMarkerPositions, bedPoints)};
@@ -216,7 +216,7 @@ auto main() -> int {
         expect(abs(pose.rotZ()) < EPSROT) << "rotation Z";
       };
 
-  "Mover pose relative to bed pose from OpenScad generated image white disks"_test =
+  "Effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
         std::string const imageFileName{hpm::getPath(
@@ -227,7 +227,7 @@ auto main() -> int {
 
         auto const &cameraMatrix = openScadCameraMatrix2x;
 
-        ProvidedMarkerPositions const moverMarkerPositions{
+        ProvidedMarkerPositions const effectorMarkerPositions{
             -72.4478, -125.483, 136.03, 72.4478,  -125.483, 136.03,
             146.895,  -3.4642,  136.03, 64.446,   139.34,   136.03,
             -68.4476, 132.411,  136.03, -160.895, -27.7129, 136.03};
@@ -241,36 +241,36 @@ auto main() -> int {
         PixelPosition const imageCenter{cameraMatrix.at<double>(0, 2),
                                         cameraMatrix.at<double>(1, 2)};
 
-        MarkerParams const moverMarkerParams{moverMarkerPositions,
-                                             markerDiameter};
+        MarkerParams const effectorMarkerParams{effectorMarkerPositions,
+                                                markerDiameter};
         MarkerParams const bedMarkerParams{bedMarkerPositions, markerDiameter};
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const moverMarks{findMarks(finderImage, moverMarkerParams,
-                                        {.m_showIntermediateImages = false,
-                                         .m_verbose = false,
-                                         .m_fitByDistance = true})};
+        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+                                           {.m_showIntermediateImages = false,
+                                            .m_verbose = false,
+                                            .m_fitByDistance = true})};
 
         auto const bedMarks{findMarks(finderImage, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, moverMarks)};
+                                      {0, 0, -1}, false, effectorMarks)};
 
-        SolvePnpPoints const moverPoints{
-            moverMarks,  markerDiameter,   meanFocalLength,
-            imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
+        SolvePnpPoints const effectorPoints{
+            effectorMarks, markerDiameter,   meanFocalLength,
+            imageCenter,   MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
 
         SolvePnpPoints const bedPoints{
             bedMarks,    markerDiameter,   meanFocalLength,
             imageCenter, MarkerType::DISK, {0, -0.5, -sqrt(3) / 2}};
 
-        expect((moverPoints.allIdentified()) >> fatal);
+        expect((effectorPoints.allIdentified()) >> fatal);
         expect((bedPoints.allIdentified()) >> fatal);
 
         std::optional<SixDof> const effectorPoseRelativeToCamera{
-            solvePnp(cameraMatrix, moverMarkerPositions, moverPoints)};
+            solvePnp(cameraMatrix, effectorMarkerPositions, effectorPoints)};
 
         std::optional<SixDof> const bedPoseRelativeToCamera{
             solvePnp(cameraMatrix, bedMarkerPositions, bedPoints)};
