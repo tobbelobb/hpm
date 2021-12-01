@@ -375,9 +375,10 @@ auto main() -> int {
   "Effector pose relative to twisted bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
-        std::string const imageFileName{hpm::getPath(
-            "test-images/"
-            "bed_markers_test_0_0_0_30_0_0_2500_doubled_10_deg_twist_different_ways.png")};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2500_doubled_10_deg_"
+                         "twist_different_ways.png")};
         cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
         expect((not image.empty()) >> fatal);
 
@@ -442,7 +443,7 @@ auto main() -> int {
         auto constexpr EPSY{0.12_d};
         auto constexpr EPSZ{0.34_d};
         auto constexpr EPSROT{0.01_d};
-        auto constexpr EXPECTED_ROT_Z{-20.0 * CV_PI/180.0};
+        auto constexpr EXPECTED_ROT_Z{-20.0 * CV_PI / 180.0};
         expect(abs(pose.x() - 20.0) < EPSX) << "translation X";
         expect(abs(pose.y() - 60.0) < EPSY) << "translation Y";
         expect(abs(pose.z() - 10.0) < EPSZ) << "translation Z";
@@ -454,9 +455,10 @@ auto main() -> int {
   "X-Tilted effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
-        std::string const imageFileName{hpm::getPath(
-            "test-images/"
-            "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_tilted_20_towards_camera.png")};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_"
+                         "tilted_20_towards_camera.png")};
         cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
         expect((not image.empty()) >> fatal);
 
@@ -521,7 +523,7 @@ auto main() -> int {
         auto constexpr EPSY{0.06_d};
         auto constexpr EPSZ{0.14_d};
         auto constexpr EPSROT{0.001_d};
-        auto constexpr EXPECTED_ROT_X{20.0 * CV_PI/180.0};
+        auto constexpr EXPECTED_ROT_X{20.0 * CV_PI / 180.0};
         expect(abs(pose.x()) < EPSX) << "translation X";
         expect(abs(pose.y()) < EPSY) << "translation Y";
         expect(abs(pose.z()) < EPSZ) << "translation Z";
@@ -533,9 +535,10 @@ auto main() -> int {
   "Y-Tilted effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
-        std::string const imageFileName{hpm::getPath(
-            "test-images/"
-            "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_tilted_10_y.png")};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_"
+                         "tilted_10_y.png")};
         cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
         expect((not image.empty()) >> fatal);
 
@@ -600,7 +603,7 @@ auto main() -> int {
         auto constexpr EPSY{0.14_d};
         auto constexpr EPSZ{0.14_d};
         auto constexpr EPSROT{0.01_d};
-        auto constexpr EXPECTED_ROT_Y{10.0 * CV_PI/180.0};
+        auto constexpr EXPECTED_ROT_Y{10.0 * CV_PI / 180.0};
         expect(abs(pose.x()) < EPSX) << "translation X";
         expect(abs(pose.y()) < EPSY) << "translation Y";
         expect(abs(pose.z()) < EPSZ) << "translation Z";
@@ -612,9 +615,10 @@ auto main() -> int {
   "Tilted and twisted effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
-        std::string const imageFileName{hpm::getPath(
-            "test-images/"
-            "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_tilted_20_towards_camera_and_twisted_10_deg.png")};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_"
+                         "tilted_20_towards_camera_and_twisted_10_deg.png")};
         cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
         expect((not image.empty()) >> fatal);
 
@@ -679,7 +683,8 @@ auto main() -> int {
         auto constexpr EPSY{0.06_d};
         auto constexpr EPSZ{0.14_d};
         auto constexpr EPSROT{0.001_d};
-        auto constexpr EXPECTED_ROT_X{0.348173}; // Found with rotz(10)*rotx(20) in Matlab
+        auto constexpr EXPECTED_ROT_X{
+            0.348173}; // Found with rotz(10)*rotx(20) in Matlab
         auto constexpr EXPECTED_ROT_Y{0.0304608};
         auto constexpr EXPECTED_ROT_Z{0.172758};
         expect(abs(pose.x()) < EPSX) << "translation X";
@@ -693,9 +698,10 @@ auto main() -> int {
   "Tilted and moved effector pose relative to bed pose from OpenScad generated image white disks"_test =
       [&openScadCameraMatrix2x] {
         double constexpr markerDiameter{90.0};
-        std::string const imageFileName{hpm::getPath(
-            "test-images/"
-            "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_tilted_and_moved_2.png")};
+        std::string const imageFileName{
+            hpm::getPath("test-images/"
+                         "bed_markers_test_0_0_0_30_0_0_2500_doubled_mover_"
+                         "tilted_and_moved_2.png")};
         cv::Mat const image = cv::imread(imageFileName, cv::IMREAD_COLOR);
         expect((not image.empty()) >> fatal);
 
@@ -759,8 +765,8 @@ auto main() -> int {
         auto constexpr EPSX{0.04_d};
         auto constexpr EPSY{0.12_d};
         auto constexpr EPSZ{0.18_d};
-         auto constexpr EPSROT{0.001_d};
-         auto constexpr EXPECTED_ROT_X{20.0 * CV_PI/180.0};
+        auto constexpr EPSROT{0.001_d};
+        auto constexpr EXPECTED_ROT_X{20.0 * CV_PI / 180.0};
         double constexpr EXPECTED_POS_X{-70.0_d};
         double constexpr EXPECTED_POS_Y{60.0_d};
         double constexpr EXPECTED_POS_Z{10.0_d};

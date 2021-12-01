@@ -45,7 +45,7 @@ auto effectorPoseRelativeToBed(SixDof const &effectorPoseRelativeToCamera,
   }();
 
   auto const tmpRotation = [&]() {
-    auto const tmpR = rotationMatrixBed.t()*rotationMatrixEffector;
+    auto const tmpR = rotationMatrixBed.t() * rotationMatrixEffector;
     Vector3d rotation_;
     cv::Rodrigues(tmpR, rotation_);
     return rotation_;
