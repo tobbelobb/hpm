@@ -166,18 +166,18 @@ auto main(int const argc, char **const argv) -> int {
       return {
           [&markerParamsFile]() {
             ProvidedMarkerPositions effectorMarkerPositions_;
-            markerParamsFile["effector_marker_positions"] >>
-                effectorMarkerPositions_;
+            markerParamsFile["effector_markers"] >> effectorMarkerPositions_;
             return effectorMarkerPositions_;
           }(),
           [&markerParamsFile]() {
             double markerDiameter_ = 0.0;
-            markerParamsFile["marker_diameter"] >> markerDiameter_;
+            markerParamsFile["effector_markers"]["marker_diameter"] >>
+                markerDiameter_;
             return markerDiameter_;
           }(),
           [&markerParamsFile]() {
             std::string markerType_;
-            markerParamsFile["marker_type"] >> markerType_;
+            markerParamsFile["effector_markers"]["marker_type"] >> markerType_;
             std::transform(std::begin(markerType_), std::end(markerType_),
                            std::begin(markerType_),
                            [](unsigned char c) { return std::tolower(c); });
