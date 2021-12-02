@@ -124,7 +124,7 @@ auto main(int const argc, char **const argv) -> int {
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
            "[-n|--no-fit-by-distance] [-c|--camera-position-calibration] "
-           "[-t|--try-hard]\n";
+           "[-t|--try-hard] [-b|--bed-reference]\n";
   CommandLine args(usage.str());
 
   std::string show{};
@@ -135,6 +135,7 @@ auto main(int const argc, char **const argv) -> int {
   bool noFitByDistance{false};
   bool printHelp{false};
   bool tryHard{false};
+  bool useBedReference{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
   args.addArgument({"-v", "--verbose"}, &verbose,
                    "Print rotation, translation, and reprojection_error of the "
@@ -156,9 +157,19 @@ auto main(int const argc, char **const argv) -> int {
       "Try harder (but slower) to find a good position. If one marker was "
       "slightly mis-detected, this option will make the program find decent "
       "values based on the other markers, and ignore the mis-detected one.");
+  args.addArgument(
+      {"-b", "--bed-reference"}, &useBedReference,
+      "If you have a set of markers on a flat background surface (\"the "
+      "bed\"), and have specified bed marker positions, type, and diameter in "
+      "the marker-parameters file, then the bed reference option will make hpm "
+      "calculate effector pose relative to the bed instead of relative to the "
+      "camera. This can give more stable results if the camera isn't "
+      "completely still between measurements, and makes measurements far less "
+      "sensitive to having correct camera_translation and camera_rotation "
+      "values in the camera-parameters file.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
-  constexpr unsigned int NUM_OPTIONAL_ARGS = 5;
+  constexpr unsigned int NUM_OPTIONAL_ARGS = 7;
   constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS + 1};
   constexpr int MIN_ARGC{NUM_MANDATORY_ARGS + 1};
 
@@ -202,8 +213,15 @@ auto main(int const argc, char **const argv) -> int {
 
   auto const effectorMarkerParams{
       getMarkerParams(markerParamsFileName, "effector_markers")};
-  // auto const bedMarkerParams{getMarkerParams(markerParamsFileName,
-  // "bed_markers")};
+
+  auto const bedMarkerParams = [&markerParamsFileName,
+                                useBedReference]() -> MarkerParams {
+    if (useBedReference) {
+      return getMarkerParams(markerParamsFileName, "bed_markers");
+    }
+    return {};
+  }();
+  static_cast<void>(bedMarkerParams);
 
   const double meanFocalLength{
       std::midpoint(cam.matrix.at<double>(0, 0), cam.matrix.at<double>(1, 1))};

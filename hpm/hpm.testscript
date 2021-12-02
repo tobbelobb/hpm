@@ -10,7 +10,7 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-b|--bed-reference]
 
 -h, --help                         Print this help.
 -v, --verbose                      Print rotation, translation, and reprojection_error of the found
@@ -26,6 +26,14 @@ $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-
                                    was slightly mis-detected, this option will make the program
                                    find decent values based on the other markers, and ignore the
                                    mis-detected one.
+-b, --bed-reference                If you have a set of markers on a flat background surface \("the
+                                   bed"\), and have specified bed marker positions, type, and diameter
+                                   in the marker-parameters file, then the bed reference option
+                                   will make hpm calculate effector pose relative to the bed instead
+                                   of relative to the camera. This can give more stable results
+                                   if the camera isn't completely still between measurements, and
+                                   makes measurements far less sensitive to having correct camera_translation
+                                   and camera_rotation values in the camera-parameters file.
 EOE
 
 : End-as-expected
