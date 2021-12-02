@@ -1,3 +1,4 @@
+#include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
 #include <hpm/hpm.h++>
 #include <hpm/solve-pnp.h++>
@@ -56,7 +57,9 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const marks{findMarks(finderImage, markerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const marks{findMarks(finderImage, ellipses, markerParams,
                                    {.m_showIntermediateImages = false,
                                     .m_verbose = false,
                                     .m_fitByDistance = true})};
@@ -110,7 +113,9 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const marks{findMarks(finderImage, markerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const marks{findMarks(finderImage, ellipses, markerParams,
                                    {.m_showIntermediateImages = false,
                                     .m_verbose = false,
                                     .m_fitByDistance = true})};
@@ -169,16 +174,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, 0}, false, effectorMarks)};
+                                      {0, 0, 0}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -247,16 +263,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -325,16 +352,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -404,16 +442,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -484,16 +533,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -564,16 +624,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -644,16 +715,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -727,16 +809,27 @@ auto main() -> int {
 
         FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-        auto const effectorMarks{findMarks(finderImage, effectorMarkerParams,
+        std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+        auto const effectorMarks{findMarks(finderImage, ellipses,
+                                           effectorMarkerParams,
                                            {.m_showIntermediateImages = false,
                                             .m_verbose = false,
                                             .m_fitByDistance = true})};
 
-        auto const bedMarks{findMarks(finderImage, bedMarkerParams,
+        ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                      [&](auto x) {
+                                        return find(std::begin(effectorMarks),
+                                                    std::end(effectorMarks),
+                                                    x) != end(effectorMarks);
+                                      }),
+                       std::end(ellipses));
+
+        auto const bedMarks{findMarks(finderImage, ellipses, bedMarkerParams,
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false, effectorMarks)};
+                                      {0, 0, -1}, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,

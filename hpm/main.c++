@@ -221,7 +221,6 @@ auto main(int const argc, char **const argv) -> int {
     }
     return {};
   }();
-  static_cast<void>(bedMarkerParams);
 
   const double meanFocalLength{
       std::midpoint(cam.matrix.at<double>(0, 0), cam.matrix.at<double>(1, 1))};
@@ -231,6 +230,11 @@ auto main(int const argc, char **const argv) -> int {
   if (effectorMarkerParams.m_diameter <= 0.0) {
     std::cerr << "Need a positive effector marker diameter. Can not use "
               << effectorMarkerParams.m_diameter << '\n';
+    return 1;
+  }
+  if (useBedReference and bedMarkerParams.m_diameter <= 0.0) {
+    std::cerr << "Need a positive bed marker diameter. Can not use "
+              << bedMarkerParams.m_diameter << '\n';
     return 1;
   }
 
@@ -253,32 +257,52 @@ auto main(int const argc, char **const argv) -> int {
         CameraFramedPosition{rotationMatrix * hpm::Vector3d{0.0, 0.0, 1.0}};
   }
 
-  auto const marks{findMarks(finderImage, effectorMarkerParams, finderConfig,
-                             expectedNormalDirection, tryHard)};
+  std::vector<hpm::Ellipse> ellipses{
+      ellipseDetect(undistortedImage, showIntermediateImages)};
 
-  SolvePnpPoints points{marks,
-                        effectorMarkerParams.m_diameter,
-                        finderImage.m_focalLength,
-                        finderImage.m_center,
-                        effectorMarkerParams.m_type,
-                        expectedNormalDirection};
+  auto const effectorMarks{findMarks(finderImage, ellipses,
+                                     effectorMarkerParams, finderConfig,
+                                     expectedNormalDirection, tryHard)};
+  auto const bedMarks = [&]() -> std::vector<hpm::Ellipse> {
+    if (useBedReference) {
+      ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
+                                    [&](auto x) {
+                                      return find(std::begin(effectorMarks),
+                                                  std::end(effectorMarks),
+                                                  x) != end(effectorMarks);
+                                    }),
+                     std::end(ellipses));
+      return findMarks(finderImage, ellipses, bedMarkerParams, finderConfig,
+                       expectedNormalDirection, tryHard);
+    }
+    return {};
+  }();
 
-  bool const allPointsWereIdentified{points.allIdentified()};
+  SolvePnpPoints effectorPoints{effectorMarks,
+                                effectorMarkerParams.m_diameter,
+                                finderImage.m_focalLength,
+                                finderImage.m_center,
+                                effectorMarkerParams.m_type,
+                                expectedNormalDirection};
+
+  bool const allPointsWereIdentified{effectorPoints.allIdentified()};
 
   if (allPointsWereIdentified) {
-    std::optional<SixDof> effectorPoseRelativeToCamera{solvePnp(
-        cam.matrix, effectorMarkerParams.m_providedMarkerPositions, points)};
+    std::optional<SixDof> effectorPoseRelativeToCamera{
+        solvePnp(cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
+                 effectorPoints)};
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (tryHard and (not effectorPoseRelativeToCamera.has_value() or
                      effectorPoseRelativeToCamera.value().reprojectionError >
                          HIGH_REPROJECTION_ERROR)) {
-      points =
-          SolvePnpPoints(marks, effectorMarkerParams.m_diameter,
+      effectorPoints =
+          SolvePnpPoints(effectorMarks, effectorMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,
                          effectorMarkerParams.m_type, expectedNormalDirection);
 
       effectorPoseRelativeToCamera = tryHardSolvePnp(
-          cam.matrix, effectorMarkerParams.m_providedMarkerPositions, points);
+          cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
+          effectorPoints);
     }
 
     if (effectorPoseRelativeToCamera.has_value()) {
@@ -348,8 +372,9 @@ auto main(int const argc, char **const argv) -> int {
       }
       std::cout << std::endl;
       if (showResultImage) {
-        showImage(imageWith(undistortedImage, points, worldPose.translation),
-                  "result.png");
+        showImage(
+            imageWith(undistortedImage, effectorPoints, worldPose.translation),
+            "result.png");
       }
     } else {
       std::cout << "Found no camera pose\n";
@@ -363,8 +388,8 @@ auto main(int const argc, char **const argv) -> int {
 
   if (not(allPointsWereIdentified) and verbose) {
     auto const cameraFramedPositions{findIndividualMarkerPositions(
-        marks, effectorMarkerParams.m_diameter, meanFocalLength, imageCenter,
-        effectorMarkerParams.m_type, expectedNormalDirection)};
+        effectorMarks, effectorMarkerParams.m_diameter, meanFocalLength,
+        imageCenter, effectorMarkerParams.m_type, expectedNormalDirection)};
     if (cameraFramedPositions.empty()) {
       std::cout << "No markers detected\n";
     }

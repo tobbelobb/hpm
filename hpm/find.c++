@@ -93,27 +93,14 @@ distanceGroupIndices(std::vector<hpm::CameraFramedPosition> const &positions,
   return group;
 }
 
-auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
-               FinderConfig const &config,
+auto findMarks(FinderImage const &image,
+               std::vector<hpm::Ellipse> const &ellipses,
+               MarkerParams const &markerParams, FinderConfig const &config,
                CameraFramedPosition const &expectedNormalDirection,
-               bool tryHard, std::vector<hpm::Ellipse> const &ignoreThese)
-    -> std::vector<hpm::Ellipse> {
-  std::vector<hpm::Ellipse> ellipses{
-      ellipseDetect(image.m_mat, config.m_showIntermediateImages)};
+               bool tryHard) -> std::vector<hpm::Ellipse> {
   if (ellipses.empty()) {
     return {};
   }
-
-  if (not ignoreThese.empty()) {
-    ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
-                                  [&](auto x) {
-                                    return find(std::begin(ignoreThese),
-                                                std::end(ignoreThese),
-                                                x) != end(ignoreThese);
-                                  }),
-                   std::end(ellipses));
-  }
-
   std::vector<hpm::CameraFramedPosition> positions;
   positions.reserve(ellipses.size());
   for (auto const &e : ellipses) {

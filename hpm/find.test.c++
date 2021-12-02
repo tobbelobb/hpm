@@ -1,3 +1,4 @@
+#include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
 #include <hpm/marks.h++>
 #include <hpm/test-util.h++> // getPath
@@ -74,7 +75,9 @@ auto main() -> int {
 
     FinderImage const finderImage{image, meanFocalLength, imageCenter};
 
-    auto const marks{findMarks(finderImage, markerParams,
+    std::vector<hpm::Ellipse> ellipses{ellipseDetect(image, false)};
+
+    auto const marks{findMarks(finderImage, ellipses, markerParams,
                                {.m_showIntermediateImages = false,
                                 .m_verbose = false,
                                 .m_fitByDistance = true})};
