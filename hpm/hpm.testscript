@@ -40,7 +40,7 @@ EOE
 : Checks what gets printed when run was successful
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png --no-fit-by-distance --verbose >>~/END/
 /Found \d markers/
-Could not identify markers
+Could not identify effector markers
 /\[-?\d\d?\d?\d?\.\d\d?\d?\d?, -?\d\d?\d?\d?\.\d\d?\d?\d?, -?\d\d?\d?\d?\.\d\d?\d?\d?\]/
 END
 
@@ -172,6 +172,7 @@ END
 $* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg >>~/END/
 /Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
 <camera_rotation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -180,6 +181,7 @@ $* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/exampl
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -195,6 +197,7 @@ $* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/exampl
 /Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
 Found 6 markers
 <camera_rotation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -203,6 +206,7 @@ Found 6 markers
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -220,6 +224,7 @@ END
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg --camera-position-calibration --verbose >>~/END/
 Found 6 markers
 <camera_rotation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -228,6 +233,7 @@ Found 6 markers
   </data>
 </camera_rotation>
 <camera_translation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
   <rows>3</rows>
   <cols>1</cols>
   <dt>d</dt>
@@ -243,7 +249,7 @@ END
 : Tries-to-calibrate-cam-pos-based-on-too-bad-image-nozzle-position-01
 : Checks that we have a single digit error
 $* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~%END%
-%Error: Reprojection error was \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?. That is too high for finding good camera_rotation and camera_translation values. A likely cause for the high reprojection error is that the configured camera_matrix, distortion_coefficients, and/or marker_positions don't match up well enough with what's found on the image. Another cause might be that the marker detector algorithm makes a mistake. Try re-running with '--show all' to verify if this is the case.%
+%Error: Effector reprojection error was \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, and bed reprojection error was nan. That is worse than the limit \d.?\d?\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?. Therefore we can't find good camera_rotation and camera_translation values. A likely cause for the high reprojection error is that the configured camera_matrix, distortion_coefficients, and/or marker positions don't match up well enough with what's found on the image. Another cause might be that the marker detector algorithm makes a mistake. Try re-running with '--show all' to verify if this is the case.%
 END
 
 : One-marker-completely-covered-over-case-1

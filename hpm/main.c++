@@ -285,9 +285,9 @@ auto main(int const argc, char **const argv) -> int {
                                 effectorMarkerParams.m_type,
                                 expectedNormalDirection};
 
-  bool const allPointsWereIdentified{effectorPoints.allIdentified()};
+  bool const allEffectorPointsWereIdentified{effectorPoints.allIdentified()};
 
-  if (allPointsWereIdentified) {
+  if (allEffectorPointsWereIdentified) {
     std::optional<SixDof> effectorPoseRelativeToCamera{
         solvePnp(cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
                  effectorPoints)};
@@ -299,10 +299,32 @@ auto main(int const argc, char **const argv) -> int {
           SolvePnpPoints(effectorMarks, effectorMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,
                          effectorMarkerParams.m_type, expectedNormalDirection);
-
       effectorPoseRelativeToCamera = tryHardSolvePnp(
           cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
           effectorPoints);
+    }
+
+    SolvePnpPoints bedPoints{bedMarks,
+                             bedMarkerParams.m_diameter,
+                             finderImage.m_focalLength,
+                             finderImage.m_center,
+                             bedMarkerParams.m_type,
+                             expectedNormalDirection};
+    std::optional<SixDof> bedPoseRelativeToCamera{};
+    if (useBedReference) {
+      bedPoseRelativeToCamera = solvePnp(
+          cam.matrix, bedMarkerParams.m_providedMarkerPositions, bedPoints);
+    }
+    if (useBedReference and tryHard and
+        (not bedPoseRelativeToCamera.has_value() or
+         bedPoseRelativeToCamera.value().reprojectionError >
+             HIGH_REPROJECTION_ERROR)) {
+      bedPoints =
+          SolvePnpPoints(bedMarks, bedMarkerParams.m_diameter,
+                         finderImage.m_focalLength, finderImage.m_center,
+                         bedMarkerParams.m_type, expectedNormalDirection);
+      bedPoseRelativeToCamera = tryHardSolvePnp(
+          cam.matrix, bedMarkerParams.m_providedMarkerPositions, bedPoints);
     }
 
     if (effectorPoseRelativeToCamera.has_value()) {
@@ -310,24 +332,61 @@ auto main(int const argc, char **const argv) -> int {
         try {
           if (effectorPoseRelativeToCamera.value().reprojectionError >
               HIGH_REPROJECTION_ERROR) {
-            std::cout
-                << "Error: Reprojection error was "
-                << effectorPoseRelativeToCamera.value().reprojectionError
-                << ". That is too high for finding good camera_rotation and "
-                   "camera_translation values. A likely cause for the high "
-                   "reprojection error is that the configured camera_matrix, "
-                   "distortion_coefficients, and/or marker_positions don't "
-                   "match up well enough with what's found on the image. "
-                   "Another cause might be that the marker detector "
-                   "algorithm "
-                   "makes a mistake. Try re-running with '--show all' to "
-                   "verify if this is the case.";
+            if ((not bedPoseRelativeToCamera.has_value()) or
+                bedPoseRelativeToCamera.value().reprojectionError >
+                    HIGH_REPROJECTION_ERROR) {
+              std::cout
+                  << "Error: Effector reprojection error was "
+                  << effectorPoseRelativeToCamera.value().reprojectionError
+                  << ", and bed reprojection error was "
+                  << (bedPoseRelativeToCamera.has_value()
+                          ? bedPoseRelativeToCamera.value().reprojectionError
+                          : std::nan("undefined"))
+                  << ". That is worse than the limit "
+                  << HIGH_REPROJECTION_ERROR
+                  << ". Therefore we can't find good camera_rotation and "
+                     "camera_translation values. A likely cause for the high "
+                     "reprojection error is that the configured camera_matrix, "
+                     "distortion_coefficients, and/or marker positions don't "
+                     "match up well enough with what's found on the image. "
+                     "Another cause might be that the marker detector "
+                     "algorithm "
+                     "makes a mistake. Try re-running with '--show all' to "
+                     "verify if this is the case.";
+            } else {
+              SixDof const camTranslation{
+                  effectorWorldPose( // Treat bed as an effector
+                      bedPoseRelativeToCamera.value(),
+                      {bedPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
+              std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                           "  <!-- Based on bed pose -->\n"
+                           "  <rows>3</rows>\n"
+                           "  <cols>1</cols>\n"
+                           "  <dt>d</dt>\n"
+                           "  <data>\n    "
+                        << bedPoseRelativeToCamera.value().rotation[0] << ' '
+                        << bedPoseRelativeToCamera.value().rotation[1] << ' '
+                        << bedPoseRelativeToCamera.value().rotation[2]
+                        << "\n  </data>\n"
+                           "</camera_rotation>\n"
+                           "<camera_translation type_id=\"opencv-matrix\">\n"
+                           "  <!-- Based on bed pose -->\n"
+                           "  <rows>3</rows>\n"
+                           "  <cols>1</cols>\n"
+                           "  <dt>d</dt>\n"
+                           "  <data>\n    "
+                        << -camTranslation.translation[0] << ' '
+                        << -camTranslation.translation[1] << ' '
+                        << -camTranslation.translation[2] << "\n  </data>\n"
+                        << "</camera_translation>";
+            }
           } else {
             SixDof const camTranslation{effectorWorldPose(
                 effectorPoseRelativeToCamera.value(),
                 {effectorPoseRelativeToCamera.value().rotation, {0, 0, 0}})};
 
             std::cout << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                         "  <!-- Based on effector pose -->\n"
                          "  <rows>3</rows>\n"
                          "  <cols>1</cols>\n"
                          "  <dt>d</dt>\n"
@@ -338,6 +397,7 @@ auto main(int const argc, char **const argv) -> int {
                       << "\n  </data>\n"
                          "</camera_rotation>\n"
                          "<camera_translation type_id=\"opencv-matrix\">\n"
+                         "  <!-- Based on effector pose -->\n"
                          "  <rows>3</rows>\n"
                          "  <cols>1</cols>\n"
                          "  <dt>d</dt>\n"
@@ -353,8 +413,18 @@ auto main(int const argc, char **const argv) -> int {
           std::exit(1);
         }
       }
-      SixDof const worldPose{effectorWorldPose(
-          effectorPoseRelativeToCamera.value(), cam.worldPose)};
+      auto const worldPose = [&]() -> SixDof {
+        if (useBedReference and bedPoseRelativeToCamera.has_value()) {
+          return effectorPoseRelativeToBed(effectorPoseRelativeToCamera.value(),
+                                           bedPoseRelativeToCamera.value());
+        }
+        if (useBedReference and (not bedPoseRelativeToCamera.has_value())) {
+          std::cout << "Warning: Found no bed pose. Calculating effector pose "
+                       "based on camera pose.\n";
+        }
+        return effectorWorldPose(effectorPoseRelativeToCamera.value(),
+                                 cam.worldPose);
+      }();
       if (verbose) {
         if (cameraPositionCalibration) {
           std::cout << '\n';
@@ -380,13 +450,13 @@ auto main(int const argc, char **const argv) -> int {
       std::cout << "Found no camera pose\n";
     }
   } else {
-    std::cout << "Could not identify markers" << std::endl;
+    std::cout << "Could not identify effector markers" << std::endl;
     if (showResultImage) {
       showImage(undistortedImage, "result.png");
     }
   }
 
-  if (not(allPointsWereIdentified) and verbose) {
+  if (not(allEffectorPointsWereIdentified) and verbose) {
     auto const cameraFramedPositions{findIndividualMarkerPositions(
         effectorMarks, effectorMarkerParams.m_diameter, meanFocalLength,
         imageCenter, effectorMarkerParams.m_type, expectedNormalDirection)};
