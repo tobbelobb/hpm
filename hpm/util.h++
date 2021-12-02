@@ -24,22 +24,6 @@ void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
 cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
                   hpm::Vector3d const &position);
 
-cv::Mat getSingleChannelCopy(cv::InputArray image, int channel);
-
-cv::Mat getRedCopy(cv::InputArray image);
-
-cv::Mat getGreenCopy(cv::InputArray image);
-
-cv::Mat getBlueCopy(cv::InputArray image);
-
-cv::Mat getValueChannelCopy(cv::InputArray image);
-
-cv::Mat getSaturationChannelCopy(cv::InputArray image);
-
-cv::Mat getHueChannelCopy(cv::InputArray image);
-
-cv::Mat invertedCopy(cv::InputArray image);
-
 namespace hpm {
 namespace util {
 struct EllipseProjection {

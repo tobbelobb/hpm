@@ -109,42 +109,6 @@ void showImage(cv::InputArray image, std::string const &name) {
   }
 }
 
-auto getSingleChannelCopy(cv::InputArray image, int channel) -> cv::Mat {
-  cv::Mat singleColorImage{};
-  cv::extractChannel(image, singleColorImage, channel);
-  return singleColorImage;
-}
-
-auto getRedCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 2);
-}
-
-auto getGreenCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 1);
-}
-
-auto getBlueCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 0);
-}
-
-auto getValueChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 2);
-}
-
-auto getSaturationChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 1);
-}
-
-auto getHueChannelCopy(cv::InputArray image) -> cv::Mat {
-  return getSingleChannelCopy(image, 0);
-}
-
-auto invertedCopy(cv::InputArray image) -> cv::Mat {
-  cv::Mat inverted;
-  cv::bitwise_not(image, inverted);
-  return inverted;
-}
-
 static inline auto sq(auto num) { return num * num; }
 
 auto sphereToEllipseWidthHeight(CameraFramedPosition const &sphereCenter,

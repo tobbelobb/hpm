@@ -78,7 +78,7 @@ cat <<EOI >=zero-marker-diameter.xml;
 </opencv_storage>
 EOI
 $* $src_base/example-cam-params/myExampleCamParams.xml zero-marker-diameter.xml $src_base/test-images/ball_25_84_dist_1001_08_Z.png 2>>EOE != 0
-Need a positive marker diameter. Can not use 0
+Need a positive effector marker diameter. Can not use 0
 EOE
 
 : Large-reprojection-error-warning
