@@ -11,7 +11,5 @@ ENABLE_WARNINGS
 std::vector<hpm::Ellipse> rawEllipseDetect(cv::InputArray image,
                                            bool showIntermediateImages);
 
-std::vector<hpm::Ellipse>
-ellipseDetect(cv::InputArray image, bool showIntermediateImages = false,
-              hpm::PixelPosition const &expectedTopLeftestCenter =
-                  hpm::PixelPosition(0.0, 0.0));
+std::vector<hpm::Ellipse> ellipseDetect(cv::InputArray image,
+                                        bool showIntermediateImages = false);

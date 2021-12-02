@@ -18,7 +18,7 @@
      Run/study that script if you don't know how to find your
      marker positions.
 -->
-<marker_positions type_id="opencv-matrix">
+<effector_marker_positions type_id="opencv-matrix">
   <rows>6</rows>
   <cols>3</cols>
   <dt>d</dt>
@@ -29,7 +29,7 @@
     59.13922508  139.24343034  157.67675604 <!-- Marker 3 -->
    -82.79230912  115.47456893  157.67675604 <!-- Marker 4 -->
   -160.4202408   -17.16617147  157.67675604 <!-- Marker 5 -->
-  </data></marker_positions>
+  </data></effector_marker_positions>
 <marker_diameter>31.8</marker_diameter>
 <marker_type>sphere</marker_type>
 </opencv_storage>

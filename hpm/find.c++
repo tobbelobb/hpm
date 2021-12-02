@@ -99,8 +99,7 @@ auto findMarks(FinderImage const &image, MarkerParams const &markerParams,
                bool tryHard, std::vector<hpm::Ellipse> const &ignoreThese)
     -> std::vector<hpm::Ellipse> {
   std::vector<hpm::Ellipse> ellipses{
-      ellipseDetect(image.m_mat, config.m_showIntermediateImages,
-                    markerParams.m_topLeftMarkerCenter)};
+      ellipseDetect(image.m_mat, config.m_showIntermediateImages)};
   if (ellipses.empty()) {
     return {};
   }

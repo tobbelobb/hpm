@@ -165,21 +165,15 @@ auto main(int const argc, char **const argv) -> int {
       }
       return {
           [&markerParamsFile]() {
-            ProvidedMarkerPositions providedMarkerPositions_;
-            markerParamsFile["marker_positions"] >> providedMarkerPositions_;
-            return providedMarkerPositions_;
+            ProvidedMarkerPositions effectorMarkerPositions_;
+            markerParamsFile["effector_marker_positions"] >>
+                effectorMarkerPositions_;
+            return effectorMarkerPositions_;
           }(),
           [&markerParamsFile]() {
             double markerDiameter_ = 0.0;
             markerParamsFile["marker_diameter"] >> markerDiameter_;
             return markerDiameter_;
-          }(),
-          [&markerParamsFile]() {
-            cv::Matx<double, 1, 2> topLeftMarkerCenter_(0.0, 0.0);
-            markerParamsFile["topleft_marker_center"] >> topLeftMarkerCenter_;
-            PixelPosition topLeftMarkerCenter_pp(topLeftMarkerCenter_(0),
-                                                 topLeftMarkerCenter_(1));
-            return topLeftMarkerCenter_pp;
           }(),
           [&markerParamsFile]() {
             std::string markerType_;

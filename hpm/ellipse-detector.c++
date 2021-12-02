@@ -66,32 +66,12 @@ auto rawEllipseDetect(cv::InputArray image, bool showIntermediateImages)
   return ellipses;
 }
 
-auto ellipseDetect(cv::InputArray image, bool showIntermediateImages,
-                   PixelPosition const &expectedTopLeftestCenter)
+auto ellipseDetect(cv::InputArray image, bool showIntermediateImages)
     -> std::vector<hpm::Ellipse> {
   cv::Mat imageMat{image.getMat()};
 
   std::vector<hpm::Ellipse> ellipses{
       rawEllipseDetect(image, showIntermediateImages)};
-
-  auto closerToTopLeft = [&expectedTopLeftestCenter](hpm::Ellipse const &lhs,
-                                                     hpm::Ellipse const &rhs) {
-    return cv::norm(lhs.m_center - expectedTopLeftestCenter) <
-           cv::norm(rhs.m_center - expectedTopLeftestCenter);
-  };
-  if (not ellipses.empty() and
-      expectedTopLeftestCenter != PixelPosition(0.0, 0.0)) {
-    Ellipse const topLeftest{*std::min_element(
-        std::begin(ellipses), std::end(ellipses), closerToTopLeft)};
-    PixelPosition const imageFrameShift{topLeftest.m_center -
-                                        expectedTopLeftestCenter};
-    double constexpr MAX_ACCEPTED_FRAME_SHIFT{10.0};
-    if (cv::norm(imageFrameShift) < MAX_ACCEPTED_FRAME_SHIFT) {
-      for (auto &e : ellipses) {
-        e.m_center -= imageFrameShift;
-      }
-    }
-  }
 
   // Size of a marker must be at least 1/200 of the image width
   double const sizeThresholdNominator{static_cast<double>(imageMat.cols)};

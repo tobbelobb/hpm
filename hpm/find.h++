@@ -16,7 +16,6 @@ namespace hpm {
 struct MarkerParams {
   ProvidedMarkerPositions m_providedMarkerPositions{0.0};
   double m_diameter{0.0};
-  PixelPosition m_topLeftMarkerCenter{0.0, 0.0};
   MarkerType m_type{MarkerType::SPHERE};
   CameraFramedPosition m_expectedNormalDirection{0.0, 0.0, 0.0};
 };

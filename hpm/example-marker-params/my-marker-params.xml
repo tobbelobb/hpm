@@ -6,7 +6,7 @@
 
      They are ordered in counter clockwise order starting with the
      marker to the left (negative X-direction) of the two A-markers
-     (along the site that faces towards the A-anchor):
+     (along the side that faces towards the A-anchor):
 
      We want the positions of the (centers of the) markers,
      expressed in the global coordinate system,
@@ -17,8 +17,11 @@
      the help of hp-mark/find-marker-positions/solve.py
      Run/study that script if you don't know how to find your
      marker positions.
+
+     Run the script twice, once for the effector marker positions,
+     and once for the bed marker positions, if you have those.
 -->
-<marker_positions type_id="opencv-matrix">
+<effector_marker_positions type_id="opencv-matrix">
   <rows>6</rows>
   <cols>3</cols>
   <dt>d</dt>
@@ -70,12 +73,12 @@
 <!-- -173.742  -41.445  0  Marker 5 -->
 
 <!-- New bigger markers -->
-<!--  -58.301 -119.240  164.045  Marker 0 -->
-<!--   61.676 -119.240  164.045  Marker 1 -->
-<!--  152.750  -21.920  164.045  Marker 2 -->
-<!--   47.278  167.238  164.045  Marker 3 -->
-<!--  -49.617  168.020  164.045  Marker 4 -->
-<!-- -173.701  -41.492  164.045  Marker 5 -->
+<!-- -58.301 -119.240  164.045  Marker 0 -->
+<!--  61.676 -119.240  164.045  Marker 1 -->
+<!-- 152.750  -21.920  164.045  Marker 2 -->
+<!--  47.278  167.238  164.045  Marker 3 -->
+<!-- -49.617  168.020  164.045  Marker 4 -->
+<!---173.701  -41.492  164.045  Marker 5 -->
 
 <!-- Rotated using demo numbers -->
 <!--  -48.34     -123.23      164.33 -->
@@ -86,22 +89,62 @@
 <!-- -166.99     -50.646      168.39 -->
 
 <!-- Rotated values for HP4pt2 -->
-  -54.083  -127.96  158.84
-   65.733  -130.81  153.3
-  159.27    -35.874 155.14
-   58.978   155.36  171.76
-  -37.765   158.44  176.28
- -167.26    -47.644 169
+<!--  -54.083  -127.96  158.84 -->
+<!--   65.733  -130.81  153.3 -->
+<!--  159.27    -35.874 155.14 -->
+<!--   58.978   155.36  171.76 -->
+<!--  -37.765   158.44  176.28 -->
+<!-- -167.26    -47.644 169 -->
 
-  </data></marker_positions>
-<marker_diameter>90.0</marker_diameter>
-<marker_type>disk</marker_type>
-<topleft_marker_center type_id="opencv-matrix">
-  <rows>1</rows>
-  <cols>2</cols>
+<!-- New bigger markers changed Z -->
+<!-- -58.301 -119.240  135.0   Marker 0 -->
+<!--  61.676 -119.240  135.0   Marker 1 -->
+<!-- 152.750  -21.920  135.0   Marker 2 -->
+<!--  47.278  167.238  135.0   Marker 3 -->
+<!-- -49.617  168.020  135.0   Marker 4 -->
+<!---173.701  -41.492  135.0   Marker 5 -->
+
+    <!-- rotated again -->
+    <!--  -51.024  -130.4  127.42 -->
+    <!--  68.856  -126.98  124.02 -->
+    <!--  157.29  -27.367  128.64 -->
+    <!--  46.927  158.2  145.6 -->
+    <!--  -49.91  156.22  148.39 -->
+    <!--  -168.38  -56.177  136.42 -->
+
+  -56.633  -118.73  136.16
+  63.338  -117.72  135.56
+  153.58  -19.633  134.41
+  46.509  168.62  133.54
+  -50.387  168.58  134
+  -172.69  -41.964  136.15
+  </data>
+</effector_marker_positions>
+
+<bed_marker_positions type_id="opencv-matrix">
+  <rows>6</rows>
+  <cols>3</cols>
   <dt>d</dt>
   <data>
-    0 0
+<!-- -241.536 -299.543    0.008 Marker 0 -->
+<!--   84.464 -299.543    0.008 Marker 1 -->
+<!--  322.559  -27.988    0.008 Marker 2 -->
+<!--  205.284  377.828    0.008 Marker 3 -->
+<!-- -133.732  435.505    0.008 Marker 4 -->
+<!-- -425.225  227.865    0.008 Marker 5 -->
+
+    <!-- Rotated in octave:
+      > rotz = @(angle) [cosd(angle) -sind(angle) 0; sind(angle) cosd(angle) 0; 0 0 1];
+      > (rotz(-15.747)*moved')' -->
+    -313.76401  -222.75052     0.00000
+       0.00027  -311.22346     0.00000
+     302.85757  -114.47698     0.00000
+     300.11835   307.93578     0.00000
+     -10.52182   455.45402     0.00000
+    -347.42648   334.71509     0.00000
   </data>
-</topleft_marker_center>
+</bed_marker_positions>
+
+<marker_diameter>90.0</marker_diameter>
+<marker_type>disk</marker_type>
 </opencv_storage>
