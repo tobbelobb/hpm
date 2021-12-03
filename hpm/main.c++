@@ -124,7 +124,7 @@ auto main(int const argc, char **const argv) -> int {
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
            "[-n|--no-fit-by-distance] [-c|--camera-position-calibration] "
-           "[-t|--try-hard] [-b|--bed-reference]\n";
+           "[-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference]\n";
   CommandLine args(usage.str());
 
   std::string show{};
@@ -135,6 +135,7 @@ auto main(int const argc, char **const argv) -> int {
   bool noFitByDistance{false};
   bool printHelp{false};
   bool tryHard{false};
+  bool forceTryHard{false};
   bool useBedReference{false};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
   args.addArgument({"-v", "--verbose"}, &verbose,
@@ -157,6 +158,11 @@ auto main(int const argc, char **const argv) -> int {
       "Try harder (but slower) to find a good position. If one marker was "
       "slightly mis-detected, this option will make the program find decent "
       "values based on the other markers, and ignore the mis-detected one.");
+  args.addArgument({"-f", "--force-try-hard"}, &forceTryHard,
+                   "Works like --try-hard, but will always use only the best 5 "
+                   "markers for position calculation, even if no markers were "
+                   "mis-detected. Setting both --try-hard and --force-try-hard "
+                   "has the same effect as only setting --force-try-hard.");
   args.addArgument(
       {"-b", "--bed-reference"}, &useBedReference,
       "If you have a set of markers on a flat background surface (\"the "
@@ -169,7 +175,7 @@ auto main(int const argc, char **const argv) -> int {
       "values in the camera-parameters file.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
-  constexpr unsigned int NUM_OPTIONAL_ARGS = 7;
+  constexpr unsigned int NUM_OPTIONAL_ARGS = 8;
   constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS + 1};
   constexpr int MIN_ARGC{NUM_MANDATORY_ARGS + 1};
 
@@ -201,6 +207,8 @@ auto main(int const argc, char **const argv) -> int {
   bool const fitByDistance{not noFitByDistance};
   FinderConfig const finderConfig{showIntermediateImages, verbose,
                                   fitByDistance};
+
+  tryHard = tryHard or forceTryHard;
 
   if (printHelp) {
     args.printHelp();
@@ -288,13 +296,17 @@ auto main(int const argc, char **const argv) -> int {
   bool const allEffectorPointsWereIdentified{effectorPoints.allIdentified()};
 
   if (allEffectorPointsWereIdentified) {
-    std::optional<SixDof> effectorPoseRelativeToCamera{
-        solvePnp(cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
-                 effectorPoints)};
+    std::optional<SixDof> effectorPoseRelativeToCamera{};
+    if (not forceTryHard) {
+      effectorPoseRelativeToCamera =
+          solvePnp(cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
+                   effectorPoints);
+    }
     double constexpr HIGH_REPROJECTION_ERROR{1.0};
-    if (tryHard and (not effectorPoseRelativeToCamera.has_value() or
-                     effectorPoseRelativeToCamera.value().reprojectionError >
-                         HIGH_REPROJECTION_ERROR)) {
+    if (forceTryHard or
+        (tryHard and (not effectorPoseRelativeToCamera.has_value() or
+                      effectorPoseRelativeToCamera.value().reprojectionError >
+                          HIGH_REPROJECTION_ERROR))) {
       effectorPoints =
           SolvePnpPoints(effectorMarks, effectorMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,
@@ -311,14 +323,15 @@ auto main(int const argc, char **const argv) -> int {
                              bedMarkerParams.m_type,
                              expectedNormalDirection};
     std::optional<SixDof> bedPoseRelativeToCamera{};
-    if (useBedReference) {
+    if (useBedReference and not forceTryHard) {
       bedPoseRelativeToCamera = solvePnp(
           cam.matrix, bedMarkerParams.m_providedMarkerPositions, bedPoints);
     }
-    if (useBedReference and tryHard and
-        (not bedPoseRelativeToCamera.has_value() or
-         bedPoseRelativeToCamera.value().reprojectionError >
-             HIGH_REPROJECTION_ERROR)) {
+    if (useBedReference and
+        (forceTryHard or
+         (tryHard and (not bedPoseRelativeToCamera.has_value() or
+                       bedPoseRelativeToCamera.value().reprojectionError >
+                           HIGH_REPROJECTION_ERROR)))) {
       bedPoints =
           SolvePnpPoints(bedMarks, bedMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,

@@ -10,7 +10,7 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-b|--bed-reference]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference]
 
 -h, --help                         Print this help.
 -v, --verbose                      Print rotation, translation, and reprojection_error of the found
@@ -26,6 +26,10 @@ $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-
                                    was slightly mis-detected, this option will make the program
                                    find decent values based on the other markers, and ignore the
                                    mis-detected one.
+-f, --force-try-hard               Works like --try-hard, but will always use only the best 5 markers
+                                   for position calculation, even if no markers were mis-detected.
+                                   Setting both --try-hard and --force-try-hard has the same effect
+                                   as only setting --force-try-hard.
 -b, --bed-reference                If you have a set of markers on a flat background surface \("the
                                    bed"\), and have specified bed marker positions, type, and diameter
                                    in the marker-parameters file, then the bed reference option
