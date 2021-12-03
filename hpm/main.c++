@@ -260,9 +260,9 @@ auto main(int const argc, char **const argv) -> int {
   std::vector<hpm::Ellipse> ellipses{
       ellipseDetect(undistortedImage, showIntermediateImages)};
 
-  auto const effectorMarks{findMarks(finderImage, ellipses,
-                                     effectorMarkerParams, finderConfig,
-                                     expectedNormalDirection, tryHard)};
+  auto const effectorMarks{
+      findMarks(finderImage, ellipses, effectorMarkerParams, finderConfig,
+                expectedNormalDirection, tryHard, "effector-")};
   auto const bedMarks = [&]() -> std::vector<hpm::Ellipse> {
     if (useBedReference) {
       ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
@@ -273,7 +273,7 @@ auto main(int const argc, char **const argv) -> int {
                                     }),
                      std::end(ellipses));
       return findMarks(finderImage, ellipses, bedMarkerParams, finderConfig,
-                       expectedNormalDirection, tryHard);
+                       expectedNormalDirection, tryHard, "bed-");
     }
     return {};
   }();
@@ -430,6 +430,28 @@ auto main(int const argc, char **const argv) -> int {
           std::cout << '\n';
         }
         std::cout << worldPose;
+        if (tryHard) {
+          std::cout << "\nUsed "
+                    << std::count_if(std::begin(effectorPoints.m_identified),
+                                     std::end(effectorPoints.m_identified),
+                                     std::identity())
+                    << " identified effector markers";
+          if (useBedReference and bedPoseRelativeToCamera.has_value()) {
+            std::cout << "\nUsed "
+                      << std::count_if(std::begin(bedPoints.m_identified),
+                                       std::end(bedPoints.m_identified),
+                                       std::identity())
+                      << " identified bed markers";
+          }
+        }
+        if (useBedReference and effectorPoseRelativeToCamera.has_value()) {
+          std::cout << "\nEffector reprojection error: "
+                    << effectorPoseRelativeToCamera.value().reprojectionError;
+          if (bedPoseRelativeToCamera.has_value()) {
+            std::cout << "\nBed reprojection error: "
+                      << bedPoseRelativeToCamera.value().reprojectionError;
+          }
+        }
       }
       if (not verbose and not cameraPositionCalibration) {
         std::cout << worldPose.translation << ";";
@@ -442,9 +464,15 @@ auto main(int const argc, char **const argv) -> int {
       }
       std::cout << std::endl;
       if (showResultImage) {
-        showImage(
-            imageWith(undistortedImage, effectorPoints, worldPose.translation),
-            "result.png");
+        if (useBedReference) {
+          showImage(imageWith(undistortedImage, effectorPoints, bedPoints,
+                              worldPose.translation),
+                    "result_w_bed.png");
+        } else {
+          showImage(imageWith(undistortedImage, effectorPoints,
+                              worldPose.translation),
+                    "result.png");
+        }
       }
     } else {
       std::cout << "Found no camera pose\n";

@@ -72,6 +72,40 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
               TEXT_SIZE, WHITE, LINE_WIDTH);
 }
 
+void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points) {
+  cv::Mat imageMat{image.getMat()};
+  int constexpr LINE_WIDTH{2};
+  int constexpr LINE_WIDTH_BOLD{7};
+  double constexpr TEXT_OFFSET{5.0};
+  double constexpr TEXT_SIZE{2.0};
+  for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
+    if (not points.m_identified[i]) {
+      auto const pos{points.get(i)};
+      cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH_BOLD);
+      cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH_BOLD);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, RED, LINE_WIDTH);
+    }
+  }
+  for (size_t i{0}; i < points.m_pixelPositions.size(); ++i) {
+    if (points.m_identified[i]) {
+      auto const pos{points.get(i)};
+      cv::circle(image, pos, LINE_WIDTH, WHITE, LINE_WIDTH_BOLD);
+      cv::circle(image, pos, LINE_WIDTH, RED, LINE_WIDTH);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH_BOLD);
+      cv::putText(image, std::to_string(i + 1),
+                  pos + cv::Point2d(TEXT_OFFSET, TEXT_OFFSET),
+                  cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH);
+    }
+  }
+}
+
 auto imageWith(cv::InputArray image, std::vector<Ellipse> const &marks)
     -> cv::Mat {
   cv::Mat imageCopy{};
@@ -85,6 +119,16 @@ auto imageWith(cv::InputArray image, SolvePnpPoints const &points,
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
   draw(imageCopy, points, position);
+  return imageCopy;
+}
+
+auto imageWith(cv::InputArray image, hpm::SolvePnpPoints const &effectorPoints,
+               hpm::SolvePnpPoints const &bedPoints,
+               hpm::Vector3d const &position) -> cv::Mat {
+  cv::Mat imageCopy{};
+  image.copyTo(imageCopy);
+  draw(imageCopy, bedPoints);
+  draw(imageCopy, effectorPoints, position);
   return imageCopy;
 }
 
@@ -105,7 +149,8 @@ void showImage(cv::InputArray image, std::string const &name) {
       if (key == 'q') {
         userWantsMoreImages = false;
       }
-    } while (key != 's' and key != 'q' and key != '\r' and key != '\n');
+    } while (key != 's' and key != 'q' and key != '\r' and key != '\n' and
+             key != 141); // 141 (reverse line feed) is my numpad Enter...
   }
 }
 

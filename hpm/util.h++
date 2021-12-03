@@ -21,6 +21,13 @@ void draw(cv::InputOutputArray image, std::vector<hpm::Ellipse> const &marks);
 void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
           hpm::Vector3d const &position);
 
+void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points);
+
+cv::Mat imageWith(cv::InputArray image,
+                  hpm::SolvePnpPoints const &effectorPoints,
+                  hpm::SolvePnpPoints const &bedPoints,
+                  hpm::Vector3d const &position);
+
 cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
                   hpm::Vector3d const &position);
 

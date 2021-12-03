@@ -97,7 +97,8 @@ auto findMarks(FinderImage const &image,
                std::vector<hpm::Ellipse> const &ellipses,
                MarkerParams const &markerParams, FinderConfig const &config,
                CameraFramedPosition const &expectedNormalDirection,
-               bool tryHard) -> std::vector<hpm::Ellipse> {
+               bool tryHard, std::string const identifier)
+    -> std::vector<hpm::Ellipse> {
   if (ellipses.empty()) {
     return {};
   }
@@ -148,9 +149,9 @@ auto findMarks(FinderImage const &image,
     for (auto const &ellipse : distanceGroupFiltered) {
       draw(cpy, ellipse, AQUA);
     }
-    std::string imageName{"distance-group-filtered-ones.png"};
+    std::string imageName{identifier + "distance-group-filtered-ones.png"};
     if (tryHard) {
-      imageName = "distance-group-filtered-ones-try-hard.png";
+      imageName = identifier + "distance-group-filtered-ones-try-hard.png";
     }
     showImage(cpy, imageName);
   }
@@ -221,9 +222,9 @@ auto findMarks(FinderImage const &image,
         draw(cpy, mark, AQUA);
       }
 
-      std::string imageName{"total-distance-filtered-ones.png"};
+      std::string imageName{identifier + "total-distance-filtered-ones.png"};
       if (tryHard) {
-        imageName = "total-distance-filtered-ones-try-hard.png";
+        imageName = identifier + "total-distance-filtered-ones-try-hard.png";
       }
       showImage(cpy, imageName);
     }
