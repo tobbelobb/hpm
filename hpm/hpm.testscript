@@ -10,7 +10,7 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference] [-r|--reprojection-error-limit <value>]
 
 -h, --help                         Print this help.
 -v, --verbose                      Print rotation, translation, and reprojection_error of the found
@@ -38,6 +38,8 @@ $0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-
                                    if the camera isn't completely still between measurements, and
                                    makes measurements far less sensitive to having correct camera_translation
                                    and camera_rotation values in the camera-parameters file.
+-r, --reprojection-error-limit     <number>. Default is 1.0. A lower number rejects more unceirtain
+                                   results. A higher number accepts more unceirtain results.
 EOE
 
 : End-as-expected
@@ -298,7 +300,7 @@ END
 
 : Bed-markers-try-hard-case-1
 : Checks that we use 5 bed markers in a difficult case
-$* $src_base/example-cam-params/loDistCamParams2.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/bed_markers_test_try_hard.jpg --try-hard --verbose --bed-reference >>~/END/
+$* $src_base/example-cam-params/loDistCamParams2.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/bed_markers_test_try_hard.jpg --try-hard --verbose --bed-reference --reprojection-error-limit 0.27 >>~/END/
 Found 6 markers
 Found 6 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/

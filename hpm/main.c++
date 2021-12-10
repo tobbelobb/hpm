@@ -124,7 +124,8 @@ auto main(int const argc, char **const argv) -> int {
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
            "[-n|--no-fit-by-distance] [-c|--camera-position-calibration] "
-           "[-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference]\n";
+           "[-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference] "
+           "[-r|--reprojection-error-limit <value>]\n";
   CommandLine args(usage.str());
 
   std::string show{};
@@ -137,6 +138,7 @@ auto main(int const argc, char **const argv) -> int {
   bool tryHard{false};
   bool forceTryHard{false};
   bool useBedReference{false};
+  double reprojectionErrorLimit{1.0};
   args.addArgument({"-h", "--help"}, &printHelp, "Print this help.");
   args.addArgument({"-v", "--verbose"}, &verbose,
                    "Print rotation, translation, and reprojection_error of the "
@@ -173,10 +175,16 @@ auto main(int const argc, char **const argv) -> int {
       "completely still between measurements, and makes measurements far less "
       "sensitive to having correct camera_translation and camera_rotation "
       "values in the camera-parameters file.");
+  args.addArgument(
+      {"-r", "--reprojection-error-limit"}, &reprojectionErrorLimit,
+      "<number>. Default is 1.0. A lower number rejects more unceirtain "
+      "results. A higher number accepts more unceirtain results.");
 
   constexpr unsigned int NUM_MANDATORY_ARGS = 3;
-  constexpr unsigned int NUM_OPTIONAL_ARGS = 8;
-  constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS + 1};
+  constexpr unsigned int NUM_OPTIONAL_ARGS = 9;
+  constexpr unsigned int NUM_OPTIONAL_VALS = 2;
+  constexpr int MAX_ARGC{NUM_MANDATORY_ARGS + NUM_OPTIONAL_ARGS +
+                         NUM_OPTIONAL_VALS + 1};
   constexpr int MIN_ARGC{NUM_MANDATORY_ARGS + 1};
 
   if (argc < MIN_ARGC or argc > MAX_ARGC) {
@@ -302,11 +310,10 @@ auto main(int const argc, char **const argv) -> int {
           solvePnp(cam.matrix, effectorMarkerParams.m_providedMarkerPositions,
                    effectorPoints);
     }
-    double constexpr HIGH_REPROJECTION_ERROR{1.0};
     if (forceTryHard or
         (tryHard and (not effectorPoseRelativeToCamera.has_value() or
                       effectorPoseRelativeToCamera.value().reprojectionError >
-                          HIGH_REPROJECTION_ERROR))) {
+                          reprojectionErrorLimit))) {
       effectorPoints =
           SolvePnpPoints(effectorMarks, effectorMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,
@@ -331,7 +338,7 @@ auto main(int const argc, char **const argv) -> int {
         (forceTryHard or
          (tryHard and (not bedPoseRelativeToCamera.has_value() or
                        bedPoseRelativeToCamera.value().reprojectionError >
-                           HIGH_REPROJECTION_ERROR)))) {
+                           reprojectionErrorLimit)))) {
       bedPoints =
           SolvePnpPoints(bedMarks, bedMarkerParams.m_diameter,
                          finderImage.m_focalLength, finderImage.m_center,
@@ -344,10 +351,10 @@ auto main(int const argc, char **const argv) -> int {
       if (cameraPositionCalibration) {
         try {
           if (effectorPoseRelativeToCamera.value().reprojectionError >
-              HIGH_REPROJECTION_ERROR) {
+              reprojectionErrorLimit) {
             if ((not bedPoseRelativeToCamera.has_value()) or
                 bedPoseRelativeToCamera.value().reprojectionError >
-                    HIGH_REPROJECTION_ERROR) {
+                    reprojectionErrorLimit) {
               std::cout
                   << "Error: Effector reprojection error was "
                   << effectorPoseRelativeToCamera.value().reprojectionError
@@ -355,8 +362,7 @@ auto main(int const argc, char **const argv) -> int {
                   << (bedPoseRelativeToCamera.has_value()
                           ? bedPoseRelativeToCamera.value().reprojectionError
                           : std::nan("undefined"))
-                  << ". That is worse than the limit "
-                  << HIGH_REPROJECTION_ERROR
+                  << ". That is worse than the limit " << reprojectionErrorLimit
                   << ". Therefore we can't find good camera_rotation and "
                      "camera_translation values. A likely cause for the high "
                      "reprojection error is that the configured camera_matrix, "
@@ -469,9 +475,8 @@ auto main(int const argc, char **const argv) -> int {
       if (not verbose and not cameraPositionCalibration) {
         std::cout << worldPose.translation << ";";
       }
-      double constexpr HIGH_REPROJECTION_ERROR{1.0};
       if (not(cameraPositionCalibration) and
-          worldPose.reprojectionError > HIGH_REPROJECTION_ERROR) {
+          worldPose.reprojectionError > reprojectionErrorLimit) {
         std::cout << " Warning! High reprojection error: "
                   << worldPose.reprojectionError;
       }
