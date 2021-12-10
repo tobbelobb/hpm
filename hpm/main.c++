@@ -331,8 +331,10 @@ auto main(int const argc, char **const argv) -> int {
                              expectedNormalDirection};
     std::optional<SixDof> bedPoseRelativeToCamera{};
     if (useBedReference and not forceTryHard) {
-      bedPoseRelativeToCamera = solvePnp(
-          cam.matrix, bedMarkerParams.m_providedMarkerPositions, bedPoints);
+      if (bedPoints.allIdentified()) {
+        bedPoseRelativeToCamera = solvePnp(
+            cam.matrix, bedMarkerParams.m_providedMarkerPositions, bedPoints);
+      }
     }
     if (useBedReference and
         (forceTryHard or

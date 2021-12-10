@@ -229,8 +229,8 @@ auto findMarks(FinderImage const &image,
       showImage(cpy, imageName);
     }
   } else {
-    for (auto const &e : ellipses) {
-      marks.emplace_back(e);
+    for (auto const &i : validEllipseIndices) {
+      marks.emplace_back(ellipses[i]);
     }
   }
 
