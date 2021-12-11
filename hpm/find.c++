@@ -1,5 +1,6 @@
 #include <hpm/ellipse-detector.h++>
 #include <hpm/find.h++>
+#include <hpm/marks.h++>
 #include <hpm/util.h++>
 
 #include <hpm/warnings-disabler.h++>
@@ -126,11 +127,35 @@ auto findMarks(FinderImage const &image,
 
   std::vector<size_t> validEllipseIndices{
       distanceGroupIndices(positions, ellipses, bubbleSizeLimit)};
+  if (validEllipseIndices.size() < NUMBER_OF_MARKERS and
+      (not validEllipseIndices.empty()) and
+      ellipses.size() >= NUMBER_OF_MARKERS - 1) {
+    validEllipseIndices.clear();
+    for (size_t i{0}; i < ellipses.size(); ++i) {
+      validEllipseIndices.emplace_back(i);
+    }
+  }
+
   if (tryHard and validEllipseIndices.empty()) {
     for (size_t i{0}; i < ellipses.size(); ++i) {
       validEllipseIndices.emplace_back(i);
     }
   }
+
+  if (markerParams.m_type == MarkerType::DISK) {
+    double constexpr MIN_NORMAL_CLOSENESS = 0.93;
+    validEllipseIndices.erase(
+        std::remove_if(
+            std::begin(validEllipseIndices), std::end(validEllipseIndices),
+            [&](auto const idx) -> bool {
+              return std::abs(expectedNormalDirection.dot(diskProjToNormal(
+                         ellipses[idx], markerParams.m_diameter,
+                         image.m_focalLength, image.m_center,
+                         expectedNormalDirection))) < MIN_NORMAL_CLOSENESS;
+            }),
+        validEllipseIndices.end());
+  }
+
   size_t doublettes{0};
   if (tryHard and validEllipseIndices.size() == NUMBER_OF_MARKERS - 1) {
     // Insert a doublette as a workaround.
@@ -156,11 +181,11 @@ auto findMarks(FinderImage const &image,
     showImage(cpy, imageName);
   }
 
-  std::vector<std::array<size_t, NUMBER_OF_MARKERS>> const candidateSixtuples{
-      extractSixtuples(validEllipseIndices)};
-
-  size_t bestSixtupleIdx{0UL};
-  if (candidateSixtuples.size() > 1) {
+  std::array<size_t, NUMBER_OF_MARKERS> bestSixtuple{};
+  if (validEllipseIndices.size() >= NUMBER_OF_MARKERS) {
+    std::vector<std::array<size_t, NUMBER_OF_MARKERS>> candidateSixtuples{
+        extractSixtuples(validEllipseIndices)};
+    size_t bestSixtupleIdx{0UL};
     std::vector<std::vector<double>> distvs;
     distvs.reserve(candidateSixtuples.size());
     for (auto const &sixtuple : candidateSixtuples) {
@@ -209,11 +234,13 @@ auto findMarks(FinderImage const &image,
 
     bestSixtupleIdx = static_cast<size_t>(std::distance(
         std::begin(errs), std::min_element(std::begin(errs), std::end(errs))));
+    bestSixtuple = candidateSixtuples[bestSixtupleIdx];
   }
 
   std::vector<hpm::Ellipse> marks;
-  if (config.m_fitByDistance and not candidateSixtuples.empty()) {
-    for (auto const &ellipseIndex : candidateSixtuples[bestSixtupleIdx]) {
+  if (config.m_fitByDistance and
+      validEllipseIndices.size() >= NUMBER_OF_MARKERS) {
+    for (auto const &ellipseIndex : bestSixtuple) {
       marks.emplace_back(ellipses[ellipseIndex]);
     }
     if (config.m_showIntermediateImages) {

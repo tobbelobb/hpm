@@ -15,12 +15,13 @@ ENABLE_WARNINGS
 namespace hpm {
 using PixelPosition = cv::Point2d;
 
-// using CameraFramedPosition = cv::Point3d;
 class CameraFramedPosition : public cv::Point3d {
 public:
   CameraFramedPosition(double x, double y, double z) : cv::Point3d(x, y, z){};
   CameraFramedPosition(cv::Point3d const &point) : cv::Point3d(point){};
 };
+
+using CameraFramedVector = CameraFramedPosition;
 
 class WorldPosition : public cv::Point3d {
 public:

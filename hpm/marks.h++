@@ -25,14 +25,19 @@ CameraFramedPosition sphereProjToPosition(Ellipse const &sphereProjection,
 
 struct TwoPoses {
   CameraFramedPosition center0;
-  CameraFramedPosition normal0;
+  CameraFramedVector normal0;
   CameraFramedPosition center1;
-  CameraFramedPosition normal1;
+  CameraFramedVector normal1;
 };
 
 TwoPoses diskProjToTwoPoses(Ellipse const &diskProjection, double diskDiameter,
                             double focalLength,
                             PixelPosition const &imageCenter);
+
+CameraFramedVector
+diskProjToNormal(Ellipse const &diskProjection, double const diskDiameter,
+                 double focalLength, PixelPosition const &imageCenter,
+                 hpm::CameraFramedPosition const &expectedNormalDirection);
 
 CameraFramedPosition
 diskProjToPosition(Ellipse const &diskProjection, double diskDiameter,

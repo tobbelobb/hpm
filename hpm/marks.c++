@@ -328,11 +328,6 @@ auto hpm::diskProjToPosition(
     -> CameraFramedPosition {
   TwoPoses const candidates{diskProjToTwoPoses(diskProjection, diskDiameter,
                                                focalLength, imageCenter)};
-  // std::cout << "candidates=" << '\n'
-  //          << candidates.center0 << '\n'
-  //          << candidates.normal0 << '\n'
-  //          << candidates.center1 << '\n'
-  //          << candidates.normal1 << '\n';
   double constexpr EPS{1e-9};
   if (cv::norm(expectedNormalDirection) < EPS or
       (std::abs(expectedNormalDirection.dot(candidates.normal0)) >
@@ -340,6 +335,22 @@ auto hpm::diskProjToPosition(
     return candidates.center0;
   }
   return candidates.center1;
+}
+
+auto hpm::diskProjToNormal(
+    Ellipse const &diskProjection, double const diskDiameter,
+    double focalLength, PixelPosition const &imageCenter,
+    hpm::CameraFramedPosition const &expectedNormalDirection)
+    -> CameraFramedVector {
+  TwoPoses const candidates{diskProjToTwoPoses(diskProjection, diskDiameter,
+                                               focalLength, imageCenter)};
+  double constexpr EPS{1e-9};
+  if (cv::norm(expectedNormalDirection) < EPS or
+      (std::abs(expectedNormalDirection.dot(candidates.normal0)) >
+       std::abs(expectedNormalDirection.dot(candidates.normal1)))) {
+    return candidates.normal0;
+  }
+  return candidates.normal1;
 }
 
 auto hpm::diskProjToTwoPoses(Ellipse const &diskProjection,

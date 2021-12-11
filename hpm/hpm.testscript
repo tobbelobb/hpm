@@ -316,11 +316,12 @@ END
 : Checks that 7 ellipses with less than 6 valid ones doesn't crash hpm
 $* $src_base/example-cam-params/loDistCamParams2.xml $src_base/example-marker-params/my-marker-params.xml $src_base/test-images/exception-bedref-0.jpg --verbose --bed-reference --try-hard >>~/END/
 Found 6 markers
-Found 3 markers
-Warning: Found no bed pose. Calculating effector pose based on camera pose.
+Found 5 markers
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
 /0\..*/
 Used 6 identified effector markers
+Used 5 identified bed markers
 /Effector reprojection error: 0\..*/
+/Bed reprojection error: 0\..*/
 END
