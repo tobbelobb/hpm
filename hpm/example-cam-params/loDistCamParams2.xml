@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibration_time>"Mon Mar 29 16:00:38 2021"</calibration_time>
+<image_width>3280</image_width>
+<image_height>2464</image_height>
+<flags>0</flags>
+<camera_matrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    3.4717009262968545e+03 0. 1.7973268123244234e+03 0.
+    3.4535880516077059e+03 1.1803549007270674e+03 0. 0. 1.
+  </data>
+</camera_matrix>
+<distortion_coefficients type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    4.0732578525265836e-02 -8.3352498006010661e-02
+    -1.0392491734528162e-04 1.2074055187115691e-03
+    7.8910092410610366e-02
+    <!--0 0 0 0 0-->
+  </data>
+</distortion_coefficients>
+<avg_reprojection_error>3.4367002757182763e-01</avg_reprojection_error>
+<camera_rotation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    <!-- 2.5509 1.38097 -0.117635-->
+    <!-- 2.55143 1.38103 -0.117087-->
+    <!-- 2.55215 1.38157 -0.115923-->
+    <!-- 2.55037 1.31179 -0.147443-->
+    <!-- 2.56918 1.33948 -0.142847-->
+    <!-- 2.56862 1.32911 -0.145982-->
+    <!-- 2.56968 1.32426 -0.145757-->
+    <!-- 2.59197 1.30635 -0.118471-->
+    <!-- 2.54829 1.36378 -0.148593-->
+    <!-- 2.52382 1.40499 -0.184974 Rotated SET 4, basic_check_set_4/0001.jpg -->
+    <!--2.55893 1.36503 -0.162806  Calibration with better software calibrate_w_bash_1/0001.jpg -->
+    <!-- 2.55893 1.36503 -0.162806 Calibration with origin at marker's height -->
+    <!-- 2.56259 1.36608 -0.161576 Calibrate w bash 2 -->
+    <!-- 2.56902 1.35898 -0.157766 Prep for vase print apr 18 -->
+    <!-- 2.65917 1.33243 -0.198137 First calib of HP4pt2 -->
+    <!-- 2.67826 1.15187 -0.217519 -->
+    <!-- 2.73246 1.20743 -0.197657 -->
+    <!-- 2.64502 1.1528 -0.230031 -->
+    <!--2.55705 1.16741 -0.224205 -->
+    <!--2.64373 1.15317 -0.230528-->
+    <!-- 2.64936 1.15293 -0.238077 -->
+    2.62224 1.15454 -0.211059
+  </data>
+</camera_rotation>
+<camera_translation type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    <!--578.465 -347.419 2577.56-->
+    <!--577.461 -347.384 2578.36-->
+    <!--574.954 -346.646 2579.8-->
+    <!--580.652 -347.415 2572.85-->
+    <!--577.364 -344.316 2577.97-->
+    <!--587.45 -368.064 2577.8-->
+    <!--584.164 -353.494 2578.8-->
+    <!-- 572.771 -327.477 2579.28 -->
+    <!-- 573.749 -363.998 2576.73-->
+    <!-- 636.14 -320.49 2569.7 Rotated SET 4, basic_check_set_4/0001.jpg -->
+    <!-- 579.092 -330.051 2580.8  Calibration with better software calibrate_w_bash_1/0001.jpg -->
+    <!-- 579.092 -330.051 2416.8  Calibration with origin at marker's height -->
+    <!--570.203 -323.833 2585.24  Calibrate w bash 2 -->
+    <!-- 562.854 -321.978 2587.59 Prep for vase print apr 18 -->
+    <!-- 616.287 -207.587 2593.02 First calib of HP4pt2 -->
+    <!-- 690.545 -355.682 2574.87 -->
+    <!-- 587.911 -204.663 2559.04 -->
+    <!-- 587.326 -198.645 2559.18 -->
+    <!-- 663.697 -366.694 2520.98 -->
+    <!-- 604.899 -195.154 2557.76 -->
+    <!-- 611.602 -172.568 2557.38 -->
+    589.082 -247.637 2548.24
+  </data>
+</camera_translation>
+</opencv_storage>
