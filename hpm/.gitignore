@@ -4,5 +4,4 @@ test-hpm
 # test binaries
 *.test
 *.test.manual
-example-cam-params/loDistCamParams2.xml
 example-cam-params/myExampleCamParams_half_size.xml
