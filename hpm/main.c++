@@ -427,6 +427,36 @@ auto main(int const argc, char **const argv) -> int {
                       << -camTranslation.translation[1] << ' '
                       << -camTranslation.translation[2] << "\n  </data>\n"
                       << "</camera_translation>";
+          
+              std::ofstream file ("myCamExtParams.xml");
+          	
+          	if (file.is_open()) {
+          		  file << "<?xml version='1.0'?>\n";
+			          file << "<opencv_storage>\n";
+          		  file << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                         "  <rows>3</rows>\n"
+                         "  <cols>1</cols>\n"
+                         "  <dt>d</dt>\n"
+                         "  <data>\n    "
+                      << effectorPoseRelativeToCamera.value().rotation[0] << ' '
+                      << effectorPoseRelativeToCamera.value().rotation[1] << ' '
+                      << effectorPoseRelativeToCamera.value().rotation[2]
+                      << "\n  </data>\n"
+                         "</camera_rotation>\n"
+                         "<camera_translation type_id=\"opencv-matrix\">\n"
+                         "  <rows>3</rows>\n"
+                         "  <cols>1</cols>\n"
+                         "  <dt>d</dt>\n"
+                         "  <data>\n    "
+                      << -camTranslation.translation[0] << ' '
+                      << -camTranslation.translation[1] << ' '
+                      << -camTranslation.translation[2] << "\n  </data>\n"
+                      << "</camera_translation>\n";
+                      	file << "</opencv_storage>";
+          		  file.close();
+          	} else {
+          		  std::cout << "Unable to open file";
+          	}
           }
         } catch (std::exception const &e) {
           std::cerr << "Catch\n";
