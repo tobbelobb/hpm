@@ -19,7 +19,8 @@
     _Pragma("GCC diagnostic ignored \"-Wsign-conversion\"") \
     _Pragma("GCC diagnostic ignored \"-Wdouble-promotion\"") \
     _Pragma("GCC diagnostic ignored \"-Wfloat-conversion\"") \
-    _Pragma("GCC diagnostic ignored \"-Woverloaded-virtual\"")
+    _Pragma("GCC diagnostic ignored \"-Woverloaded-virtual\"") \
+    _Pragma("GCC diagnostic ignored \"-Wdeprecated-enum-enum-conversion\"")
 #elif defined(_MSC_VER)
   #define DISABLE_WARNINGS \
     __pragma("warning(push, 0)")

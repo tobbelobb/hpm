@@ -19,6 +19,7 @@ ENABLE_WARNINGS
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -427,9 +428,9 @@ auto main(int const argc, char **const argv) -> int {
                       << -camTranslation.translation[1] << ' '
                       << -camTranslation.translation[2] << "\n  </data>\n"
                       << "</camera_translation>";
-          
+
               std::ofstream file ("myCamExtParams.xml");
-          	
+
           	if (file.is_open()) {
           		  file << "<?xml version='1.0'?>\n";
 			          file << "<opencv_storage>\n";
