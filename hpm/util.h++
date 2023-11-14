@@ -21,6 +21,12 @@ void draw(cv::InputOutputArray image, std::vector<hpm::Ellipse> const &marks);
 void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points,
           hpm::Vector3d const &position);
 
+void draw(cv::InputOutputArray image, double effectorReprojectionError,
+          double reprojectionErrorLimit);
+
+void draw(cv::InputOutputArray image, double effectorReprojectionError,
+          double bedReprojectionError, double reprojectionErrorLimit);
+
 void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points);
 
 cv::Mat imageWith(cv::InputArray image,
@@ -28,8 +34,20 @@ cv::Mat imageWith(cv::InputArray image,
                   hpm::SolvePnpPoints const &bedPoints,
                   hpm::Vector3d const &position);
 
+cv::Mat imageWith(cv::InputArray image,
+                  hpm::SolvePnpPoints const &effectorPoints,
+                  hpm::SolvePnpPoints const &bedPoints,
+                  hpm::Vector3d const &position,
+                  double effectorReprojectionError, double bedReprojectionError,
+                  double reprojectionErrorLimit);
+
 cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
                   hpm::Vector3d const &position);
+
+cv::Mat imageWith(cv::InputArray image, hpm::SolvePnpPoints const &points,
+                  hpm::Vector3d const &positioe,
+                  double effectorReprojectionError,
+                  double reprojectionErrorLimit);
 
 namespace hpm {
 namespace util {

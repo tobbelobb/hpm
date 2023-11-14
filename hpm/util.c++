@@ -72,6 +72,69 @@ void draw(cv::InputOutputArray image, SolvePnpPoints const &points,
               TEXT_SIZE, WHITE, LINE_WIDTH);
 }
 
+void draw(cv::InputOutputArray image, double effectorReprojectionError,
+          double reprojectionErrorLimit) {
+  int constexpr LINE_WIDTH{2};
+  int constexpr LINE_WIDTH_BOLD{7};
+  int constexpr LINE_HEIGHT{100};
+  double constexpr TEXT_SIZE{2.0};
+  cv::Mat imageMat{image.getMat()};
+  int const posRow{200};
+  int const posCol{200};
+  std::stringstream ss;
+  ss << "Effector reproj err: " << std::setprecision(2) << std::fixed
+     << effectorReprojectionError;
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, WHITE, LINE_WIDTH);
+  if (effectorReprojectionError > reprojectionErrorLimit) {
+    ss.clear();
+    ss.str("");
+    ss << "Warning! High reprojection error.";
+    cv::putText(image, ss.str(), {posCol, posRow + LINE_HEIGHT},
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+    cv::putText(image, ss.str(), {posCol, posRow + LINE_HEIGHT},
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, RED, LINE_WIDTH);
+  }
+}
+
+void draw(cv::InputOutputArray image, double effectorReprojectionError,
+          double bedReprojectionError, double reprojectionErrorLimit) {
+  int constexpr LINE_WIDTH{2};
+  int constexpr LINE_WIDTH_BOLD{7};
+  int constexpr LINE_HEIGHT{100};
+  double constexpr TEXT_SIZE{2.0};
+  cv::Mat imageMat{image.getMat()};
+  int const posRow{200};
+  int const posCol{200};
+  std::stringstream ss;
+  ss << "Effector reproj err: " << std::setprecision(2) << std::fixed
+     << effectorReprojectionError;
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+  cv::putText(image, ss.str(), {posCol, posRow}, cv::FONT_HERSHEY_TRIPLEX,
+              TEXT_SIZE, WHITE, LINE_WIDTH);
+  ss.clear();
+  ss.str("");
+  ss << "Bed reproj err: " << std::setprecision(2) << std::fixed
+     << bedReprojectionError;
+  cv::putText(image, ss.str(), {posCol, posRow + LINE_HEIGHT},
+              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+  cv::putText(image, ss.str(), {posCol, posRow + LINE_HEIGHT},
+              cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, WHITE, LINE_WIDTH);
+  if (bedReprojectionError > reprojectionErrorLimit or
+      effectorReprojectionError > reprojectionErrorLimit) {
+    ss.clear();
+    ss.str("");
+    ss << "Warning! High reprojection error.";
+    cv::putText(image, ss.str(), {posCol, posRow + 2 * LINE_HEIGHT},
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, BLACK, LINE_WIDTH_BOLD);
+    cv::putText(image, ss.str(), {posCol, posRow + 2 * LINE_HEIGHT},
+                cv::FONT_HERSHEY_TRIPLEX, TEXT_SIZE, RED, LINE_WIDTH);
+  }
+}
+
 void draw(cv::InputOutputArray image, hpm::SolvePnpPoints const &points) {
   cv::Mat imageMat{image.getMat()};
   int constexpr LINE_WIDTH{2};
@@ -122,11 +185,35 @@ auto imageWith(cv::InputArray image, SolvePnpPoints const &points,
   return imageCopy;
 }
 
+auto imageWith(cv::InputArray image, SolvePnpPoints const &points,
+               hpm::Vector3d const &position, double effectorReprojectionError,
+               double reprojectionErrorLimit) -> cv::Mat {
+  cv::Mat imageCopy{};
+  image.copyTo(imageCopy);
+  draw(imageCopy, effectorReprojectionError, reprojectionErrorLimit);
+  draw(imageCopy, points, position);
+  return imageCopy;
+}
+
 auto imageWith(cv::InputArray image, hpm::SolvePnpPoints const &effectorPoints,
                hpm::SolvePnpPoints const &bedPoints,
                hpm::Vector3d const &position) -> cv::Mat {
   cv::Mat imageCopy{};
   image.copyTo(imageCopy);
+  draw(imageCopy, bedPoints);
+  draw(imageCopy, effectorPoints, position);
+  return imageCopy;
+}
+
+auto imageWith(cv::InputArray image, hpm::SolvePnpPoints const &effectorPoints,
+               hpm::SolvePnpPoints const &bedPoints,
+               hpm::Vector3d const &position, double effectorReprojectionError,
+               double bedReprojectionError, double reprojectionErrorLimit)
+    -> cv::Mat {
+  cv::Mat imageCopy{};
+  image.copyTo(imageCopy);
+  draw(imageCopy, effectorReprojectionError, bedReprojectionError,
+       reprojectionErrorLimit);
   draw(imageCopy, bedPoints);
   draw(imageCopy, effectorPoints, position);
   return imageCopy;

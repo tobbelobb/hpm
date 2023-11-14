@@ -34,12 +34,9 @@ class XMLMerger:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-f1", "--xmlC", required=False,
-                    help="path to the internal cam params XML file")
-    ap.add_argument("-f2", "--xmlM", required=False,
-                    help="path to the markers params XML file")
-    ap.add_argument("-f3", "--image", required=False,
-                    help="path to the input image which will be analyzed")
+    ap.add_argument("-f1", "--xmlC", required=False, help="path to the internal cam params XML file")
+    ap.add_argument("-f2", "--xmlM", required=False, help="path to the markers params XML file")
+    ap.add_argument("-f3", "--image", required=False, help="path to the input image which will be analyzed")
     args = vars(ap.parse_args())
 
     xmlC = None
@@ -48,7 +45,7 @@ def main():
 
     print()
 
-    if (len(sys.argv) > 3):
+    if len(sys.argv) > 3:
         xmlC = args["xmlC"]
         xmlM = args["xmlM"]
         image = args["image"]
@@ -59,7 +56,8 @@ def main():
             xmlM = str(input(Fore.MAGENTA + "Enter path to the markers params XML file: " + Style.RESET_ALL))
         if image is None:
             image = str(
-                input(Fore.MAGENTA + "Enter path to the input image which will be analyzed: " + Style.RESET_ALL))
+                input(Fore.MAGENTA + "Enter path to the input image which will be analyzed: " + Style.RESET_ALL)
+            )
 
     xmlIntCamPar = xmlC
     xmlExtCamPar = "myCamExtParams.xml"
@@ -88,12 +86,19 @@ def main():
         print(Fore.GREEN + "XML files merged succesfully!" + Style.RESET_ALL)
         print()
         print(
-            Fore.YELLOW + "All camera parameters are located in the " + Style.RESET_ALL + xmlCamPar + Fore.YELLOW + " XML file!" + Style.RESET_ALL)
+            Fore.YELLOW
+            + "All camera parameters are located in the "
+            + Style.RESET_ALL
+            + xmlCamPar
+            + Fore.YELLOW
+            + " XML file!"
+            + Style.RESET_ALL
+        )
         print()
     except:
         print()
         print(Fore.RED + "Could not create XML file!" + Style.RESET_ALL)
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()

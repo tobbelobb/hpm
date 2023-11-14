@@ -429,35 +429,35 @@ auto main(int const argc, char **const argv) -> int {
                       << -camTranslation.translation[2] << "\n  </data>\n"
                       << "</camera_translation>";
 
-              std::ofstream file ("myCamExtParams.xml");
+            std::ofstream file("myCamExtParams.xml");
 
-          	if (file.is_open()) {
-          		  file << "<?xml version='1.0'?>\n";
-			          file << "<opencv_storage>\n";
-          		  file << "<camera_rotation type_id=\"opencv-matrix\">\n"
-                         "  <rows>3</rows>\n"
-                         "  <cols>1</cols>\n"
-                         "  <dt>d</dt>\n"
-                         "  <data>\n    "
-                      << effectorPoseRelativeToCamera.value().rotation[0] << ' '
-                      << effectorPoseRelativeToCamera.value().rotation[1] << ' '
-                      << effectorPoseRelativeToCamera.value().rotation[2]
-                      << "\n  </data>\n"
-                         "</camera_rotation>\n"
-                         "<camera_translation type_id=\"opencv-matrix\">\n"
-                         "  <rows>3</rows>\n"
-                         "  <cols>1</cols>\n"
-                         "  <dt>d</dt>\n"
-                         "  <data>\n    "
-                      << -camTranslation.translation[0] << ' '
-                      << -camTranslation.translation[1] << ' '
-                      << -camTranslation.translation[2] << "\n  </data>\n"
-                      << "</camera_translation>\n";
-                      	file << "</opencv_storage>";
-          		  file.close();
-          	} else {
-          		  std::cout << "Unable to open file";
-          	}
+            if (file.is_open()) {
+              file << "<?xml version='1.0'?>\n";
+              file << "<opencv_storage>\n";
+              file << "<camera_rotation type_id=\"opencv-matrix\">\n"
+                      "  <rows>3</rows>\n"
+                      "  <cols>1</cols>\n"
+                      "  <dt>d</dt>\n"
+                      "  <data>\n    "
+                   << effectorPoseRelativeToCamera.value().rotation[0] << ' '
+                   << effectorPoseRelativeToCamera.value().rotation[1] << ' '
+                   << effectorPoseRelativeToCamera.value().rotation[2]
+                   << "\n  </data>\n"
+                      "</camera_rotation>\n"
+                      "<camera_translation type_id=\"opencv-matrix\">\n"
+                      "  <rows>3</rows>\n"
+                      "  <cols>1</cols>\n"
+                      "  <dt>d</dt>\n"
+                      "  <data>\n    "
+                   << -camTranslation.translation[0] << ' '
+                   << -camTranslation.translation[1] << ' '
+                   << -camTranslation.translation[2] << "\n  </data>\n"
+                   << "</camera_translation>\n";
+              file << "</opencv_storage>";
+              file.close();
+            } else {
+              std::cout << "Unable to open file";
+            }
           }
         } catch (std::exception const &e) {
           std::cerr << "Catch\n";
@@ -516,13 +516,35 @@ auto main(int const argc, char **const argv) -> int {
       std::cout << std::endl;
       if (showResultImage) {
         if (useBedReference) {
-          showImage(imageWith(undistortedImage, effectorPoints, bedPoints,
-                              worldPose.translation),
-                    "result_w_bed.png");
+          if (verbose) {
+            hpm::SixDof const noPose{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 99999.0};
+            showImage(
+                imageWith(
+                    undistortedImage, effectorPoints, bedPoints,
+                    worldPose.translation,
+                    effectorPoseRelativeToCamera.value_or(noPose)
+                        .reprojectionError,
+                    bedPoseRelativeToCamera.value_or(noPose).reprojectionError,
+                    reprojectionErrorLimit),
+                "result_w_bed_and_reproj_errs.png");
+          } else {
+            showImage(imageWith(undistortedImage, effectorPoints, bedPoints,
+                                worldPose.translation),
+                      "result_w_bed.png");
+          }
         } else {
-          showImage(imageWith(undistortedImage, effectorPoints,
-                              worldPose.translation),
-                    "result.png");
+          if (verbose) {
+            showImage(
+                imageWith(
+                    undistortedImage, effectorPoints, worldPose.translation,
+                    effectorPoseRelativeToCamera.value().reprojectionError,
+                    reprojectionErrorLimit),
+                "result_w_reproj_err.png");
+          } else {
+            showImage(imageWith(undistortedImage, effectorPoints,
+                                worldPose.translation),
+                      "result.png");
+          }
         }
       }
     } else {
