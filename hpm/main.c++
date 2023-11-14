@@ -517,7 +517,7 @@ auto main(int const argc, char **const argv) -> int {
       if (showResultImage) {
         if (useBedReference) {
           if (verbose) {
-            hpm::SixDof const noPose{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 99999.0};
+            hpm::SixDof const noPose{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, std::numeric_limits<double>::infinity()};
             showImage(
                 imageWith(
                     undistortedImage, effectorPoints, bedPoints,
