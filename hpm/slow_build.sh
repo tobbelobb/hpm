@@ -1,7 +1,7 @@
-CPPCOMPILER="g++-10.1"
+CPPCOMPILER="g++-10"
 if ! compiler_loc="$(type -p "${CPPCOMPILER}")" || [[ -z $compiler_loc ]]; then
-	echo "Did not find g++-10.1. Trying g++-10 instead."
-	CPPCOMPILER="g++-10"
+	echo "Did not find g++-10. Trying simple g++ instead."
+	CPPCOMPILER="g++"
 fi
 
 if (($# < 1)); then
