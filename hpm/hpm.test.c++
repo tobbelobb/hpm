@@ -194,7 +194,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, 0}, false)};
+                                      {0, 0, 0}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -283,7 +283,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -372,7 +372,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -462,7 +462,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -553,7 +553,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -644,7 +644,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -735,7 +735,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,
@@ -829,7 +829,7 @@ auto main() -> int {
                                       {.m_showIntermediateImages = false,
                                        .m_verbose = false,
                                        .m_fitByDistance = true},
-                                      {0, 0, -1}, false)};
+                                      {0, 0, -1}, false, false)};
 
         SolvePnpPoints const effectorPoints{
             effectorMarks, markerDiameter,   meanFocalLength,

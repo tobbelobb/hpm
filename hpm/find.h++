@@ -37,7 +37,7 @@ std::vector<hpm::Ellipse> findMarks(
     hpm::FinderImage const &image, std::vector<hpm::Ellipse> const &ellipses,
     hpm::MarkerParams const &markerParams, hpm::FinderConfig const &config,
     hpm::CameraFramedPosition const &expectedNormalDirection = {0.0, 0.0, 0.0},
-    bool tryHard = false, std::string const identifier = "");
+    bool tryHard = false, bool cameraPoseCalibration = false, std::string const identifier = "");
 
 std::vector<hpm::CameraFramedPosition> findIndividualMarkerPositions(
     std::vector<hpm::Ellipse> const &marks, double knownMarkerDiameter,

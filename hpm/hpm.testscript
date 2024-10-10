@@ -10,36 +10,36 @@
 : The $0 will expand to the executable name
 $* >>"EOE"
 Usage:
-$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-position-calibration] [-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference] [-r|--reprojection-error-limit <value>]
+$0 <camera-parameters> <marker-parameters> <image> [-h|--help] [-v|--verbose] [-s|--show <value>] [-n|--no-fit-by-distance] [-c|--camera-pose-calibration] [-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference] [-r|--reprojection-error-limit <value>]
 
--h, --help                         Print this help.
--v, --verbose                      Print rotation, translation, and reprojection_error of the found
-                                   pose. The default is to only print the translation.
--s, --show                         <result|r|intermediate|i|all|a|none|n>. none is the default. During
-                                   any pop up you may press s to write the image, or q to stop showing
-                                   images, or any other key to continue.
--n, --no-fit-by-distance           Don't fit the mark detection results to only those marks who match
-                                   the marks' internal distance to each other.
--c, --camera-position-calibration  Output the position of the camera in a way that can be pasted
-                                   into the camera-parameters file.
--t, --try-hard                     Try harder \(but slower\) to find a good position. If one marker
-                                   was slightly mis-detected, this option will make the program
-                                   find decent values based on the other markers, and ignore the
-                                   mis-detected one.
--f, --force-try-hard               Works like --try-hard, but will always use only the best 5 markers
-                                   for position calculation, even if no markers were mis-detected.
-                                   Setting both --try-hard and --force-try-hard has the same effect
-                                   as only setting --force-try-hard.
--b, --bed-reference                If you have a set of markers on a flat background surface \("the
-                                   bed"\), and have specified bed marker positions, type, and diameter
-                                   in the marker-parameters file, then the bed reference option
-                                   will make hpm calculate effector pose relative to the bed instead
-                                   of relative to the camera. This can give more stable results
-                                   if the camera isn't completely still between measurements, and
-                                   makes measurements far less sensitive to having correct camera_translation
-                                   and camera_rotation values in the camera-parameters file.
--r, --reprojection-error-limit     <number>. Default is 1.0. A lower number rejects more unceirtain
-                                   results. A higher number accepts more unceirtain results.
+-h, --help                      Print this help.
+-v, --verbose                   Print rotation, translation, and reprojection_error of the found
+                                pose. The default is to only print the translation.
+-s, --show                      <result|r|intermediate|i|all|a|none|n>. none is the default. During
+                                any pop up you may press s to write the image, or q to stop showing
+                                images, or any other key to continue.
+-n, --no-fit-by-distance        Don't fit the mark detection results to only those marks who match
+                                the marks' internal distance to each other.
+-c, --camera-pose-calibration   Output the position of the camera in a way that can be pasted
+                                into the camera-parameters file.
+-t, --try-hard                  Try harder \(but slower\) to find a good position. If one marker
+                                was slightly mis-detected, this option will make the program
+                                find decent values based on the other markers, and ignore the
+                                mis-detected one.
+-f, --force-try-hard            Works like --try-hard, but will always use only the best 5 markers
+                                for position calculation, even if no markers were mis-detected.
+                                Setting both --try-hard and --force-try-hard has the same effect
+                                as only setting --force-try-hard.
+-b, --bed-reference             If you have a set of markers on a flat background surface \("the
+                                bed"\), and have specified bed marker positions, type, and diameter
+                                in the marker-parameters file, then the bed reference option
+                                will make hpm calculate effector pose relative to the bed instead
+                                of relative to the camera. This can give more stable results
+                                if the camera isn't completely still between measurements, and
+                                makes measurements far less sensitive to having correct camera_translation
+                                and camera_rotation values in the camera-parameters file.
+-r, --reprojection-error-limit  <number>. Default is 1.0. A lower number rejects more unceirtain
+                                results. A higher number accepts more unceirtain results.
 EOE
 
 : End-as-expected
@@ -175,7 +175,7 @@ END
 
 : Finds-all-markers-no-cam-pos
 : Checks output when there's no cam pos in cam params file
-$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg >>~/END/
+$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg &myCamExtParams.xml >>~/END/
 /Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
 <camera_rotation type_id="opencv-matrix">
   <!-- Based on effector pose -->
@@ -199,7 +199,7 @@ END
 
 : No-cam-pos-and-verbose
 : Checks output when there's no cam pos in cam params file
-$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg --verbose >>~/END/
+$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg --verbose &myCamExtParams.xml >>~/END/
 /Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
 Found 6 markers
 <camera_rotation type_id="opencv-matrix">
@@ -225,9 +225,9 @@ Found 6 markers
 /\d.\d\d?\d?\d?\d?\d?\d?e?\d?\d?/
 END
 
-: Camera-position-calibration-and-verbose
+: Camera-pose-calibration-and-verbose
 : Checks output when there's no cam pos in cam params file
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg --camera-position-calibration --verbose >>~/END/
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests-2.xml $src_base/test-images/zeroed_1.jpg --camera-pose-calibration --verbose &myCamExtParams.xml >>~/END/
 Found 6 markers
 <camera_rotation type_id="opencv-matrix">
   <!-- Based on effector pose -->
@@ -254,7 +254,7 @@ END
 
 : Tries-to-calibrate-cam-pos-based-on-too-bad-image-nozzle-position-01
 : Checks that we have a single digit error
-$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-position-calibration >>~%END%
+$* $src_base/example-cam-params/myExampleCamParams.xml $src_base/example-marker-params/marker-params-for-the-old-tests.xml $src_base/test-images/nozzle_position_02.jpg --camera-pose-calibration >>~%END%
 %Error: Effector reprojection error was \d.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, and bed reprojection error was nan. That is worse than the limit \d.?\d?\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?. Therefore we can't find good camera_rotation and camera_translation values. A likely cause for the high reprojection error is that the configured camera_matrix, distortion_coefficients, and/or marker positions don't match up well enough with what's found on the image. Another cause might be that the marker detector algorithm makes a mistake. Try re-running with '--show all' to verify if this is the case.%
 END
 
@@ -324,4 +324,32 @@ Used 6 identified effector markers
 Used 5 identified bed markers
 /Effector reprojection error: 0\..*/
 /Bed reprojection error: 0\..*/
+END
+
+: Dont-use-expected-normal-during-camera-pose-calibration
+$* $src_base/example-cam-params/myExampleCamParamsNoCamPose.xml $src_base/example-marker-params/my-marker-params-no-bed.xml $src_base/test-images/try_hard_0007.jpg --verbose --try-hard --camera-pose-calibration &myCamExtParams.xml >>~/END/
+/Warning! Did not find valid camera_rotation or camera_translation in .*\. Will try to calculate these based on the input image. The calculated values will only be valid if the nozzle was at the origin, and the markers were level with the print bed, when the image was taken./
+Found 5 markers
+<camera_rotation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+/    -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
+  </data>
+</camera_rotation>
+<camera_translation type_id="opencv-matrix">
+  <!-- Based on effector pose -->
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+/    -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d? -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?/
+  </data>
+</camera_translation>
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/\[-?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?, -?\d\d?\d?\d?.\d\d?\d?\d?\d?\d?\d?e?-?\d?\d?\]/
+/\d.\d\d?\d?\d?\d?\d?\d?e?\d?\d?/
+Used 5 identified effector markers
 END

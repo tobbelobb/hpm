@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<!--
+     There are six markers:
+     marker 0, marker 1, marker 2, marker 3, marker 4, and marker 5
+
+     They are ordered in counter clockwise order starting with the
+     marker to the left (negative X-direction) of the two A-markers
+     (along the side that faces towards the A-anchor):
+
+     We want the positions of the (centers of the) markers,
+     expressed in the global coordinate system,
+     (that is the XYZ-one that the slicer uses),
+     measured when the nozzle is placed at the origin.
+
+     The marker positions in this file were computed with
+     the help of hp-mark/find-marker-positions/solve.py
+     Run/study that script if you don't know how to find your
+     marker positions.
+
+     Run the script twice, once for the effector marker positions,
+     and once for the bed marker positions, if you have those.
+-->
+<effector_markers type_id="opencv-matrix">
+  <rows>6</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+   -61.614  -118.584   136.000
+    58.981  -118.784   136.000
+   148.339   -20.430   136.000
+    40.933   167.238   136.000
+   -55.123   169.084   136.000
+  -177.167   -41.925   136.000
+  </data>
+  <marker_diameter>90.0</marker_diameter>
+  <marker_type>disk</marker_type>
+</effector_markers>
+</opencv_storage>

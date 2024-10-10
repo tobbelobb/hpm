@@ -30,14 +30,14 @@ struct Cam {
   cv::Mat const matrix;
   cv::Mat const distortion;
   hpm::SixDof const worldPose;
-  bool calibrationNeeded = false;
+  bool poseCalibrationNeeded = false;
 };
 static auto getCamParams(std::string const &camParamsFileName) -> Cam {
   cv::Mat cameraMatrix_;
   cv::Mat distortionCoefficients_;
   cv::Mat cameraRotation_(3, 1, CV_64FC1, cv::Scalar(0));
   cv::Mat cameraTranslation_(3, 1, CV_64FC1, cv::Scalar(0));
-  bool calibrationNeeded = false;
+  bool poseCalibrationNeeded = false;
   try {
     cv::FileStorage const camParamsFile(camParamsFileName,
                                         cv::FileStorage::READ);
@@ -64,7 +64,7 @@ static auto getCamParams(std::string const &camParamsFileName) -> Cam {
                    "The calculated values will only be valid if the nozzle was "
                    "at the origin, and the markers were level with the print "
                    "bed, when the image was taken.\n";
-      calibrationNeeded = true;
+      poseCalibrationNeeded = true;
     }
   } catch (std::exception const &e) {
     std::cerr << "Could not read camera parameters from file "
@@ -75,7 +75,7 @@ static auto getCamParams(std::string const &camParamsFileName) -> Cam {
   return {cameraMatrix_,
           distortionCoefficients_,
           {cameraRotation_, cameraTranslation_},
-          calibrationNeeded};
+          poseCalibrationNeeded};
 }
 
 static auto getMarkerParams(std::string const &fileName,
@@ -124,14 +124,14 @@ auto main(int const argc, char **const argv) -> int {
         << *argv
         << " <camera-parameters> <marker-parameters> <image> "
            "[-h|--help] [-v|--verbose] [-s|--show <value>] "
-           "[-n|--no-fit-by-distance] [-c|--camera-position-calibration] "
+           "[-n|--no-fit-by-distance] [-c|--camera-pose-calibration] "
            "[-t|--try-hard] [-f|--force-try-hard] [-b|--bed-reference] "
            "[-r|--reprojection-error-limit <value>]\n";
   CommandLine args(usage.str());
 
   std::string show{};
   bool verbose{false};
-  bool cameraPositionCalibration{false};
+  bool cameraPoseCalibration{false};
   bool showResultImage{false};
   bool showIntermediateImages{false};
   bool noFitByDistance{false};
@@ -152,8 +152,8 @@ auto main(int const argc, char **const argv) -> int {
   args.addArgument({"-n", "--no-fit-by-distance"}, &noFitByDistance,
                    "Don't fit the mark detection results to only those marks "
                    "who match the marks' internal distance to each other.");
-  args.addArgument({"-c", "--camera-position-calibration"},
-                   &cameraPositionCalibration,
+  args.addArgument({"-c", "--camera-pose-calibration"},
+                   &cameraPoseCalibration,
                    "Output the position of the camera in a way that can be "
                    "pasted into the camera-parameters file.");
   args.addArgument(
@@ -225,8 +225,8 @@ auto main(int const argc, char **const argv) -> int {
   }
 
   auto const cam{getCamParams(camParamsFileName)};
-  cameraPositionCalibration =
-      cameraPositionCalibration or cam.calibrationNeeded;
+  cameraPoseCalibration =
+      cameraPoseCalibration or cam.poseCalibrationNeeded;
 
   auto const effectorMarkerParams{
       getMarkerParams(markerParamsFileName, "effector_markers")};
@@ -279,7 +279,7 @@ auto main(int const argc, char **const argv) -> int {
 
   auto const effectorMarks{
       findMarks(finderImage, ellipses, effectorMarkerParams, finderConfig,
-                expectedNormalDirection, tryHard, "effector-")};
+                expectedNormalDirection, cameraPoseCalibration, tryHard, "effector-")};
   auto const bedMarks = [&]() -> std::vector<hpm::Ellipse> {
     if (useBedReference) {
       ellipses.erase(std::remove_if(std::begin(ellipses), std::end(ellipses),
@@ -290,7 +290,7 @@ auto main(int const argc, char **const argv) -> int {
                                     }),
                      std::end(ellipses));
       return findMarks(finderImage, ellipses, bedMarkerParams, finderConfig,
-                       expectedNormalDirection, tryHard, "bed-");
+                       expectedNormalDirection, cameraPoseCalibration, tryHard, "bed-");
     }
     return {};
   }();
@@ -351,7 +351,7 @@ auto main(int const argc, char **const argv) -> int {
     }
 
     if (effectorPoseRelativeToCamera.has_value()) {
-      if (cameraPositionCalibration) {
+      if (cameraPoseCalibration) {
         try {
           if (effectorPoseRelativeToCamera.value().reprojectionError >
               reprojectionErrorLimit) {
@@ -478,7 +478,7 @@ auto main(int const argc, char **const argv) -> int {
                                  cam.worldPose);
       }();
       if (verbose) {
-        if (cameraPositionCalibration) {
+        if (cameraPoseCalibration) {
           std::cout << '\n';
         }
         std::cout << worldPose;
@@ -505,10 +505,10 @@ auto main(int const argc, char **const argv) -> int {
           }
         }
       }
-      if (not verbose and not cameraPositionCalibration) {
+      if (not verbose and not cameraPoseCalibration) {
         std::cout << worldPose.translation << ";";
       }
-      if (not(cameraPositionCalibration) and
+      if (not(cameraPoseCalibration) and
           worldPose.reprojectionError > reprojectionErrorLimit) {
         std::cout << " Warning! High reprojection error: "
                   << worldPose.reprojectionError;

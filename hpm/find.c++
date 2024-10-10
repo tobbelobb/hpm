@@ -98,6 +98,7 @@ auto findMarks(FinderImage const &image,
                std::vector<hpm::Ellipse> const &ellipses,
                MarkerParams const &markerParams, FinderConfig const &config,
                CameraFramedPosition const &expectedNormalDirection,
+               bool cameraPoseCalibration,
                bool tryHard, std::string const identifier)
     -> std::vector<hpm::Ellipse> {
   if (ellipses.empty()) {
@@ -142,7 +143,7 @@ auto findMarks(FinderImage const &image,
     }
   }
 
-  if (markerParams.m_type == MarkerType::DISK) {
+  if (markerParams.m_type == MarkerType::DISK and not cameraPoseCalibration) {
     double constexpr MIN_NORMAL_CLOSENESS = 0.93;
     validEllipseIndices.erase(
         std::remove_if(
