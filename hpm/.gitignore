@@ -5,3 +5,7 @@ test-hpm
 *.test
 *.test.manual
 example-cam-params/myExampleCamParams_half_size.xml
+*.o
+*.d
+*.a
+myCamExtParams.xml
